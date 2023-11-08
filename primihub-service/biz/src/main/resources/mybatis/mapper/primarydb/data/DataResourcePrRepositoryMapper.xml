@@ -143,4 +143,27 @@
     <update id="updateVisibilityAuthName">
         update data_resource_visibility_auth set organ_name=#{organName} where organ_global_id=#{organGlobalId}
     </update>
+
+    <insert id="saveDataResourceOrganAssignList">
+        insert into data_resource_organ_assign (resource_id,organ_global_id,organ_name,is_del)
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.resourceId},#{item.organGlobalId},#{item.organName},#{item.isDel})
+        </foreach>
+    </insert>
+    <insert id="saveDataResourceUserAssignList">
+        insert into data_resource_user_assign (resource_id,organ_global_id,organ_name,user_id,user_name,user_account,is_del)
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.resourceId},#{item.organGlobalId},#{item.organName},#{userId},#{userName},#{userAccount},#{item.isDel})
+        </foreach>
+    </insert>
+
+    <delete id="deleteResourceOrganAssignByResourceId">
+        delete from data_resource_organ_assign where resource_id=#{resourceId}
+    </delete>
+
+    <delete id="deleteResourceUserAssignByResourceId">
+        delete from data_resource_user_assign where resource_id=#{resourceId}
+    </delete>
 </mapper>

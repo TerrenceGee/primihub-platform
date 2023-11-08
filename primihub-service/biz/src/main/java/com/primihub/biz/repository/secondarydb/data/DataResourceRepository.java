@@ -61,4 +61,8 @@ public interface DataResourceRepository {
     Long findMaxDataResource();
 
     List<DataResourceVisibilityAuth> findAuthOrganByResourceId(@Param("resourceIds") List<Long> resourceIds);
+
+    List<DataResourceUserAssign> findUserAssignByResourceId(@Param("resourceId") Long resourceId);
+
+    List<DataResourceOrganAssign> findOrganAssignByResourceId(@Param("resourceId") Long resourceId);
 }

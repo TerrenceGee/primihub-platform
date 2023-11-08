@@ -382,4 +382,21 @@
         from data_source where id = #{id}
     </select>
 
+    <select id="findAuthOrganByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceOrganAssign">
+        select
+        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,is_del isDel,c_time cTime,u_time uTime
+        from
+        data_resource_organ_assign
+        where
+        resource_id = #{resourceId}
+    </select>
+
+    <select id="findAuthUserByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select
+        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,user_id userId, user_name userName, user_account userAccount, is_del isDel,c_time cTime,u_time uTime
+        from
+        data_resource_user_assign
+        where
+        resource_id = #{resourceId}
+    </select>
 </mapper>

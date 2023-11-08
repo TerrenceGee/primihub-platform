@@ -1,6 +1,5 @@
 package com.primihub.biz.service.sys;
 
-import com.alibaba.fastjson.JSONObject;
 import com.anji.captcha.model.common.ResponseModel;
 import com.anji.captcha.service.CaptchaService;
 import com.primihub.biz.config.base.BaseConfiguration;
@@ -10,6 +9,7 @@ import com.primihub.biz.constant.SysConstant;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageParam;
+import com.primihub.biz.entity.sys.enumeration.RoleTypeEnum;
 import com.primihub.biz.entity.sys.param.*;
 import com.primihub.biz.entity.sys.po.SysRole;
 import com.primihub.biz.entity.sys.po.SysUr;
@@ -499,5 +499,28 @@ public class SysUserService {
         Map<String,Object> map = new HashMap<>();
         map.put("user", sysUserSecondarydbRepository.selectSysUserByUserId(userId));
         return BaseResultEntity.success(map);
+    }
+
+    public Boolean checkUserIsAdminOrNot(Long userId) {
+        // check that user is organ admin or not
+        List<SysRole> sysRole = this.findUserRoleByUserId(userId);
+        if (sysRole == null) {
+            return false;
+        }
+        Set<String> collect = sysRole.stream().map(SysRole::getRoleType).collect(Collectors.toSet());
+        return collect.contains(RoleTypeEnum.ORGAN_ADMIN.name());
+    }
+
+    public List<SysRole> findUserRoleByUserId(Long userId) {
+        SysUser sysUser = this.getSysUserById(userId);
+        if (sysUser == null) {
+            return null;
+        }
+        String[] split1 = sysUser.getRoleIdList().split(",");
+        Set<Long> roleIdSet = Arrays.stream(split1).map(Long::valueOf).collect(Collectors.toSet());
+        if (roleIdSet.size() == 0) {
+            return null;
+        }
+        return sysRoleSecondarydbRepository.selectSysRoleByBatchRoleId(roleIdSet);
     }
 }

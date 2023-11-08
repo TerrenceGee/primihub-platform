@@ -12,6 +12,7 @@ import com.primihub.biz.entity.data.req.DataResourceReq;
 import com.primihub.biz.entity.data.req.DerivationResourceReq;
 import com.primihub.biz.entity.data.req.PageReq;
 import com.primihub.biz.service.data.DataResourceService;
+import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class ResourceController {
 
     @Autowired
     private DataResourceService dataResourceService;
+    @Autowired
+    private SysUserService sysUserService;
 
     /**
      * 获取资源标签列表
@@ -52,6 +55,17 @@ public class ResourceController {
     public BaseResultEntity getDataResourceList(@RequestHeader("userId") Long userId,
                                                 DataResourceReq req){
         return dataResourceService.getDataResourceList(req,userId);
+    }
+
+    @GetMapping("getdataresourcelistbyorgan")
+    public BaseResultEntity getDataResourceListByOrgan(@RequestHeader("userId") Long userId,
+                                                       DataResourceReq req){
+        // check that user is organ admin or not
+        Boolean flag = sysUserService.checkUserIsAdminOrNot(userId);
+        if (!flag) {
+            return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"role");
+        }
+        return dataResourceService.getDataResourceListByOrgan(req,userId);
     }
 
     @GetMapping("getDerivationResourceList")

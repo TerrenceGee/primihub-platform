@@ -59,4 +59,6 @@ public class DataResourceReq extends PageReq{
 
     private Integer fileContainsY;
 
+    private DataResourceAssignReq dataResourceAssign;
+
 }

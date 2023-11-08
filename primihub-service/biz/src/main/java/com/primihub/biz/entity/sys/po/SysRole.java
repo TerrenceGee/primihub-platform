@@ -33,4 +33,8 @@ public class SysRole {
      * 修改时间
      */
     private Date uTime;
+    /**
+     * 角色类型 from RoleTypeEnum
+     */
+    private String roleType;
 }

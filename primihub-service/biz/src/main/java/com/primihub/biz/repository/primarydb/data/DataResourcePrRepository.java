@@ -84,4 +84,12 @@ public interface DataResourcePrRepository {
 
     void updateVisibilityAuthName(@Param("organName") String organName,@Param("organGlobalId")String organGlobalId);
 
+    void saveDataResourceOrganAssignList(@Param("list") List<DataResourceOrganAssign> collect);
+
+    void saveDataResourceUserAssignList(@Param("list") List<DataResourceUserAssign> collect);
+
+    void deleteResourceOrganAssignByResourceId(@Param("resourceId") Long resourceId);
+
+    void deleteResourceUserAssignByResourceId(@Param("resourceId") Long resourceId);
+
 }
