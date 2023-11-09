@@ -28,7 +28,7 @@ public class SysEmailService {
     private JavaMailSender javaMailSender;
 
 
-    @PostConstruct
+//    @PostConstruct
     public void init(){
         javaMailSender = initMailSender(baseConfiguration);
     }

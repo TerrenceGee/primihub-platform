@@ -2,9 +2,8 @@ package com.primihub.biz.repository.secondarydb.data;
 
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.DerivationResourceReq;
-import com.primihub.biz.entity.data.vo.DataDerivationResourceVo;
-import com.primihub.biz.entity.data.vo.DataResourceRecordVo;
-import com.primihub.biz.entity.data.vo.ResourceTagListVo;
+import com.primihub.biz.entity.data.req.PageReq;
+import com.primihub.biz.entity.data.vo.*;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -65,4 +64,13 @@ public interface DataResourceRepository {
     List<DataResourceUserAssign> findUserAssignByResourceId(@Param("resourceId") Long resourceId);
 
     List<DataResourceOrganAssign> findOrganAssignByResourceId(@Param("resourceId") Long resourceId);
+    List<DataResourceOrganAssign> findOrganAssignByResourceIdList(@Param("resourceIds") List<Long> resourceIds);
+
+    List<DataResourceUsageListVo> queryDataResourceUsageList(@Param("resourceId")Long resourceId);
+
+    Integer queryDataResourceUsageCount(@Param("resourceId")Long resourceId);
+
+    List<DataResourceAssignmentListVo> queryDataResourceAssignmentListByResourceId(@Param("resourceId")Long resourceId);
+
+    Integer queryDataResourceAssignmentByResourceIdCount(@Param("resourceId")Long resourceId);
 }

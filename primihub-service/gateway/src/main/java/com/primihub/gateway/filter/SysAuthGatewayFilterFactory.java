@@ -44,9 +44,11 @@ public class SysAuthGatewayFilterFactory extends AbstractGatewayFilterFactory {
             }
 
             String userIdStr;
+            String roleType;
             String rawPath = exchange.getRequest().getURI().getRawPath();
             if(token.equals(baseConfiguration.getUsefulToken())){
                 userIdStr="1";
+                roleType = "1";
             }else {
                 SysUserListVO sysUserListVO = sysUserPrimaryRedisRepository.findUserLoginStatus(token);
                 if (sysUserListVO == null) {
@@ -66,10 +68,12 @@ public class SysAuthGatewayFilterFactory extends AbstractGatewayFilterFactory {
                 }
 
                 userIdStr = sysUserListVO.getUserId().toString();
+                roleType = sysUserListVO.getRoleType().toString();
             }
             ServerHttpRequest newRequest = exchange.getRequest().mutate()
                     .header("userId", userIdStr)
                     .header("token", token)
+                    .header("roleType", roleType)
                     .build();
             return chain.filter(exchange.mutate().request(newRequest).build());
         }));

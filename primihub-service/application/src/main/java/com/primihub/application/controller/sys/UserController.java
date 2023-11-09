@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 用户管理
+ */
 @RequestMapping("user")
 @RestController
 public class UserController {
@@ -22,6 +25,12 @@ public class UserController {
     @Value("${primihub.interior.code:null}")
     private String interiorCode;
 
+    /**
+     * 用户登录
+     * @param loginParam
+     * @param ip
+     * @return
+     */
     @RequestMapping("login")
     public BaseResultEntity login(LoginParam loginParam,@RequestHeader(value = "ip",defaultValue = "") String ip){
         if(loginParam.getUserAccount()==null|| "".equals(loginParam.getUserAccount().trim())) {
@@ -36,11 +45,22 @@ public class UserController {
         return sysUserService.login(loginParam,ip);
     }
 
+    /**
+     * 用户退出
+     * @param token
+     * @param userId
+     * @return
+     */
     @RequestMapping("logout")
     public BaseResultEntity logout(@RequestHeader(value = "token",defaultValue = "") String token,@RequestHeader(value = "userId",defaultValue = "-1") Long userId){
         return sysUserService.logout(token,userId);
     }
 
+    /**
+     * 保存或修改用户
+     * @param saveOrUpdateUserParam
+     * @return
+     */
     @RequestMapping("saveOrUpdateUser")
     public BaseResultEntity saveOrUpdateUser(SaveOrUpdateUserParam saveOrUpdateUserParam){
         if(saveOrUpdateUserParam.getUserId()!=null){
@@ -54,6 +74,11 @@ public class UserController {
         return sysUserService.saveOrUpdateUser(saveOrUpdateUserParam);
     }
 
+    /**
+     * 删除用户
+     * @param userId 用户序号
+     * @return
+     */
     @RequestMapping("deleteSysUser")
     public BaseResultEntity deleteSysUser(Long userId){
         if(userId==null) {
@@ -65,6 +90,13 @@ public class UserController {
         return sysUserService.deleteSysUser(userId);
     }
 
+    /**
+     * 查询用户列表
+     * @param findUserPageParam
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @return
+     */
     @RequestMapping("findUserPage")
     public BaseResultEntity findUserPage(FindUserPageParam findUserPageParam,
                                          @RequestParam(defaultValue = "1") Integer pageNum,
@@ -75,6 +107,11 @@ public class UserController {
         return sysUserService.findUserPage(findUserPageParam,pageNum,pageSize);
     }
 
+    /**
+     * 重置密码
+     * @param userId 用户序号
+     * @return
+     */
     @RequestMapping("initPassword")
     public BaseResultEntity initPassword(Long userId){
         if(userId==null) {
@@ -86,6 +123,13 @@ public class UserController {
         return sysUserService.initPassword(userId);
     }
 
+    /**
+     * 修改密码
+     * @param userId 用户序号
+     * @param password 密码
+     * @param validateKeyName 验证键
+     * @return
+     */
     @RequestMapping("updatePassword")
     public BaseResultEntity updatePassword(@RequestHeader("userId") Long userId,
                                            String password,
@@ -105,6 +149,11 @@ public class UserController {
         return sysUserService.updatePassword(userId,password,validateKeyName);
     }
 
+    /**
+     * 账号查询用户
+     * @param userAccount 用户账号
+     * @return
+     */
     @RequestMapping("findUserByAccount")
     public BaseResultEntity findUserByAccount(String userAccount){
         if(userAccount==null|| "".equals(userAccount.trim())) {
@@ -113,6 +162,11 @@ public class UserController {
         return sysUserService.findUserByAccount(userAccount);
     }
 
+    /**
+     * 注册用户
+     * @param saveOrUpdateUserParam
+     * @return
+     */
     @RequestMapping("register")
     public BaseResultEntity register(SaveOrUpdateUserParam saveOrUpdateUserParam){
         if(saveOrUpdateUserParam.getVerificationCode()==null|| "".equals(saveOrUpdateUserParam.getVerificationCode())) {
@@ -140,6 +194,11 @@ public class UserController {
         return sysUserService.saveOrUpdateUser(saveOrUpdateUserParam);
     }
 
+    /**
+     * 验证码接口
+     * @param sendVerificationCodeParam
+     * @return
+     */
     @RequestMapping("sendVerificationCode")
     public BaseResultEntity sendVerificationCode(SendVerificationCodeParam sendVerificationCodeParam){
         if((sendVerificationCodeParam.getCellphone()==null|| "".equals(sendVerificationCodeParam.getCellphone()))&&(sendVerificationCodeParam.getEmail()==null|| "".equals(sendVerificationCodeParam.getEmail()))) {
@@ -154,6 +213,11 @@ public class UserController {
         return sysUserService.sendVerificationCode(sendVerificationCodeParam);
     }
 
+    /**
+     * 忘记密码
+     * @param forgetPasswordParam
+     * @return
+     */
     @RequestMapping("forgetPassword")
     public BaseResultEntity forgetPassword(ForgetPasswordParam forgetPasswordParam){
         if(forgetPasswordParam.getUserAccount()==null|| "".equals(forgetPasswordParam.getUserAccount())) {
@@ -179,6 +243,13 @@ public class UserController {
         }
         return sysUserService.forgetPassword(forgetPasswordParam);
     }
+
+    /**
+     * 修改用户账号
+     * @param param
+     * @param userId 用户序号
+     * @return
+     */
     @RequestMapping("changeUserAccount")
     public BaseResultEntity changeUserAccount(SaveOrUpdateUserParam param,@RequestHeader("userId") Long userId){
         if (userId == null || userId<=0L) {
@@ -201,6 +272,11 @@ public class UserController {
         return sysUserService.changeUserAccount(param);
     }
 
+    /**
+     * 解除用户账号
+     * @param userId 用户序号
+     * @return
+     */
     @RequestMapping("relieveUserAccount")
     public BaseResultEntity relieveUserAccount(@RequestHeader("userId") Long userId){
         if (userId == null || userId<=0L) {

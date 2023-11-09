@@ -36,5 +36,5 @@ public class SysRole {
     /**
      * 角色类型 from RoleTypeEnum
      */
-    private String roleType;
+    private Integer roleType;
 }

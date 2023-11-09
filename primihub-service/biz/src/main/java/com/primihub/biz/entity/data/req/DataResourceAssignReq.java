@@ -12,6 +12,8 @@ import java.util.List;
 @Getter
 @Setter
 public class DataResourceAssignReq {
+    // 对机构授权要同步到 fusion
     private List<DataResourceAssignOrganReq> assignOrganList;
+    // 用户授权在 platform
     private List<DataResourceAssignUserReq> assignUserList;
 }

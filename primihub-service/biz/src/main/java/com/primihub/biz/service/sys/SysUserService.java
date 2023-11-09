@@ -132,6 +132,7 @@ public class SysUserService {
 
         List<SysRole> roleList=roleIdSet.size()==0?new ArrayList<>():sysRoleSecondarydbRepository.selectSysRoleByBatchRoleId(roleIdSet);
         Map<Long,String> roleMap=roleList.stream().collect(Collectors.toMap(SysRole::getRoleId,SysRole::getRoleName,(x,y)->x));
+        boolean isAdmin = roleList.stream().anyMatch(sysRole -> RoleTypeEnum.ORGAN_ADMIN.getRoleCode().equals(sysRole.getRoleType()));
 
         SysUserListVO sysUserListVO=new SysUserListVO();
         BeanUtils.copyProperties(sysUser,sysUserListVO);
@@ -142,6 +143,8 @@ public class SysUserService {
         sysUserListVO.setRoleIdListDesc(roleIdListDesc);
         sysUserListVO.setOrganIdListDesc(organConfiguration.getSysLocalOrganName());
         sysUserListVO.setOrganIdList(organConfiguration.getSysLocalOrganId());
+
+        sysUserListVO.setRoleType(isAdmin?RoleTypeEnum.ORGAN_ADMIN.getRoleCode():RoleTypeEnum.PLAIN_USER.getRoleCode());
 
         Date date=new Date();
 
@@ -507,8 +510,8 @@ public class SysUserService {
         if (sysRole == null) {
             return false;
         }
-        Set<String> collect = sysRole.stream().map(SysRole::getRoleType).collect(Collectors.toSet());
-        return collect.contains(RoleTypeEnum.ORGAN_ADMIN.name());
+        Set<Integer> collect = sysRole.stream().map(SysRole::getRoleType).collect(Collectors.toSet());
+        return collect.contains(RoleTypeEnum.ORGAN_ADMIN.getRoleCode());
     }
 
     public List<SysRole> findUserRoleByUserId(Long userId) {

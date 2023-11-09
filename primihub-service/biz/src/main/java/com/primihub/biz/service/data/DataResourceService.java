@@ -24,6 +24,7 @@ import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.repository.primarydb.data.DataResourcePrRepository;
 import com.primihub.biz.repository.secondarydb.data.DataModelRepository;
 import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
+import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysFileSecondarydbRepository;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.service.sys.SysUserService;
@@ -34,6 +35,7 @@ import com.primihub.sdk.task.TaskHelper;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
 import com.primihub.sdk.task.param.TaskDataSetParam;
 import com.primihub.sdk.task.param.TaskParam;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +78,8 @@ public class DataResourceService {
     private FusionResourceService fusionResourceService;
     @Autowired
     private TaskHelper taskHelper;
+    @Autowired
+    private DataTaskRepository dataTaskRepository;
 
     public BaseResultEntity getDataResourceList(DataResourceReq req, Long userId){
         Map<String,Object> paramMap = new HashMap<>();
@@ -175,25 +179,17 @@ public class DataResourceService {
                 dataResourcePrRepository.saveVisibilityAuth(authList);
             }*/
             // assign to organ or user of organ
-            if (req.getResourceAuthType().equals(DataResourceAuthType.ASSIGN.getAuthType())) {
+            if (req.getResourceAuthType().equals(DataResourceAuthType.ASSIGN.getAuthType()) || req.getResourceAuthType().equals(DataResourceAuthType.PRIVATE.getAuthType())) {
                 DataResourceAssignReq dataResourceAssign = req.getDataResourceAssign();
+
                 List<DataResourceAssignOrganReq> assignOrganList = dataResourceAssign.getAssignOrganList();
                 if (assignOrganList != null && assignOrganList.size() > 0) {
                     DataResource finalDataResource = dataResource;
-                    List<DataResourceOrganAssign> collect = assignOrganList.stream().map(organ -> {
-                        return new DataResourceOrganAssign(finalDataResource.getResourceId(), organ.getOrganGlobalId(), organ.getOrganName());
-                    }).collect(Collectors.toList());
+                    List<DataResourceOrganAssign> collect = assignOrganList.stream().map(organ -> new DataResourceOrganAssign()).collect(Collectors.toList());
                     dataResourcePrRepository.saveDataResourceOrganAssignList(collect);
                 }
 
-                List<DataResourceAssignUserReq> assignUserList = dataResourceAssign.getAssignUserList();
-                if (assignUserList != null && assignUserList.size() > 0) {
-                    DataResource finalDataResource1 = dataResource;
-                    List<DataResourceUserAssign> collect = assignUserList.stream().map(user -> {
-                        return new DataResourceUserAssign(finalDataResource1.getResourceId(), user.getOrganGlobalId(), user.getOrganName(), user.getUserId(), user.getUserName(), user.getUserAccount());
-                    }).collect(Collectors.toList());
-                    dataResourcePrRepository.saveDataResourceUserAssignList(collect);
-                }
+
             }
             fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
             singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
@@ -201,6 +197,15 @@ public class DataResourceService {
             map.put("resourceFusionId",dataResource.getResourceFusionId());
             map.put("resourceName",dataResource.getResourceName());
             map.put("resourceDesc",dataResource.getResourceDesc());
+
+            List<DataResourceAssignUserReq> assignUserList = req.getDataResourceAssign().getAssignUserList();
+            if (assignUserList != null && assignUserList.size() > 0) {
+                DataResource finalDataResource1 = dataResource;
+                List<DataResourceUserAssign> collect = assignUserList.stream().map(user -> new DataResourceUserAssign(
+//                        finalDataResource1.getResourceId(), finalDataResource1.getResourceFusionId(), organConfiguration.getSysLocalOrganId(), organConfiguration.getSysLocalOrganName(), user.getUserId()
+                )).collect(Collectors.toList());
+                dataResourcePrRepository.saveDataResourceUserAssignList(collect);
+            }
         }catch (Exception e){
             log.info("save DataResource Exception：{}",e.getMessage());
             e.printStackTrace();
@@ -211,6 +216,7 @@ public class DataResourceService {
     }
 
     public BaseResultEntity editDataResource(DataResourceReq req, Long userId) {
+        SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
         DataResource dataResource = dataResourceRepository.queryDataResourceById(req.getResourceId());
         if (dataResource==null){
             return BaseResultEntity.failure(BaseResultEnum.DATA_EDIT_FAIL,"找不到资源信息");
@@ -235,7 +241,7 @@ public class DataResourceService {
                 }
                 dataResourcePrRepository.saveVisibilityAuth(authList);
             }
-            if (req.getResourceAuthType().equals(DataResourceAuthType.ASSIGN.getAuthType())) {
+            if (req.getResourceAuthType().equals(DataResourceAuthType.ASSIGN.getAuthType()) || req.getResourceAuthType().equals(DataResourceAuthType.PRIVATE.getAuthType())) {
                 DataResourceAssignReq dataResourceAssign = req.getDataResourceAssign();
                 if (dataResourceAssign.getAssignOrganList() != null && dataResourceAssign.getAssignOrganList().size() > 0) {
                     List<DataResourceOrganAssign> collect = dataResourceAssign.getAssignOrganList().stream().map(organ -> new DataResourceOrganAssign(req.getResourceId(), organ.getOrganGlobalId(), organ.getOrganName())).collect(Collectors.toList());
@@ -244,7 +250,7 @@ public class DataResourceService {
 
                 List<DataResourceAssignUserReq> assignUserList = dataResourceAssign.getAssignUserList();
                 if (assignUserList != null && assignUserList.size() > 0) {
-                    List<DataResourceUserAssign> collect = assignUserList.stream().map(user -> new DataResourceUserAssign(req.getResourceId(), user.getOrganGlobalId(), user.getOrganName(), user.getUserId(), user.getUserName(), user.getUserAccount())).collect(Collectors.toList());
+                    List<DataResourceUserAssign> collect = assignUserList.stream().map(user -> new DataResourceUserAssign(req.getResourceId(), dataResource.getResourceFusionId(), sysLocalOrganInfo.getOrganId(), sysLocalOrganInfo.getOrganName(), user.getUserId())).collect(Collectors.toList());
                     dataResourcePrRepository.saveDataResourceUserAssignList(collect);
                 }
             }
@@ -515,10 +521,15 @@ public class DataResourceService {
         List<Long> resourceIds = resourceList.stream().map(DataResource::getResourceId).collect(Collectors.toList());
         Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds).stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
         List<Long> filterIdList=resourceList.stream().filter(item->item.getResourceAuthType().equals(DataResourceAuthType.ASSIGN.getAuthType())).map(DataResource::getResourceId).collect(Collectors.toList());
+
+        // resource organ-assign need to transform to fusion
+        Map<Long, List<DataResourceOrganAssign>> resourceOrganAssignMap=new HashMap<>();
         Map<Long, List<DataResourceVisibilityAuth>> resourceAuthMap=new HashMap<>();
         if(filterIdList!=null&&filterIdList.size()!=0) {
             List<DataResourceVisibilityAuth> authList=dataResourceRepository.findAuthOrganByResourceId(filterIdList);
             resourceAuthMap=authList.stream().collect(Collectors.groupingBy(DataResourceVisibilityAuth::getResourceId));
+            List<DataResourceOrganAssign> organAssignList= dataResourceRepository.findOrganAssignByResourceIdList(filterIdList);
+            resourceOrganAssignMap=organAssignList.stream().collect(Collectors.groupingBy(DataResourceOrganAssign::getResourceId));
         }
         List<DataFileField> fileFieldList = dataResourceRepository.queryDataFileField(new HashMap() {{
             put("resourceIds", resourceIds);
@@ -542,7 +553,8 @@ public class DataResourceService {
             }
             List<String> tags = Optional.ofNullable(resourceTagMap.get(dataResource.getResourceId())).map(list -> list.stream().map(ResourceTagListVo::getTagName).collect(Collectors.toList())).orElse(null);
             List<String> authOrganList = Optional.ofNullable(resourceAuthMap.get(dataResource.getResourceId())).map(list -> list.stream().map(DataResourceVisibilityAuth::getOrganGlobalId).collect(Collectors.toList())).orElse(null);
-            copyVolist.add(DataResourceConvert.dataResourcePoConvertCopyVo(dataResource,organConfiguration.getSysLocalOrganId(),StringUtils.join(tags,","),authOrganList,fileFieldListMap.get(dataResource.getResourceId()),sysUserMap.get(dataResource.getUserId())));
+            List<String> assignOrganList = Optional.ofNullable(resourceOrganAssignMap.get(dataResource.getResourceId())).map(list -> list.stream().map(DataResourceOrganAssign::getOrganGlobalId).collect(Collectors.toList())).orElse(null);
+            copyVolist.add(DataResourceConvert.dataResourcePoConvertCopyVo(dataResource,organConfiguration.getSysLocalOrganId(),StringUtils.join(tags,","),authOrganList,assignOrganList,fileFieldListMap.get(dataResource.getResourceId()),sysUserMap.get(dataResource.getUserId())));
         }
         return copyVolist;
     }
@@ -961,6 +973,25 @@ public class DataResourceService {
             dataResourceVo.setUrl("");
         }
         return BaseResultEntity.success(new PageDataEntity(count,req.getPageSize(),req.getPageNo(),voList));
+    }
+
+    public BaseResultEntity getDataSourceUsagePage(Long resourceId, PageReq req) {
+        /*List<DataResourceUsageListVo> dataResourceUsageList = dataResourceRepository.queryDataResourceUsageList(resourceId);
+        if (dataResourceUsageList.size()==0) {
+            return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceUsageCount(resourceId);
+        return BaseResultEntity.success(new PageDataEntity(count.intValue(),req.getPageSize(), req.getPageNo(), dataResourceUsageList));*/
+        return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+    }
+
+    public BaseResultEntity findDataResourceAssignmentPage(Long resourceId, PageReq req) {
+        List<DataResourceAssignmentListVo> dataResourceAssignmentListVoList = dataResourceRepository.queryDataResourceAssignmentListByResourceId(resourceId);
+        if (dataResourceAssignmentListVoList.size()==0){
+            return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceAssignmentByResourceIdCount(resourceId);
+        return BaseResultEntity.success(new PageDataEntity(count,req.getPageSize(),req.getPageNo(),dataResourceAssignmentListVoList));
     }
 }
 

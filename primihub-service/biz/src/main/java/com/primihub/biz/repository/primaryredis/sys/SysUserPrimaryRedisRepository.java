@@ -35,6 +35,7 @@ public class SysUserPrimaryRedisRepository {
         map.put("isForbid",sysUserListVO.getIsForbid().toString());
         map.put("authIdList",sysUserListVO.getAuthIdList());
         map.put("token",token);
+        map.put("roleType", sysUserListVO.getRoleType().toString());
         stringRedisTemplate.opsForHash().putAll(userKey,map);
         stringRedisTemplate.expire(tokenKey,1, TimeUnit.HOURS);
         stringRedisTemplate.expire(userKey,1, TimeUnit.HOURS);
@@ -58,6 +59,7 @@ public class SysUserPrimaryRedisRepository {
         sysUserListVO.setOrganIdListDesc(map.get("organIdListDesc").toString());
         sysUserListVO.setIsForbid(Integer.parseInt(map.get("isForbid").toString()));
         sysUserListVO.setAuthIdList(map.get("authIdList").toString());
+        sysUserListVO.setRoleType(Integer.valueOf(map.get("roleType").toString()));
         return sysUserListVO;
     }
 

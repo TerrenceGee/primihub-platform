@@ -2,6 +2,9 @@ package com.primihub.biz.entity.data.req;
 
 import lombok.Data;
 
+/**
+ * 数据资源字段请求
+ */
 @Data
 public class DataResourceFieldReq {
     /**

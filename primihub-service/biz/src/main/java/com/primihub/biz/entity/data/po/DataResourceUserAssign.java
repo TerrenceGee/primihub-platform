@@ -1,6 +1,9 @@
 package com.primihub.biz.entity.data.po;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
@@ -11,15 +14,29 @@ import java.util.Date;
  **/
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class DataResourceUserAssign {
     private Long id;
     private Long resourceId;
-    private String organGlobalId;
-    private String organName;
+    private String resourceFusionId;
     private Long userId;
-    private String userName;
-    private String userAccount;
     private Integer isDel = 0;
+    /**
+     * 申请时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date applyTime;
+    /**
+     * 授权通过时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date assignTime;
+    /**
+     * 授权状态
+     * 0.申请 1.申请通过，由所有者直接授予 2.申请拒绝
+     */
+    private Integer assignStatus;
     /**
      * 创建时间
      */
@@ -29,13 +46,11 @@ public class DataResourceUserAssign {
      */
     private Date uTime;
 
-    public DataResourceUserAssign(Long resourceId, String organGlobalId, String organName, Long userId, String userName, String userAccount) {
+    public DataResourceUserAssign(Long resourceId, String resourceGlobalId, Long userId) {
         this.isDel = 0;
         this.resourceId = resourceId;
-        this.organGlobalId = organGlobalId;
-        this.organName = organName;
+        this.resourceFusionId = resourceGlobalId;
         this.userId = userId;
-        this.userName = userName;
-        this.userAccount = userAccount;
     }
+
 }

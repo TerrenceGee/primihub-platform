@@ -10,9 +10,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DataResourceAssignUserReq {
-    private String organGlobalId;
-    private String organName;
     private Long userId;
-    private String userName;
-    private String userAccount;
 }

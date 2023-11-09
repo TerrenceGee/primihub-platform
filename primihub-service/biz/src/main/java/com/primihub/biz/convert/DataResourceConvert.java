@@ -170,7 +170,7 @@ public class DataResourceConvert {
         return vo;
     }
 
-    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String tags, List<String> authOrganList, List<DataFileField> fieldList, SysUser sysUser){
+    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String tags, List<String> authOrganList,List<String> assignOrganList, List<DataFileField> fieldList, SysUser sysUser){
         DataResourceCopyVo dataResourceCopyVo = new DataResourceCopyVo();
         dataResourceCopyVo.setResourceId(dataResource.getResourceFusionId());
         dataResourceCopyVo.setResourceName(dataResource.getResourceName());
@@ -186,6 +186,8 @@ public class DataResourceConvert {
         dataResourceCopyVo.setOrganId(organId);
         dataResourceCopyVo.setResourceTag(tags);
         dataResourceCopyVo.setAuthOrganList(authOrganList);
+
+        dataResourceCopyVo.setAssignOrganList(assignOrganList);
         dataResourceCopyVo.setFieldList(new ArrayList<>());
         if (dataResource.getIsDel()!=null && dataResource.getIsDel()!=0) {
             dataResourceCopyVo.setIsDel(dataResource.getIsDel());

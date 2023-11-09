@@ -23,7 +23,10 @@ public class DataResource {
      */
     private String resourceDesc;
     /**
-     * 授权类型 1.公开 2.私有
+     * 授权类型 1.公开 2.私有 3.授权使用
+     * 公开：所有机构及用户无需授权即可使用
+     * 私有：对外部机构不可见，但是可以单独授权（不可见即不可申请）
+     * 授权使用：对所有机构及用户可见，
      */
     private Integer resourceAuthType;
     /**

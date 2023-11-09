@@ -3,6 +3,9 @@ package com.primihub.biz.entity.data.req;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * 分页、条件信息
+ */
 @Data
 public class DataResourceReq extends PageReq{
     /**

@@ -2,6 +2,9 @@ package com.primihub.biz.entity.sys.param;
 
 import lombok.Data;
 
+/**
+ * 查询用户列表参数
+ */
 @Data
 public class FindUserPageParam {
     /**

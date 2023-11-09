@@ -12,19 +12,21 @@ import java.util.List;
  **/
 @Getter
 public enum RoleTypeEnum {
-    ORGAN_ADMIN("机构管理员"),
-    PLAIN_USER("普通用户");
+    ORGAN_ADMIN(1, "机构管理员"),
+    PLAIN_USER(2, "普通用户");
 
+    private final Integer roleCode;
     private final String roleName;
 
-    RoleTypeEnum(String roleName) {
+    RoleTypeEnum(Integer roleCode, String roleName) {
+        this.roleCode = roleCode;
         this.roleName = roleName;
     }
 
-    public static final List<String> ROLE_TYPE_LIST = new ArrayList<String>(){
+    public static final List<Integer> ROLE_TYPE_CODE_LIST = new ArrayList<Integer>(){
         {
             for (RoleTypeEnum e:RoleTypeEnum.values()){
-                add(e.name());
+                add(e.getRoleCode());
             }
         }
     };

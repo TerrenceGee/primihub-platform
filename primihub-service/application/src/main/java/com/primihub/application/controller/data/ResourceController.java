@@ -25,7 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
- * 资源管理
+ * 数据资源管理
  */
 @RequestMapping("resource")
 @RestController
@@ -57,6 +57,12 @@ public class ResourceController {
         return dataResourceService.getDataResourceList(req,userId);
     }
 
+    /**
+     * 获取机构资源列表
+     * @param userId
+     * @param req 分页、条件信息
+     * @return
+     */
     @GetMapping("getdataresourcelistbyorgan")
     public BaseResultEntity getDataResourceListByOrgan(@RequestHeader("userId") Long userId,
                                                        DataResourceReq req){
@@ -68,11 +74,21 @@ public class ResourceController {
         return dataResourceService.getDataResourceListByOrgan(req,userId);
     }
 
+    /**
+     * 获取衍生数据列表
+     * @param req 分页、条件信息
+     * @return
+     */
     @GetMapping("getDerivationResourceList")
     public BaseResultEntity getDerivationResourceList(DerivationResourceReq req){
         return dataResourceService.getDerivationResourceList(req);
     }
 
+    /**
+     * 获取衍生数据
+     * @param req
+     * @return
+     */
     @GetMapping("getDerivationResourceData")
     public BaseResultEntity getDerivationResourceData(DerivationResourceReq req){
         if (req.getResourceId() == null || req.getResourceId() ==0L) {
@@ -90,6 +106,7 @@ public class ResourceController {
     @PostMapping("saveorupdateresource")
     public BaseResultEntity saveDataResource(@RequestBody DataResourceReq req,
                                              @RequestHeader("userId") Long userId){
+        // update
         if (req.getResourceId()!=null&&req.getResourceId()!=0L){
             if ((req.getResourceName()==null|| "".equals(req.getResourceName().trim()))
                     &&(req.getResourceDesc()==null|| "".equals(req.getResourceDesc().trim()))
@@ -103,7 +120,9 @@ public class ResourceController {
                 return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"resourceAuthType");
             }
             return dataResourceService.editDataResource(req,userId);
-        }else {
+        }
+        // save
+        else {
             if (req.getResourceName()==null|| "".equals(req.getResourceName().trim())){
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceName");
             }
@@ -178,7 +197,7 @@ public class ResourceController {
 
     /**
      * 删除一个资源信息
-     * @param resourceId
+     * @param resourceId 资源Id
      * @return
      */
     @GetMapping("deldataresource")
@@ -189,6 +208,12 @@ public class ResourceController {
         return dataResourceService.deleteDataResource(resourceId);
     }
 
+    /**
+     * 资源文件预览
+     * @param fileId 文件Id
+     * @param resourceId 资源Id
+     * @return
+     */
     @RequestMapping("resourceFilePreview")
     public BaseResultEntity resourceFilePreview(Long fileId,String resourceId){
         if (StringUtils.isBlank(resourceId)){
@@ -202,7 +227,7 @@ public class ResourceController {
 
     /**
      * 获取资源文件字段
-     * @param resourceId
+     * @param resourceId 资源Id
      * @return
      */
     @RequestMapping("getDataResourceFieldPage")
@@ -238,6 +263,12 @@ public class ResourceController {
     }
 
 
+    /**
+     * 修改数据资源状态
+     * @param resourceId 资源Id
+     * @param resourceState 资源状态
+     * @return
+     */
     @RequestMapping("resourceStatusChange")
     public BaseResultEntity resourceStatusChange(Long resourceId,Integer resourceState){
         if (resourceId==null||resourceId==0L){
@@ -252,11 +283,20 @@ public class ResourceController {
         return dataResourceService.resourceStatusChange(resourceId,resourceState);
     }
 
+    /**
+     * 展示的数据源类型
+     * @return
+     */
     @RequestMapping("displayDatabaseSourceType")
     public BaseResultEntity displayDatabaseSourceType(){
         return dataResourceService.displayDatabaseSourceType();
     }
 
+    /**
+     * 注册资源
+     * @param resourceId 资源Id
+     * @return
+     */
     @PostMapping("noticeResource")
     public BaseResultEntity noticeResource(String resourceId){
         if (StringUtils.isBlank(resourceId)){
@@ -265,6 +305,12 @@ public class ResourceController {
         return dataResourceService.noticeResource(resourceId);
     }
 
+    /**
+     * 下载文件
+     * @param response
+     * @param resourceId 资源Id
+     * @throws Exception
+     */
     @RequestMapping("download")
     public void download(HttpServletResponse response, Long resourceId) throws Exception{
         DataResource dataResource = dataResourceService.getDataResourceUrl(resourceId);
@@ -303,6 +349,35 @@ public class ResourceController {
     }
 
 
+    /**
+     *
+     * @param userId
+     * @param roleType
+     * @param resourceId
+     * @param req
+     * @return
+     */
+    @GetMapping("getDataSourceUsagePage")
+    public BaseResultEntity getDataSourceUsagePage(@RequestHeader("userId") Long userId,
+                                                   @RequestHeader("roleType")Integer roleType,
+                                                   Long resourceId,
+                                                   PageReq req) {
+        if (resourceId==null||resourceId==0L){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
+        }
+        return dataResourceService.getDataSourceUsagePage(resourceId,req);
+    }
+
+    @GetMapping("getDataSourceAssignmentPage")
+    public BaseResultEntity getDataSourceAssignmentPage(@RequestHeader("userId") Long userId,
+                                                        @RequestHeader("roleType")Integer roleType,
+                                                        Long resourceId,
+                                                        PageReq req) {
+        if (resourceId==null||resourceId==0L){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
+        }
+        return dataResourceService.findDataResourceAssignmentPage(resourceId, req);
+    }
 
 
 }

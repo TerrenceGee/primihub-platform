@@ -2,6 +2,9 @@ package com.primihub.biz.entity.sys.param;
 
 import lombok.Data;
 
+/**
+ * 保存或修改用户信息
+ */
 @Data
 public class SaveOrUpdateUserParam {
     /**
@@ -40,8 +43,12 @@ public class SaveOrUpdateUserParam {
      * 验证码
      */
     private String verificationCode;
-
+    /**
+     * 认证公钥
+     */
     private String authPublicKey;
-
+    /**
+     * 认证随机数
+     */
     private String authUuid;
 }

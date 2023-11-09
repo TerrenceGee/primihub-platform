@@ -83,6 +83,11 @@ public class DataResourceCopyVo {
     private List<String> authOrganList;
 
     /**
+     * 授权机构
+     */
+    private List<String> assignOrganList;
+
+    /**
      * 资源字段列表
      */
     private List<DataResourceFieldCopyVo> fieldList;
