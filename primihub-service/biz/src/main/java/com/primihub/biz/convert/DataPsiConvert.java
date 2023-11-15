@@ -8,6 +8,7 @@ import com.primihub.biz.entity.data.req.DataPsiReq;
 import com.primihub.biz.entity.data.vo.DataPsiVo;
 import com.primihub.biz.entity.data.vo.PsiTaskVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
+import com.primihub.biz.entity.sys.po.SysUser;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.LinkedHashMap;
@@ -51,7 +52,7 @@ public class DataPsiConvert {
 
     }
 
-    public static DataPsiVo DataPsiConvertVo(DataPsiTask task, DataPsi dataPsi, DataResource dataResource, Map<String, Object> otherDataResource, SysLocalOrganInfo sysLocalOrganInfo, DataTask dataTask, List<LinkedHashMap<String, Object>> dataList, String teeOrganName) {
+    public static DataPsiVo DataPsiConvertVo(DataPsiTask task, DataPsi dataPsi, DataResource dataResource, Map<String, Object> otherDataResource, SysLocalOrganInfo sysLocalOrganInfo, DataTask dataTask, List<LinkedHashMap<String, Object>> dataList, String teeOrganName, SysUser user) {
         DataPsiVo dataPsiVo = new DataPsiVo();
         dataPsiVo.setId(task.getId());
         dataPsiVo.setOwnOrganId(dataPsi.getOwnOrganId());
@@ -92,6 +93,11 @@ public class DataPsiConvert {
         dataPsiVo.setTaskName(dataTask.getTaskName());
         dataPsiVo.setTeeOrganId(dataPsi.getTeeOrganId());
         dataPsiVo.setTeeOrganName(teeOrganName);
+
+        dataPsiVo.setUserId(dataPsi.getUserId());
+        if (user != null) {
+            dataPsiVo.setUserName(user.getUserName());
+        }
         return dataPsiVo;
     }
 }

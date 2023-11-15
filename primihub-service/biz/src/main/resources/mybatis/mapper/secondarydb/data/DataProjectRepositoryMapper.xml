@@ -205,6 +205,9 @@
         <if test="queryType==2">
             and created_organ_id != #{ownOrganId}
         </if>
+        <if test="queryType==3">
+            and created_user_id = #{userId}
+        </if>
         <if test="projectName!=null and projectName!=''"> and project_name like CONCAT('%',#{projectName,jdbcType=VARCHAR},'%')</if>
         <if test="status!=null">
             <choose>

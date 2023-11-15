@@ -150,4 +150,13 @@ public class DataPsiVo {
         }
         return 0L;
     }
+
+    /**
+     * 发起人Id
+     */
+    private Long userId;
+    /**
+     * 发起人名字
+     */
+    private String userName;
 }

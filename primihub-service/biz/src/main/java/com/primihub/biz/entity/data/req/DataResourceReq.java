@@ -64,4 +64,10 @@ public class DataResourceReq extends PageReq{
 
     private DataResourceAssignReq dataResourceAssign;
 
+    /**
+     * 0 个人资源列表
+     * 1 机构资源列表
+     */
+    private Integer queryType;
+
 }

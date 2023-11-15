@@ -50,8 +50,9 @@ public class ResourceController {
      */
     @GetMapping("getdataresourcelist")
     public BaseResultEntity getDataResourceList(@RequestHeader("userId") Long userId,
+                                                @RequestHeader("roleType") Integer roleType,
                                                 DataResourceReq req){
-        return dataResourceService.getDataResourceList(req,userId);
+        return dataResourceService.getDataResourceList(req,userId, roleType);
     }
 
     /**
@@ -406,7 +407,6 @@ public class ResourceController {
     }
 
     /**
-     * todo 11.15日
      * 可申请的资源
      */
     @GetMapping("getDataResourceToApply")

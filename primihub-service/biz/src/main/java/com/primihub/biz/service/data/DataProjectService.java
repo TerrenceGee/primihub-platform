@@ -168,7 +168,21 @@ public class DataProjectService {
         return true;
     }
 
-    public BaseResultEntity getProjectList(DataProjectQueryReq req) {
+    /**
+     * 查询项目列表
+     * @param req
+     * @param userId
+     * @param roleType
+     * @return
+     */
+    public BaseResultEntity getProjectList(DataProjectQueryReq req, Long userId, Integer roleType) {
+        // 普通用户不能查询机构的项目
+        if (req.getQueryType() != 3 && roleType == 2) {
+            return BaseResultEntity.failure(BaseResultEnum.NO_AUTH, "无权限查看机构的项目");
+        }
+        if (req.getQueryType() == 3) {
+            req.setUserId(userId);
+        }
         req.setOwnOrganId(organConfiguration.getSysLocalOrganId());
         List<DataProject> dataProjects = dataProjectRepository.selectDataProjectPage(req);
         if (dataProjects.isEmpty()) {

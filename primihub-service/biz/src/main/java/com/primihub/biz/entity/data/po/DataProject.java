@@ -51,7 +51,10 @@ public class DataProject {
      * 创建者名称
      */
     private String createdUsername;
-
+    /**
+     * 创建者Id
+     */
+    private Long createdUserId;
     /**
      * 资源数
      */

@@ -74,6 +74,7 @@ public class DataProjectConvert {
         dataProjectDetailsVo.setProjectId(dataProject.getProjectId());
         dataProjectDetailsVo.setProjectName(dataProject.getProjectName());
         dataProjectDetailsVo.setProjectDesc(dataProject.getProjectDesc());
+        dataProjectDetailsVo.setUserId(dataProject.getCreatedUserId());
         dataProjectDetailsVo.setUserName(dataProject.getCreatedUsername());
         dataProjectDetailsVo.setStatus(dataProject.getStatus());
         dataProjectDetailsVo.setCreateDate(dataProject.getCreateDate());

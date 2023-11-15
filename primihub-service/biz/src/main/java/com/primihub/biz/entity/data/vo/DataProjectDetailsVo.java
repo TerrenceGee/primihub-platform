@@ -30,6 +30,10 @@ public class DataProjectDetailsVo {
      */
     private Boolean creator = false;
     /**
+     * 创建者Id
+     */
+    private Long userId;
+    /**
      * 创建者名称
      */
     private String userName;

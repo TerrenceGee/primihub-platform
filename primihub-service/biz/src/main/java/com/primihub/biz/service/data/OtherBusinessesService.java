@@ -227,7 +227,7 @@ public class OtherBusinessesService {
                 param.setPageNo(req.getPageNo());
                 param.setPageSize(req.getPageSize());
                 log.info(JSONObject.toJSONString(param));
-                BaseResultEntity resultEntity= fusionResourceService.getResourceList(param);
+                BaseResultEntity resultEntity= fusionResourceService.getResourceListOrgan(param);
                 return BaseResultEntity.success(resultEntity.getResult());
             }catch (Exception e){
                 log.info("元数据资源数据异常:{}",e.getMessage());

@@ -13,11 +13,14 @@ import com.primihub.biz.entity.data.vo.DataOrganPsiTaskVo;
 import com.primihub.biz.entity.data.vo.DataPsiTaskVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
+import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.repository.primarydb.data.DataPsiPrRepository;
+import com.primihub.biz.repository.primarydb.sys.SysUserPrimarydbRepository;
 import com.primihub.biz.repository.secondarydb.data.DataPsiRepository;
 import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
+import com.primihub.biz.repository.secondarydb.sys.SysUserSecondarydbRepository;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +53,8 @@ public class DataPsiService {
     private OrganConfiguration organConfiguration;
     @Autowired
     private SysOrganSecondarydbRepository sysOrganSecondarydbRepository;
+    @Autowired
+    private SysUserSecondarydbRepository sysUserSecondarydbRepository;
 
 
     public BaseResultEntity getPsiResourceList(DataResourceReq req) {
@@ -175,6 +180,11 @@ public class DataPsiService {
         if (dataTask == null){
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"未查询到任务详情");
         }
+        SysUser sysUser = null;
+        if (dataTask.getTaskUserId() != null) {
+            sysUser = sysUserSecondarydbRepository.selectSysUserByUserId(dataTask.getTaskUserId());
+        }
+
         DataResource dataResource = dataResourceRepository.queryDataResourceByResourceFusionId(dataPsi.getOwnResourceId());
         if (dataResource==null){
             dataResource = dataResourceRepository.queryDataResourceById(Long.valueOf(dataPsi.getOwnResourceId()));
@@ -203,7 +213,7 @@ public class DataPsiService {
             }
         }
         SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
-        return BaseResultEntity.success(DataPsiConvert.DataPsiConvertVo(task,dataPsi,dataResource,otherDataResource,sysLocalOrganInfo,dataTask,list,teeOrganName));
+        return BaseResultEntity.success(DataPsiConvert.DataPsiConvertVo(task,dataPsi,dataResource,otherDataResource,sysLocalOrganInfo,dataTask,list,teeOrganName, sysUser));
     }
 
     public DataPsiTask selectPsiTaskById(Long taskId){

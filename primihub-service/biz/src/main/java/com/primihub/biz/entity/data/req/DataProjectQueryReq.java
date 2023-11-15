@@ -10,9 +10,10 @@ import java.util.List;
 public class DataProjectQueryReq extends PageReq {
     /**
      * 查询类型
-     * 0 全部
+     * 0 全部，此字段无值，默认是0
      * 1 我发起的
      * 2 我协作的
+     * 3 机构下的
      */
     private Integer queryType = 0;
     /**
@@ -55,4 +56,8 @@ public class DataProjectQueryReq extends PageReq {
      * 结束时间
      */
     private String endDate;
+    /**
+     * 发起者Id
+     */
+    private Long userId;
 }

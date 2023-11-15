@@ -46,7 +46,10 @@ public class ProjectController {
      * @return
      */
     @RequestMapping("getProjectList")
-    public BaseResultEntity getProjectList(DataProjectQueryReq req){
+    public BaseResultEntity getProjectList(DataProjectQueryReq req,
+                                           @RequestHeader("userId") Long userId,
+                                           @RequestHeader("roleType") Integer roleType
+                                           ){
         try {
             if (StringUtils.isNotBlank(req.getStartDate())) {
                 DateUtil.parseDate(req.getStartDate(),DateUtil.DateStyle.TIME_FORMAT_NORMAL.getFormat());
@@ -57,7 +60,7 @@ public class ProjectController {
         }catch (Exception e){
             return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"开始时间或结束时间校验失败");
         }
-        return dataProjectService.getProjectList(req);
+        return dataProjectService.getProjectList(req, userId, roleType);
     }
 
     /**

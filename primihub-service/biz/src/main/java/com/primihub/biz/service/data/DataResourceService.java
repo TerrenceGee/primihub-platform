@@ -79,8 +79,6 @@ public class DataResourceService {
     private FusionResourceService fusionResourceService;
     @Autowired
     private TaskHelper taskHelper;
-    @Autowired
-    private DataTaskRepository dataTaskRepository;
 
     public BaseResultEntity getDataResourceList(DataResourceReq req, Long userId){
         Map<String,Object> paramMap = new HashMap<>();
@@ -96,6 +94,55 @@ public class DataResourceService {
         paramMap.put("userName",req.getUserName());
         paramMap.put("derivation",req.getDerivation());
         paramMap.put("fileContainsY",req.getFileContainsY());
+        List<DataResource> dataResources = dataResourceRepository.queryDataResource(paramMap);
+        if (dataResources.size()==0){
+            return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceCount(paramMap);
+        List<Long> resourceIds = new ArrayList<>();
+        Set<Long> userIds = new HashSet<>();
+        List<DataResourceVo> voList = dataResources.stream().map(vo->{
+            resourceIds.add(vo.getResourceId());
+            userIds.add(vo.getUserId());
+            return DataResourceConvert.dataResourcePoConvertVo(vo);
+        }).collect(Collectors.toList());
+        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds)
+                .stream()
+                .collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+        Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
+        for (DataResourceVo dataResourceVo : voList) {
+            SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
+            dataResourceVo.setUserName(sysUser==null?"":sysUser.getUserName());
+            dataResourceVo.setTags(resourceTagMap.get(dataResourceVo.getResourceId()));
+            dataResourceVo.setUrl("");
+        }
+        return BaseResultEntity.success(new PageDataEntity(count,req.getPageSize(),req.getPageNo(),voList));
+    }
+
+    public BaseResultEntity getDataResourceList(DataResourceReq req, Long userId, Integer roleType){
+        // 查询机构
+        if (req.getQueryType() == 1) {
+            // 需要有管事员权限
+            if (roleType != 1) {
+                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
+            }
+        }
+        Map<String,Object> paramMap = new HashMap<>();
+        paramMap.put("offset",req.getOffset());
+        paramMap.put("pageSize",req.getPageSize());
+        paramMap.put("resourceId",req.getResourceId());
+        paramMap.put("resourceAuthType",req.getResourceAuthType());
+        paramMap.put("resourceSource",req.getResourceSource());
+        paramMap.put("resourceName",req.getResourceName());
+        paramMap.put("tag",req.getTag());
+        paramMap.put("selectTag",req.getSelectTag());
+        paramMap.put("userName",req.getUserName());
+        paramMap.put("derivation",req.getDerivation());
+        paramMap.put("fileContainsY",req.getFileContainsY());
+        // 查询个人
+        if (req.getQueryType() == 0) {
+            paramMap.put("userId", userId);
+        }
         List<DataResource> dataResources = dataResourceRepository.queryDataResource(paramMap);
         if (dataResources.size()==0){
             return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
