@@ -123,8 +123,18 @@ public class DataPsiService {
         return BaseResultEntity.success(map);
     }
 
-    public BaseResultEntity getPsiTaskList(DataPsiQueryReq req) {
+    public BaseResultEntity getPsiTaskList(DataPsiQueryReq req, Long userId, Integer roleType) {
         log.info(JSONObject.toJSONString(req));
+        if (Objects.equals(req.getQueryType(), "USER")) {
+            // sql 添加参数
+            req.setUserId(userId);
+        }
+        if (Objects.equals(req.getQueryType(), "ORGAN")) {
+            // 查询机构下的全部 pir 任务
+            if (roleType != 1) {
+                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"没有机构权限");
+            }
+        }
         List<DataPsiTaskVo> dataPsiTaskVos = dataPsiRepository.selectPsiTaskPage(req);
         if (dataPsiTaskVos.size()==0){
             return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));

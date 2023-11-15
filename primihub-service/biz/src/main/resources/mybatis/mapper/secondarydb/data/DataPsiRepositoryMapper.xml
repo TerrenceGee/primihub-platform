@@ -15,14 +15,17 @@
             dt.task_end_time as taskEnd,
             dpt.task_state as taskState,
             dpt.ascription as ascription,
-            dpt.create_date as createDate
+            dpt.create_date as createDate,
+            dt.task_user_id as userId,
+            su.user_name as userName
         FROM
             data_psi dp,
             data_psi_task dpt,
             data_task dt
+        LEFT JOIN sys_user su ON dt.task_user_id = su.user_id
         WHERE
             dp.id = dpt.psi_id
-            and dpt.task_id = dt.task_id_name
+            and dpt.task_id = dt.task_id_name and dt.task_id_name
         <include refid="pageListWhere"/>
         ORDER BY dp.id desc
         LIMIT #{offset},#{pageSize}
@@ -34,6 +37,7 @@
             data_psi dp,
             data_psi_task dpt,
             data_task dt
+        LEFT JOIN sys_user su ON dt.task_user_id = su.user_id
         WHERE
             dp.id = dpt.psi_id
             and dpt.task_id = dt.task_id_name
@@ -47,6 +51,7 @@
          <if test="taskState!=null"> and dpt.task_state = #{taskState}</if>
         <if test="startDate!=null">and dpt.create_date &gt;=#{startDate} </if>
         <if test="endDate!=null">and dpt.create_date &lt;=#{endDate} </if>
+        <if test="userId!=null">and dp.task_user_id = #{userId}</if>
     </sql>
     <select id="selectOrganPsiTaskPage" resultType="com.primihub.biz.entity.data.vo.DataOrganPsiTaskVo">
         SELECT

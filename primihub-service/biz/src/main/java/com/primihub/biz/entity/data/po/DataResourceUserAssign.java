@@ -20,8 +20,8 @@ public class DataResourceUserAssign {
     private Long id;
     private Long resourceId;
     private String resourceFusionId;
+    private String organGlobalId;
     private Long userId;
-    private Integer isDel = 0;
     /**
      * 申请时间
      */
@@ -47,7 +47,6 @@ public class DataResourceUserAssign {
     private Date uTime;
 
     public DataResourceUserAssign(Long resourceId, String resourceGlobalId, Long userId) {
-        this.isDel = 0;
         this.resourceId = resourceId;
         this.resourceFusionId = resourceGlobalId;
         this.userId = userId;

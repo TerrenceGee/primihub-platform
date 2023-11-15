@@ -65,7 +65,12 @@ public class DataPirTaskVo {
         }
         return (taskEnd - taskStart)/1000;
     }
-
+    /**
+     * 发起人Id
+     */
     private Long userId;
+    /**
+     * 发起人名称
+     */
     private String userName;
 }

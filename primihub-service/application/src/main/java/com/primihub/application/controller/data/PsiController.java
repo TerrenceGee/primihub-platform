@@ -124,8 +124,12 @@ public class PsiController {
      * @return
      */
     @GetMapping("getPsiTaskList")
-    public BaseResultEntity getPsiTaskList(DataPsiQueryReq req){
-        return  dataPsiService.getPsiTaskList(req);
+    public BaseResultEntity getPsiTaskList(
+            DataPsiQueryReq req,
+            @RequestHeader("userId") Long userId,
+            @RequestHeader("roleType")Integer roleType
+    ){
+        return  dataPsiService.getPsiTaskList(req, userId, roleType);
     }
 
 

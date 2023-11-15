@@ -15,4 +15,5 @@ public class ResourceParam extends PageReq {
     private String tagName;
     private Integer fileContainsY;
     private String globalId;
+    private List<String> resourceFusionIds;
 }

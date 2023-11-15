@@ -58,4 +58,9 @@ public interface FusionResourceService {
     @GetMapping("/fusionResource/getDataResourceToApply")
     BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, Integer pageNo, Integer pageSize);
 
+    @RequestMapping("/fusionResource/getResourceListUser")
+    BaseResultEntity getResourceListUser(@RequestBody ResourceParam resourceParam);
+
+    @RequestMapping("/fusionResource/getResourceListOrgan")
+    BaseResultEntity getResourceListOrgan(@RequestBody ResourceParam resourceParam);
 }
