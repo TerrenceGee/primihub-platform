@@ -78,10 +78,13 @@
             dpt.resource_name resourceName,
             dpt.retrieval_id retrievalId,
             dpt.create_date createDate,
-            dt.task_state taskState
+            dt.task_state taskState,
+            dt.task_user_id userId,
+            su.user_name userName
         from
              data_pir_task dpt,
-             data_task dt
+             data_task dt,
+            sys_user su
         <include refid="selectDataPirTaskWhere"/>
         ORDER BY id desc
         LIMIT #{offset},#{pageSize}
@@ -91,7 +94,8 @@
             count(id)
         from
             data_pir_task dpt,
-            data_task dt
+            data_task dt,
+            sys_user su
         <include refid="selectDataPirTaskWhere"/>
     </select>
     <select id="selectDataTaskList" resultType="com.primihub.biz.entity.data.vo.DataTaskVo">
@@ -118,6 +122,7 @@
     <sql id="selectDataPirTaskWhere">
         where
         dpt.task_id = dt.task_id
+        and dt.task_user_id = su.user_id
         <if test="resourceName!=null and resourceName!=''"> and dpt.resource_name like CONCAT('%',#{resourceName,jdbcType=VARCHAR},'%')</if>
         <if test="taskId!=null and taskId!=''"> and dt.task_id_name like CONCAT('%',#{taskId,jdbcType=VARCHAR},'%')</if>
         <if test="organName!=null and organName!=''"> and dpt.provider_organ_name like CONCAT('%',#{organName,jdbcType=VARCHAR},'%')</if>
@@ -126,6 +131,7 @@
         <if test="taskName!=null"> and dt.task_name like CONCAT('%',#{taskName,jdbcType=VARCHAR},'%')</if>
         <if test="startDate!=null">and dpt.create_date &gt;=#{startDate} </if>
         <if test="endDate!=null">and dpt.create_date &lt;=#{endDate} </if>
+        <if test="userId!=null">and dt.task_user_id = #{userId}</if>
     </sql>
     <sql id="selectDataTaskListWhere">
         where is_del = 0

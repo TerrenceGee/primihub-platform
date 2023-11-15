@@ -39,6 +39,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.datetime.DateFormatterRegistrar;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
@@ -992,6 +993,145 @@ public class DataResourceService {
         }
         Integer count = dataResourceRepository.queryDataResourceAssignmentByResourceIdCount(resourceId);
         return BaseResultEntity.success(new PageDataEntity(count,req.getPageSize(),req.getPageNo(),dataResourceAssignmentListVoList));
+    }
+
+    public BaseResultEntity auditDataResourceApply(DataResourceApplyReq req) {
+        // 用户，只需要本地中处理
+        if (req.getAssignType() == 1) {
+            dataResourcePrRepository.updateDataResourceUserAssignment(req);
+            return BaseResultEntity.success();
+        }
+        // 机构，需要同步至 fusion
+        else if (req.getAssignType() == 2) {
+            dataResourcePrRepository.updateDataResourceOrganAssignment(req);
+            // 这里需要同步到 fusion
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(req.getResourceId(), req.getResourceId()));
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+            return null;
+
+        } else {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"授权类型不正确");
+        }
+    }
+
+    /**
+     * 授权给我的资源
+     * @param userId
+     * @param roleType
+     * @return
+     */
+    public BaseResultEntity getDataResourceAssignedToMe(Long userId, Integer roleType, PageReq req) {
+        // 1.机构管理员
+        if (roleType == 1) {
+            String sysLocalOrganId = organConfiguration.getSysLocalOrganId();
+            BaseResultEntity dataResourceOrganAssignment = fusionResourceService.getDataResourceOrganAssignment(sysLocalOrganId);
+            return dataResourceOrganAssignment;
+        }
+        // 2.普通用户
+        if (roleType == 2) {
+            Map<String, Object> paramMap = new HashMap<>();
+            paramMap.put("userId", userId);
+            paramMap.put("auditStatus", 1);
+            paramMap.put("offset", req.getOffset());
+            paramMap.put("pageSize", req.getOffset());
+            List<DataResource> dataResources = dataResourceRepository.findUserAssignByParam(paramMap);
+            if (dataResources.size() == 0) {
+                return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+            }
+            Integer count = dataResourceRepository.findUserAssignCountByParam(paramMap);
+            ArrayList<Object> resourceIds = new ArrayList<>();
+            Set<Long> userIds = new HashSet<>();
+            List<DataResourceVo> voList = dataResources.stream().map(vo -> {
+                resourceIds.add(vo.getResourceId());
+                userIds.add(vo.getUserId());
+                return DataResourceConvert.dataResourcePoConvertVo(vo);
+            }).collect(Collectors.toList());
+            Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds)
+                    .stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+            Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
+            voList.forEach(vo -> {
+                SysUser sysUser = sysUserMap.get(vo.getUserId());
+                vo.setUserName(sysUser==null?"":sysUser.getUserName());
+                vo.setTags(resourceTagMap.get(vo.getResourceId()));
+                vo.setUrl("");
+            });
+            return BaseResultEntity.success(new PageDataEntity(count, req.getPageSize(), req.getPageNo(), voList));
+        }
+        return BaseResultEntity.failure(BaseResultEnum.DATA_NO_MATCHING,"角色类型不正确");
+    }
+
+    public BaseResultEntity getDataResourceToApply(Long userId, Integer roleType, PageReq req) {
+        String sysLocalOrganId = organConfiguration.getSysLocalOrganId();
+        // 1.机构管理员
+        if (roleType == 1) {
+            return fusionResourceService.getDataResourceToApply(sysLocalOrganId);
+        }
+        // 2.普通用户
+        if (roleType == 2) {
+            // 分为两部分，1，机构内的数据源 2，机构外的数据源
+            // 内部也有两部分，分别是 内部用户上传+已授权给机构的
+            HashMap<String, Object> paramMap = new HashMap<>();
+            paramMap.put("offset", req.getOffset());
+            paramMap.put("pageSize", req.getPageSize());
+            paramMap.put("userId", userId);
+            List<DataResource> dataResourceList = dataResourceRepository.queryDataResourceOtherUser(paramMap);
+            if (dataResourceList.size() == 0) {
+                return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+            }
+            Integer count = dataResourceRepository.queryDataResourceOtherUserCount(paramMap);
+            return BaseResultEntity.success(new PageDataEntity(count.intValue(), req.getPageSize(), req.getPageNo(), dataResourceList));
+            // 过滤还没有获得授权的
+
+            // 机构已获得授权的
+            BaseResultEntity dataResourceOrganAssignment = fusionResourceService.getDataResourceOrganAssignment(sysLocalOrganId, req.getPageNo(), req.getPageSize());
+            return dataResourceOrganAssignment;
+            // 过滤还没有获得授权的
+        }
+        return BaseResultEntity.failure(BaseResultEnum.DATA_NO_MATCHING,"角色类型不正确");
+    }
+
+    public BaseResultEntity getDataResourceOfMine(Long userId, Integer roleType, DataResourceReq req) {
+        Map<String,Object> paramMap = new HashMap<>();
+        paramMap.put("offset",req.getOffset());
+        paramMap.put("pageSize",req.getPageSize());
+        paramMap.put("resourceId",req.getResourceId());
+        paramMap.put("resourceAuthType",req.getResourceAuthType());
+        paramMap.put("resourceSource",req.getResourceSource());
+        paramMap.put("resourceName",req.getResourceName());
+        paramMap.put("tag",req.getTag());
+        paramMap.put("selectTag",req.getSelectTag());
+        paramMap.put("userName",req.getUserName());
+        paramMap.put("derivation",req.getDerivation());
+        paramMap.put("fileContainsY",req.getFileContainsY());
+        // 1.机构管理员
+        if (roleType == 1) {}
+        // 2.普通用户
+        if (roleType == 2) {
+            paramMap.put("userId", userId);
+        }
+        List<DataResource> dataResources = dataResourceRepository.queryDataResource(paramMap);
+        if (dataResources.size()==0){
+            return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceCount(paramMap);
+        List<Long> resourceIds = new ArrayList<>();
+        Set<Long> userIds = new HashSet<>();
+        List<DataResourceVo> voList = dataResources.stream().map(vo->{
+            resourceIds.add(vo.getResourceId());
+            userIds.add(vo.getUserId());
+            return DataResourceConvert.dataResourcePoConvertVo(vo);
+        }).collect(Collectors.toList());
+        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds)
+                .stream()
+                .collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+        Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
+        for (DataResourceVo dataResourceVo : voList) {
+            SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
+            dataResourceVo.setUserName(sysUser==null?"":sysUser.getUserName());
+            dataResourceVo.setTags(resourceTagMap.get(dataResourceVo.getResourceId()));
+            dataResourceVo.setUrl("");
+        }
+        return BaseResultEntity.success(new PageDataEntity(count,req.getPageSize(),req.getPageNo(),voList));
     }
 }
 

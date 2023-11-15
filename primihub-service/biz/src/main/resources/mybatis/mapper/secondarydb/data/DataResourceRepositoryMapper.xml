@@ -101,6 +101,9 @@
         <if test="fileHandleField!=null and fileHandleField!=''">
             and cast(file_handle_field as char) = #{fileHandleField}
         </if>
+        <if test="userId!=null">
+            and user_id = #{userId}
+        </if>
     </sql>
 
     <select id="queryDataResourceById" resultType="com.primihub.biz.entity.data.po.DataResource">
@@ -408,7 +411,7 @@
         where resource_id = #{resourceId}
     </select>
 
-    <select id="findUserAssignByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+    <select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
         select id,
                resource_id     resourceId,
                organ_global_id organGlobalId,
@@ -473,6 +476,21 @@
                      '1'           assign_staus
               from data_resource_user_assign
               where resource_id = #{resourceId})
+    </select>
+
+    <select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select id,
+               resource_id     resourceId,
+               organ_global_id organGlobalId,
+               organ_name      organName,
+               user_id         userId,
+               user_name       userName,
+               user_account    userAccount,
+               is_del          isDel,
+               c_time          cTime,
+               u_time          uTime
+        from data_resource_user_assign
+        where resource_id = #{resourceId}
     </select>
 
 </mapper>

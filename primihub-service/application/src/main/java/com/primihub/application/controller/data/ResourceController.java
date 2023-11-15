@@ -7,10 +7,7 @@ import com.primihub.biz.entity.data.dataenum.DataResourceAuthType;
 import com.primihub.biz.entity.data.dataenum.ResourceStateEnum;
 import com.primihub.biz.entity.data.dataenum.SourceEnum;
 import com.primihub.biz.entity.data.po.DataResource;
-import com.primihub.biz.entity.data.req.DataResourceFieldReq;
-import com.primihub.biz.entity.data.req.DataResourceReq;
-import com.primihub.biz.entity.data.req.DerivationResourceReq;
-import com.primihub.biz.entity.data.req.PageReq;
+import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.service.data.DataResourceService;
 import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
@@ -379,5 +376,58 @@ public class ResourceController {
         return dataResourceService.findDataResourceAssignmentPage(resourceId, req);
     }
 
+    @PostMapping("auditDataResourceApply")
+    public BaseResultEntity auditDataResourceApply(@RequestHeader("userId") Long userId,
+                                                   @RequestHeader("roleType")Integer roleType,
+                                                   DataResourceApplyReq req
+                                                   ) {
+        if (req.getId()==null||req.getId()==0L){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"id");
+        }
+        if (req.getAssignType()==null||req.getAssignType()==1 || req.getAssignType()==2){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"assignType");
+        }
+        if (req.getOperation()==null||req.getOperation()==1 || req.getOperation()==2){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"operation");
+        }
+        return dataResourceService.auditDataResourceApply(req);
+    }
 
+
+    /**
+     * 授权给我的资源
+     */
+    @GetMapping("getDataResourceAssignedToMe")
+    public BaseResultEntity getDataResourceAssignedToMe(@RequestHeader("userId") Long userId,
+                                                        @RequestHeader("roleType") Integer roleType,
+                                                        PageReq req
+    ) {
+        return dataResourceService.getDataResourceAssignedToMe(userId, roleType, req);
+    }
+
+    /**
+     * todo 11.15日
+     * 可申请的资源
+     */
+    @GetMapping("getDataResourceToApply")
+    public BaseResultEntity getDataResourceToApply(@RequestHeader("userId") Long userId,
+                                                   @RequestHeader("roleType") Integer roleType,
+                                                   PageReq req
+    ) {
+        return dataResourceService.getDataResourceToApply(userId, roleType, req);
+    }
+
+
+    /**
+     * 我的资源
+     * @param userId
+     * @param req 分页、条件信息
+     * @return
+     */
+    @GetMapping("getDataResourceOfMine")
+    public BaseResultEntity getDataResourceOfMine(@RequestHeader("userId") Long userId,
+                                                       @RequestHeader("roleType") Integer roleType,
+                                                       DataResourceReq req){
+        return dataResourceService.getDataResourceOfMine(userId, roleType, req);
+    }
 }

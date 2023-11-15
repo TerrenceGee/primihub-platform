@@ -16,6 +16,10 @@ public class DataResourceAssignmentListVo {
      */
     private String assignType;
     /**
+     * id，可能是用户授权id，也有可能是机构授权id
+     */
+    private Long id;
+    /**
      * 授权的用户Id
      */
     private Long dataResourceAssignUserId;

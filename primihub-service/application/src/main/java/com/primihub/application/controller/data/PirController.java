@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 @RequestMapping("pir")
 @RestController
@@ -41,7 +43,10 @@ public class PirController {
         return pirService.pirSubmitTask(resourceId,pirParam,taskName);
     }
     @RequestMapping("getPirTaskList")
-    public BaseResultEntity getPirTaskList(DataPirTaskReq req){
+    public BaseResultEntity getPirTaskList(DataPirTaskReq req,
+                                           @RequestHeader("userId") Long userId,
+                                           @RequestHeader("roleType")Integer roleType
+                                           ){
         if (req.getTaskState()!=null){
             if(!TaskStateEnum.TASK_STATE_MAP.containsKey(req.getTaskState())) {
                 return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"taskState");
@@ -51,7 +56,10 @@ public class PirController {
             // Cancel mysql like _ Wildcard action
             req.setResourceName(req.getResourceName().replace("_","\\_"));
         }
-        return pirService.getPirTaskList(req);
+        if (req.getQueryType() == null|| !Arrays.asList("USER", "ORGAN").contains(req.getQueryType())) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"queryType");
+        }
+        return pirService.getPirTaskList(req, userId, roleType);
     }
 
     /**

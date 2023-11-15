@@ -65,4 +65,7 @@ public class DataPirTaskVo {
         }
         return (taskEnd - taskStart)/1000;
     }
+
+    private Long userId;
+    private String userName;
 }

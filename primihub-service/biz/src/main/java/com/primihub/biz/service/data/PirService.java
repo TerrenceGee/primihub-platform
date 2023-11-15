@@ -74,12 +74,22 @@ public class PirService {
         return BaseResultEntity.success(map);
     }
 
-    public BaseResultEntity getPirTaskList(DataPirTaskReq req) {
+    public BaseResultEntity getPirTaskList(DataPirTaskReq req, Long userId, Integer roleType) {
+        if (Objects.equals(req.getQueryType(), "USER")) {
+            // sql 添加参数
+            req.setUserId(userId);
+        }
+        if (Objects.equals(req.getQueryType(), "ORGAN")) {
+            // 查询机构下的全部 pir 任务
+            if (roleType != 1) {
+                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"没有机构权限");
+            }
+        }
         List<DataPirTaskVo> dataPirTaskVos = dataTaskRepository.selectDataPirTaskPage(req);
         if (dataPirTaskVos.isEmpty()) {
             return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
         }
-        Integer tolal = dataTaskRepository.selectDataPirTaskCount(req);
+        Integer total = dataTaskRepository.selectDataPirTaskCount(req);
         Map<String,LinkedHashMap<String, Object>> resourceMap= new HashMap<>();
         List<String> ids = dataPirTaskVos.stream().map(DataPirTaskVo::getResourceId).collect(Collectors.toList());
         BaseResultEntity baseResult = otherBusinessesService.getResourceListById(ids);
@@ -94,7 +104,7 @@ public class PirService {
                 DataTaskConvert.dataPirTaskPoConvertDataPirTaskVo(dataPirTaskVo,resourceMap.get(dataPirTaskVo.getResourceId()));
             }
         }
-        return BaseResultEntity.success(new PageDataEntity(tolal,req.getPageSize(),req.getPageNo(),dataPirTaskVos));
+        return BaseResultEntity.success(new PageDataEntity(total,req.getPageSize(),req.getPageNo(),dataPirTaskVos));
     }
 
     public BaseResultEntity getPirTaskDetail(Long taskId) {

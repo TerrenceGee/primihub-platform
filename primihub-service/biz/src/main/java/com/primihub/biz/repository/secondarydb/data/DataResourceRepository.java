@@ -73,4 +73,7 @@ public interface DataResourceRepository {
     List<DataResourceAssignmentListVo> queryDataResourceAssignmentListByResourceId(@Param("resourceId")Long resourceId);
 
     Integer queryDataResourceAssignmentByResourceIdCount(@Param("resourceId")Long resourceId);
+
+    List<DataResourceUserAssign> findUserAssignByParam(Map<String, Object> paramMap);
+    Integer findUserAssignCountByParam(Map<String,Object> paramMap);
 }
