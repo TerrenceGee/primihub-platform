@@ -2,6 +2,9 @@ package com.primihub.biz.entity.data.req;
 
 import lombok.Data;
 
+/**
+ * 模型任务查询参数
+ */
 @Data
 public class ModelTaskSuccessReq extends PageReq {
     private Long modelId;

@@ -150,12 +150,13 @@ public class ModelController {
      * @return
      */
     @RequestMapping("getModelTaskSuccessList")
-    public BaseResultEntity getModelTaskSuccessList(@RequestHeader("userId") Long userId,ModelTaskSuccessReq req){
+    public BaseResultEntity getModelTaskSuccessList(@RequestHeader("userId") Long userId,
+                                                    @RequestHeader("roleType") Integer roleType,
+                                                    ModelTaskSuccessReq req){
         if (userId==null||userId==0L) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"userId");
         }
-        req.setUserId(userId);
-        return dataModelService.getModelTaskSuccessList(req);
+        return dataModelService.getModelTaskSuccessList(req, userId, roleType);
     }
 
     @RequestMapping("saveOrUpdateComponentDraft")

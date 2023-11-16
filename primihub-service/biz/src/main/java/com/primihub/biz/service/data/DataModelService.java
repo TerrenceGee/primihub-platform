@@ -576,14 +576,18 @@ public class DataModelService {
     }
 
 
-    public BaseResultEntity getModelTaskSuccessList(ModelTaskSuccessReq req) {
+    public BaseResultEntity getModelTaskSuccessList(ModelTaskSuccessReq req, Long userId, Integer roleType) {
         if (StringUtils.isNotBlank(req.getStartDate())){
             req.setStartTime(DateUtil.parseDate(req.getStartDate(),DateUtil.DateStyle.DATE_FORMAT_NORMAL.getFormat()).getTime());
         }
         if (StringUtils.isNotBlank(req.getEndDate())){
             req.setEndTime(DateUtil.parseDate(req.getEndDate(),DateUtil.DateStyle.DATE_FORMAT_NORMAL.getFormat()).getTime());
         }
-        if (baseConfiguration.getAdminUserIds().contains(req.getUserId())) {
+        // 这里更换下管理员的判定方式
+//        if (baseConfiguration.getAdminUserIds().contains(req.getUserId())) {
+//            req.setIsAdmin(1);
+//        }
+        if (roleType == 1) {
             req.setIsAdmin(1);
         }
         List<ModelTaskSuccessVo> modelTaskSuccessVos = dataModelRepository.queryModelTaskSuccessList(req);
