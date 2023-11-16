@@ -2,6 +2,7 @@ package com.primihub.biz.service.feign;
 
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
+import com.primihub.biz.entity.data.po.DataResourceOrganAssign;
 import com.primihub.biz.entity.data.req.PageReq;
 import com.primihub.biz.entity.data.vo.DataResourceCopyVo;
 import com.primihub.biz.entity.fusion.param.OrganResourceParam;
@@ -55,6 +56,9 @@ public interface FusionResourceService {
     @GetMapping("/fusionResource/getDataResourceOrganAssignment")
     BaseResultEntity getDataResourceOrganAssignment(@RequestParam("organGlobalId") String organGlobalId, Integer pageNo, Integer pageSize);
 
+    @GetMapping("/fusionResource/getDataResourceOrganAssignment")
+    BaseResultEntity getDataResourceOrganAssignment(Map<String, Object> param);
+
     @GetMapping("/fusionResource/getDataResourceToApply")
     BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, Integer pageNo, Integer pageSize);
 
@@ -63,4 +67,8 @@ public interface FusionResourceService {
 
     @RequestMapping("/fusionResource/getResourceListOrgan")
     BaseResultEntity getResourceListOrgan(@RequestBody ResourceParam resourceParam);
+
+    @PostMapping("/fusionResource/saveResourceOrganAssignList")
+    BaseResultEntity saveDataResourceOrganAssignList(@RequestParam("globalId") String globalId, @RequestBody List<DataResourceOrganAssign> dataResourceOrganAssigns);
+
 }

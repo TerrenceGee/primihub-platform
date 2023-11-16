@@ -20,7 +20,10 @@ public class DataResourceUserAssign {
     private Long id;
     private Long resourceId;
     private String resourceFusionId;
-    private String organGlobalId;
+    /**
+     * 资源所属机构Id
+     */
+    private String resourceOrganId;
     private Long userId;
     /**
      * 申请时间
@@ -36,7 +39,7 @@ public class DataResourceUserAssign {
      * 授权状态
      * 0.申请 1.申请通过，由所有者直接授予 2.申请拒绝
      */
-    private Integer assignStatus;
+    private Integer auditStatus;
     /**
      * 创建时间
      */
@@ -46,9 +49,10 @@ public class DataResourceUserAssign {
      */
     private Date uTime;
 
-    public DataResourceUserAssign(Long resourceId, String resourceGlobalId, Long userId) {
+    public DataResourceUserAssign(Long resourceId, String resourceGlobalId, String resourceOrganId, Long userId) {
         this.resourceId = resourceId;
         this.resourceFusionId = resourceGlobalId;
+        this.resourceOrganId = resourceOrganId;
         this.userId = userId;
     }
 
