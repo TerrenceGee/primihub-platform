@@ -44,8 +44,11 @@ public class DataReasoningService {
 
 
 
-    public BaseResultEntity getReasoningList(ReasoningListReq req) {
-        if (baseConfiguration.getAdminUserIds().contains(req.getUserId())) {
+    public BaseResultEntity getReasoningList(ReasoningListReq req, Long userId, Integer roleType) {
+//        if (baseConfiguration.getAdminUserIds().contains(req.getUserId())) {
+//            req.setIsAdmin(1);
+//        }
+        if (roleType == 1) {
             req.setIsAdmin(1);
         }
         List<DataReasoningVo> dataReasonings = dataReasoningRepository.selectDataReasoninPage(req);

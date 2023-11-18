@@ -7,6 +7,7 @@ import com.primihub.biz.entity.data.vo.*;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,6 +75,13 @@ public interface DataResourceRepository {
 
     Integer queryDataResourceAssignmentByResourceIdCount(@Param("resourceId")Long resourceId);
 
-    List<DataResourceUserAssign> findUserAssignByParam(Map<String, Object> paramMap);
+    // todo
+    List<DataResource> findUserAssignByParam(Map<String, Object> paramMap);
     Integer findUserAssignCountByParam(Map<String,Object> paramMap);
+
+    // todo
+    List<DataResource> queryDataResourceOtherUser(HashMap<String, Object> paramMap);
+
+    // todo
+    Integer queryDataResourceOtherUserCount(HashMap<String, Object> paramMap);
 }

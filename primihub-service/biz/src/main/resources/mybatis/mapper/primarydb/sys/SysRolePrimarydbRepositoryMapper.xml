@@ -3,8 +3,8 @@
 <mapper namespace="com.primihub.biz.repository.primarydb.sys.SysRolePrimarydbRepository">
 
     <insert id="insertSysRole" keyProperty="roleId" useGeneratedKeys="true">
-        insert into sys_role(role_name,is_editable,is_del)
-        values(#{roleName},#{isEditable},#{isDel})
+        insert into sys_role(role_name,role_type,is_editable,is_del)
+        values(#{roleName},#{roleType},#{isEditable},#{isDel})
     </insert>
 
     <update id="updateSysRole">

@@ -478,7 +478,7 @@
               where resource_id = #{resourceId})
     </select>
 
-    <select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+    <!--<select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
         select id,
                resource_id     resourceId,
                organ_global_id organGlobalId,
@@ -491,6 +491,6 @@
                u_time          uTime
         from data_resource_user_assign
         where resource_id = #{resourceId}
-    </select>
+    </select>-->
 
 </mapper>

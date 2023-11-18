@@ -3,7 +3,7 @@ package com.primihub.application.controller.data;
 import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
-import com.primihub.biz.entity.data.dataenum.DataResourceAuthType;
+import com.primihub.biz.entity.data.dataenum.DataResourceAuthTypeEnum;
 import com.primihub.biz.entity.data.dataenum.ResourceStateEnum;
 import com.primihub.biz.entity.data.dataenum.SourceEnum;
 import com.primihub.biz.entity.data.po.DataResource;
@@ -96,7 +96,7 @@ public class ResourceController {
     }
 
     /**
-     * 增加或删除资源接口
+     * 增加或修改资源接口
      * @param req       资源信息
      * @param userId    用户id
      * @return
@@ -114,7 +114,7 @@ public class ResourceController {
                     &&(req.getTags()==null||req.getTags().size()==0)){
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"至少需要一个修改的字段");
             }
-            if(!DataResourceAuthType.AUTH_TYPE_MAP.containsKey(req.getResourceAuthType())) {
+            if(!DataResourceAuthTypeEnum.AUTH_TYPE_MAP.containsKey(req.getResourceAuthType())) {
                 return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"resourceAuthType");
             }
             return dataResourceService.editDataResource(req,userId);
@@ -130,7 +130,7 @@ public class ResourceController {
             if (req.getResourceAuthType()==null || req.getResourceAuthType()==0){
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceAuthType");
             }
-            if(!DataResourceAuthType.AUTH_TYPE_MAP.containsKey(req.getResourceAuthType())) {
+            if(!DataResourceAuthTypeEnum.AUTH_TYPE_MAP.containsKey(req.getResourceAuthType())) {
                 return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"resourceAuthType");
             }
             if (req.getResourceSource()==null || req.getResourceSource()<=0){

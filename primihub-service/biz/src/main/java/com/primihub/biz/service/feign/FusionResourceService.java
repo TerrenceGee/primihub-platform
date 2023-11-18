@@ -53,14 +53,14 @@ public interface FusionResourceService {
     @PostMapping("/fusionResource/batchSaveTestDataSet")
     BaseResultEntity batchSaveTestDataSet(@RequestBody List<DataSet> dataSets);
 
-    @GetMapping("/fusionResource/getDataResourceOrganAssignment")
-    BaseResultEntity getDataResourceOrganAssignment(@RequestParam("organGlobalId") String organGlobalId, Integer pageNo, Integer pageSize);
+//    @GetMapping("/fusionResource/getDataResourceOrganAssignment")
+//    BaseResultEntity getDataResourceOrganAssignment(@RequestParam("organGlobalId") String organGlobalId, Integer pageNo, Integer pageSize);
 
     @GetMapping("/fusionResource/getDataResourceOrganAssignment")
     BaseResultEntity getDataResourceOrganAssignment(Map<String, Object> param);
 
     @GetMapping("/fusionResource/getDataResourceToApply")
-    BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, Integer pageNo, Integer pageSize);
+    BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, @RequestParam("organGlobalId")Integer pageNo, @RequestParam("organGlobalId")Integer pageSize);
 
     @RequestMapping("/fusionResource/getResourceListUser")
     BaseResultEntity getResourceListUser(@RequestBody ResourceParam resourceParam);

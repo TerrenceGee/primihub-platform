@@ -2,6 +2,7 @@ package com.primihub.biz.repository.primarydb.data;
 
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.po.*;
+import com.primihub.biz.entity.data.req.DataResourceApplyReq;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -90,4 +91,9 @@ public interface DataResourcePrRepository {
 
     void deleteResourceUserAssignByResourceId(@Param("resourceId") Long resourceId);
 
+    // todo
+    void updateDataResourceUserAssignment(DataResourceApplyReq req);
+
+    // todo
+    void updateDataResourceOrganAssignment(DataResourceApplyReq req);
 }

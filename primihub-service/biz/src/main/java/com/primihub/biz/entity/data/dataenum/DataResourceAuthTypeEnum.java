@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
-public enum DataResourceAuthType {
+public enum DataResourceAuthTypeEnum {
     PUBLIC(1,"公开"),
     PRIVATE(2,"私有"),
     ASSIGN(3,"指定机构"),
@@ -14,15 +14,15 @@ public enum DataResourceAuthType {
     private Integer authType;
     private String desc;
 
-    public static Map<Integer, DataResourceAuthType> AUTH_TYPE_MAP=new HashMap(){
+    public static Map<Integer, DataResourceAuthTypeEnum> AUTH_TYPE_MAP=new HashMap(){
         {
-            for (DataResourceAuthType e:DataResourceAuthType.values()){
+            for (DataResourceAuthTypeEnum e: DataResourceAuthTypeEnum.values()){
                 put(e.authType,e);
             }
         }
     };
 
-    DataResourceAuthType(Integer authType, String desc) {
+    DataResourceAuthTypeEnum(Integer authType, String desc) {
         this.authType = authType;
         this.desc = desc;
     }

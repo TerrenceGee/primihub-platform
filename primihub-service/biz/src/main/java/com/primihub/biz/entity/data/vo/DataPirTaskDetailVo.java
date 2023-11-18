@@ -42,4 +42,10 @@ public class DataPirTaskDetailVo {
         }
         return (taskEndTime - taskStartTime)/1000;
     }
+    /**
+     * 发起人
+     */
+    private Long taskUserId;
+    private String taskUserAccount;
+    private String taskUserName;
 }

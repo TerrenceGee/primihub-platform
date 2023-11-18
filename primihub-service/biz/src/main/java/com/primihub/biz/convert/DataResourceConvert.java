@@ -32,7 +32,7 @@ public class DataResourceConvert {
         return vo;
     }
 
-    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, Long organId, SysFile sysFile){
+    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, String organId, SysFile sysFile){
         DataResource po = new DataResource();
         po.setResourceId(req.getResourceId());
         po.setResourceName(req.getResourceName());
@@ -55,7 +55,7 @@ public class DataResourceConvert {
         return po;
     }
 
-    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, Long organId){
+    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, String organId){
         DataResource po = new DataResource();
         po.setResourceId(req.getResourceId());
         po.setResourceName(req.getResourceName());
@@ -121,6 +121,35 @@ public class DataResourceConvert {
         vo.setResourceFusionId(po.getResourceFusionId());
         return vo;
     }
+    public static DataResourceVo dataResourcePoConvertVo(DataResource po, String organName){
+        DataResourceVo vo = new DataResourceVo();
+        vo.setCreateDate(po.getCreateDate());
+        vo.setDbId(po.getDbId());
+        vo.setFileId(po.getFileId());
+        vo.setFileSize(po.getFileSize());
+        vo.setFileSuffix(po.getFileSuffix());
+        vo.setFileColumns(po.getFileColumns());
+        vo.setFileRows(po.getFileRows());
+        vo.setFileHandleStatus(po.getFileHandleStatus());
+        vo.setFileContainsY(po.getFileContainsY());
+        vo.setFileYRows(po.getFileYRows());
+        vo.setFileYRatio(po.getFileYRatio());
+        vo.setOrganId(po.getOrganId());
+        vo.setOrganName(organName);
+        vo.setResourceAuthType(po.getResourceAuthType());
+        vo.setResourceSource(po.getResourceSource());
+        vo.setResourceDesc(po.getResourceDesc());
+        vo.setResourceName(po.getResourceName());
+        vo.setResourceId(po.getResourceId());
+        vo.setResourceNum(po.getResourceNum());
+        vo.setUserId(po.getUserId());
+        vo.setUrl(po.getUrl());
+        vo.setFileHandleField(StringUtils.isBlank(po.getFileHandleField())?new String[]{}:po.getFileHandleField().split(","));
+        vo.setResourceState(po.getResourceState());
+        vo.setResourceHashCode(po.getResourceHashCode());
+        vo.setResourceFusionId(po.getResourceFusionId());
+        return vo;
+    }
     public static DataFileFieldVo DataFileFieldPoConvertVo(DataFileField fileField){
         DataFileFieldVo dataFileFieldVo = new DataFileFieldVo();
         dataFileFieldVo.setFieldId(fileField.getFieldId());
@@ -170,7 +199,7 @@ public class DataResourceConvert {
         return vo;
     }
 
-    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String tags, List<String> authOrganList, List<DataFileField> fieldList, SysUser sysUser){
+    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String organName, String tags, List<String> authOrganList, List<DataFileField> fieldList, SysUser sysUser){
         DataResourceCopyVo dataResourceCopyVo = new DataResourceCopyVo();
         dataResourceCopyVo.setResourceId(dataResource.getResourceFusionId());
         dataResourceCopyVo.setResourceName(dataResource.getResourceName());
@@ -184,6 +213,7 @@ public class DataResourceConvert {
         dataResourceCopyVo.setResourceYRowsCount(dataResource.getFileYRows());
         dataResourceCopyVo.setResourceYRatio(dataResource.getFileYRatio());
         dataResourceCopyVo.setOrganId(organId);
+        dataResourceCopyVo.setOrganName(organName);
         dataResourceCopyVo.setResourceTag(tags);
         dataResourceCopyVo.setAuthOrganList(authOrganList);
         dataResourceCopyVo.setFieldList(new ArrayList<>());

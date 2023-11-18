@@ -2,6 +2,9 @@ package com.primihub.biz.entity.data.req;
 
 import lombok.Data;
 
+/**
+ * pir任务参数
+ */
 @Data
 public class DataPirTaskReq extends PageReq {
 

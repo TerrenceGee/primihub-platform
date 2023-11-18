@@ -6,6 +6,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
 
+/**
+ * 机构表
+ */
 @Data
 public class SysOrgan {
     private Long id;
@@ -14,6 +17,9 @@ public class SysOrgan {
     private String organName;
     private String organGateway;
     private String publicKey;
+    /**
+     * 审核状态 0待审核 1同意 2拒绝
+     */
     private Integer examineState;
     private String examineMsg;
     private Integer nodeState;
@@ -22,6 +28,9 @@ public class SysOrgan {
     private String country;
     private BigDecimal lat;
     private BigDecimal lon;
+    /**
+     * 是否启用 0启用 1禁用
+     */
     private Integer enable;
     private Integer identity = 1;
     private Integer isDel;

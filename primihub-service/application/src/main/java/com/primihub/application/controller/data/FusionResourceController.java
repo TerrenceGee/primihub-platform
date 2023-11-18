@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * fusion数据资源管理
+ */
 @RequestMapping("fusionResource")
 @RestController
 public class FusionResourceController {

@@ -76,6 +76,10 @@ public class DataResourceCopyVo {
      * 机构ID
      */
     private String organId;
+    /**
+     * 机构ID
+     */
+    private String organName;
 
     /**
      * 可见机构id

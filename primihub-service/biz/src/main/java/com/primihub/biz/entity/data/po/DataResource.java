@@ -97,7 +97,7 @@ public class DataResource {
     /**
      * 机构id
      */
-    private Long organId;
+    private String organId;
     /**
      * 资源标识路径
      */

@@ -3,7 +3,6 @@ package com.primihub.application.controller.data;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.req.DataReasoningReq;
-import com.primihub.biz.entity.data.req.PageReq;
 import com.primihub.biz.entity.data.req.ReasoningListReq;
 import com.primihub.biz.service.data.DataReasoningService;
 import org.apache.commons.lang.StringUtils;
@@ -18,17 +17,17 @@ public class ReasoningController {
     private DataReasoningService dataReasoningService;
 
     /**
-     * 获取模型列表
+     * 获取推理服务列表
      * @return
      */
     @GetMapping("getReasoningList")
     public BaseResultEntity getReasoningList(ReasoningListReq req,
-                                             @RequestHeader("userId") Long userId){
+                                             @RequestHeader("userId") Long userId,
+                                             @RequestHeader("roleType") Integer roleType){
         if (userId==null || userId==0L) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"userId");
         }
-        req.setUserId(userId);
-        return dataReasoningService.getReasoningList(req);
+        return dataReasoningService.getReasoningList(req, userId, roleType);
     }
     @PostMapping("saveReasoning")
     public BaseResultEntity saveReasoning(DataReasoningReq req,

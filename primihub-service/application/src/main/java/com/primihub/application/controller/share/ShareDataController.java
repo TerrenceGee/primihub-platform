@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 数据共享管理
+ */
 @RequestMapping("shareData")
 @RestController
 @Slf4j
@@ -67,6 +70,11 @@ public class ShareDataController {
         return dataModelService.syncModel(vo);
     }
 
+    /**
+     * 节点确认检验 接受方
+     * @param info
+     * @return
+     */
     @RequestMapping("apply")
     public BaseResultEntity applyForJoinNode(@RequestBody Map<String,Object> info){
         if (info==null){

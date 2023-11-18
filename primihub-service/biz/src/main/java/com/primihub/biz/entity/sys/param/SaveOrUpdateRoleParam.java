@@ -2,6 +2,9 @@ package com.primihub.biz.entity.sys.param;
 
 import lombok.Data;
 
+/**
+ * 添加或者修改角色参数
+ */
 @Data
 public class SaveOrUpdateRoleParam {
     /**
@@ -20,4 +23,8 @@ public class SaveOrUpdateRoleParam {
      * 取消授权的权限id
      */
     private Long[] cancelAuthArray;
+    /**
+     * 角色类型 1管理员 2普通用户
+     */
+    private Integer roleType;
 }

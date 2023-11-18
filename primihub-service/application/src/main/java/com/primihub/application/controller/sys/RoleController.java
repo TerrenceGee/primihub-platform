@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 角色管理
+ */
 @RequestMapping("role")
 @RestController
 public class RoleController {
@@ -16,6 +19,11 @@ public class RoleController {
     @Autowired
     private SysRoleService sysRoleService;
 
+    /**
+     * 添加或修改角色
+     * @param saveOrUpdateRoleParam
+     * @return
+     */
     @RequestMapping("saveOrUpdateRole")
     public BaseResultEntity saveOrUpdateRole(SaveOrUpdateRoleParam saveOrUpdateRoleParam){
         if(saveOrUpdateRoleParam.getRoleId()!=null){
@@ -42,6 +50,13 @@ public class RoleController {
         return sysRoleService.getRoleAuthTree(roleId);
     }
 
+    /**
+     * 查询角色列表
+     * @param roleName 角色名称
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @return
+     */
     @RequestMapping("findRolePage")
     public BaseResultEntity findRolePage(String roleName,
                                          @RequestParam(defaultValue = "1") Integer pageNum,

@@ -190,9 +190,17 @@ public class SysOrganService {
         return BaseResultEntity.success(organConfiguration.getSysLocalOrganInfo().getHomeMap());
     }
 
+    /**
+     * 作为发起方添加合作机构
+     * @param gateway
+     * @param publicKey
+     * @return
+     */
     public BaseResultEntity joiningPartners(String gateway, String publicKey) {
         SysOrgan sysOrgan = new SysOrgan();
-        sysOrgan.setExamineState(0);
+        // 可用状态 0待审核 1同意 2拒绝
+        // 改为不需要审核，直接连接，但是后续还是可以通过断开连接来断开
+        sysOrgan.setExamineState(1);
         sysOrgan.setEnable(0);
         sysOrgan.setApplyId(organConfiguration.generateUniqueCode());
         sysOrgan.setOrganGateway(gateway);
@@ -201,7 +209,9 @@ public class SysOrganService {
         Map<String,Object> map = new HashMap<>();
         map.put("organId",sysLocalOrganInfo.getOrganId());
         map.put("organName",sysLocalOrganInfo.getOrganName());
+        // 本方网关
         map.put("gateway",sysLocalOrganInfo.getGatewayAddress());
+        // 本方公钥
         map.put("publicKey",sysLocalOrganInfo.getPublicKey());
         if (sysLocalOrganInfo.getAddressInfo()!=null){
             map.put("country",sysLocalOrganInfo.getAddressInfo().getCountry());

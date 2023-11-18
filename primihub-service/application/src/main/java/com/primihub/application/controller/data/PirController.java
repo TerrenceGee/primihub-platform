@@ -21,6 +21,9 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.Arrays;
 
+/**
+ * pir 管理
+ */
 @RequestMapping("pir")
 @RestController
 @Slf4j
@@ -42,6 +45,14 @@ public class PirController {
         }
         return pirService.pirSubmitTask(resourceId,pirParam,taskName);
     }
+
+    /**
+     * 查询隐匿查询任务列表
+     * @param req
+     * @param userId 用户id
+     * @param roleType 角色类型
+     * @return
+     */
     @RequestMapping("getPirTaskList")
     public BaseResultEntity getPirTaskList(DataPirTaskReq req,
                                            @RequestHeader("userId") Long userId,

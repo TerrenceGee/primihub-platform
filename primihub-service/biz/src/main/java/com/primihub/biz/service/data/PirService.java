@@ -13,8 +13,10 @@ import com.primihub.biz.entity.data.po.DataTask;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskVo;
+import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
+import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class PirService {
     private DataTaskRepository dataTaskRepository;
     @Autowired
     private DataAsyncService dataAsyncService;
+    @Autowired
+    private SysUserService userService;
 
     public String getResultFilePath(String taskId,String taskDate){
         return new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append(taskDate).append("/").append(taskId).append(".csv").toString();
@@ -116,8 +120,8 @@ public class PirService {
         if (dataTask==null) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"未查询到任务详情");
         }
+
         DataPirTaskDetailVo vo = new DataPirTaskDetailVo();
-        List<LinkedHashMap<String, Object>> list = null;
         if (StringUtils.isNotEmpty(dataTask.getTaskResultPath())){
             vo.setList(FileUtil.getCsvData(dataTask.getTaskResultPath(), 50));
         }
@@ -132,6 +136,14 @@ public class PirService {
         vo.setCreateDate(dataTask.getCreateDate());
         vo.setTaskStartTime(dataTask.getTaskStartTime());
         vo.setTaskEndTime(dataTask.getTaskEndTime());
+        if (dataTask.getTaskUserId() != null) {
+            SysUser sysUser = userService.getSysUserById(dataTask.getTaskUserId());
+            if (sysUser != null) {
+                vo.setTaskUserId(dataTask.getTaskUserId());
+                vo.setTaskUserAccount(sysUser.getUserAccount());
+                vo.setTaskUserName(sysUser.getUserName());
+            }
+        }
         return BaseResultEntity.success(vo);
     }
 

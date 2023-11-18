@@ -27,7 +27,7 @@
     </select>
 
     <select id="selectRoleListByParam" resultType="com.primihub.biz.entity.sys.vo.SysRoleListVO">
-        select role_id roleId,role_name roleName,is_editable isEditable,is_del isDel,c_time cTime,u_time uTime from sys_role
+        select role_id roleId,role_name roleName,role_type roleType, is_editable isEditable,is_del isDel,c_time cTime,u_time uTime from sys_role
         <trim prefix="where" prefixOverrides="and">
             <if test="roleName != null and roleName!='' ">and role_name like CONCAT('%',#{roleName},'%')</if>
         </trim>

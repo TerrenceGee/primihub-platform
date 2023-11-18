@@ -8,11 +8,9 @@ import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.po.DataResourceUserAssign;
 import com.primihub.biz.entity.data.req.DataFResourceReq;
 import com.primihub.biz.entity.data.req.OrganResourceReq;
-import com.primihub.biz.entity.fusion.param.OrganResourceParam;
 import com.primihub.biz.entity.fusion.param.ResourceParam;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
-import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
 import com.primihub.biz.repository.secondarydb.data.DataResourceUserAssignRepository;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
@@ -171,6 +169,14 @@ public class OtherBusinessesService {
         return syncGatewayApiData(vo,gatewayAddressAndApi,publicKey,1);
     }
 
+    /**
+     * 发起方
+     * @param vo
+     * @param gatewayAddressAndApi
+     * @param publicKey
+     * @param i
+     * @return
+     */
     public BaseResultEntity syncGatewayApiData(Object vo,String gatewayAddressAndApi,String publicKey,int i){
         try {
             Object data;
@@ -262,6 +268,8 @@ public class OtherBusinessesService {
                 param.setTagName(req.getTagName());
                 param.setPageNo(req.getPageNo());
                 param.setPageSize(req.getPageSize());
+
+                // 额外带上已获取授权的列表
                 param.setResourceFusionIds(assignResourceIdList);
                 log.info(JSONObject.toJSONString(param));
                 BaseResultEntity resultEntity= fusionResourceService.getResourceListUser(param);

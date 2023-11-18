@@ -1,5 +1,6 @@
 package com.primihub.biz.service.sys;
 
+import com.primihub.biz.entity.sys.enumeration.RoleTypeEnum;
 import com.primihub.biz.repository.primarydb.sys.SysRolePrimarydbRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysRoleSecondarydbRepository;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -32,8 +33,15 @@ public class SysRoleService {
             if(saveOrUpdateRoleParam.getRoleName()==null) {
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"roleId");
             }
+            if (saveOrUpdateRoleParam.getRoleType() == null) {
+                return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "roleType");
+            }
+            if (!RoleTypeEnum.ROLE_TYPE_CODE_LIST.contains(saveOrUpdateRoleParam.getRoleType())) {
+                return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "roleType");
+            }
             sysRole=new SysRole();
             sysRole.setRoleName(saveOrUpdateRoleParam.getRoleName());
+            sysRole.setRoleType(saveOrUpdateRoleParam.getRoleType());
             sysRole.setIsEditable(1);
             sysRole.setIsDel(0);
             sysRolePrimarydbRepository.insertSysRole(sysRole);
@@ -46,10 +54,20 @@ public class SysRoleService {
             if(sysRole.getIsEditable().equals(0)) {
                 return BaseResultEntity.failure(BaseResultEnum.CAN_NOT_ALTER,"该记录是不可编辑状态");
             }
+            if(saveOrUpdateRoleParam.getRoleName()==null) {
+                return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"roleName");
+            }
+            if (saveOrUpdateRoleParam.getRoleType() == null ) {
+                return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "roleType");
+            }
+            if (!RoleTypeEnum.ROLE_TYPE_CODE_LIST.contains(saveOrUpdateRoleParam.getRoleType())) {
+                return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "roleType");
+            }
             Map paramMap=new HashMap(){
                 {
                     put("roleId",saveOrUpdateRoleParam.getRoleId());
                     put("roleName",saveOrUpdateRoleParam.getRoleName());
+                    put("roleType", saveOrUpdateRoleParam.getRoleType());
                 }
             };
             sysRolePrimarydbRepository.updateSysRole(paramMap);

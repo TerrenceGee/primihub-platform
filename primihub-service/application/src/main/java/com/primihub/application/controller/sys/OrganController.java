@@ -24,6 +24,10 @@ public class OrganController {
     @Autowired
     private SysOrganService sysOrganService;
 
+    /**
+     * 获取本地节点信息
+     * @return
+     */
     @RequestMapping("getLocalOrganInfo")
     public BaseResultEntity getLocalOrganInfo(){
         return sysOrganService.getLocalOrganInfo();
@@ -95,7 +99,7 @@ public class OrganController {
         return sysOrganService.changeOtherOrganInfo(changeOtherOrganInfoParam);
     }
     /**
-     * 审核申请的机构
+     * 审核机构连接申请
      * @param id                申请数字ID
      * @param examineState      审核状态    0再次申请 1同意 2拒绝
      * @param examineMsg        审核意见
