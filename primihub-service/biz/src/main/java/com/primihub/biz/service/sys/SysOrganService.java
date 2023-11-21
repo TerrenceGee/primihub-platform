@@ -322,15 +322,19 @@ public class SysOrganService {
         if (sysOrgan.getApplyId().contains(localOrganShortCode)&&sysOrgan.getExamineState()==0){
             return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"发起申请者不能进行审核");
         }
+        // 审核, 0就启用
         if (examineState!=0){
             if (sysOrgan.getEnable()!=0){
                 return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"机构禁用，请启用后再次申请！");
             }
-        }else {
+        }
+        // 申请
+        else {
             sysOrgan.setEnable(0);
             sysOrgan.setApplyId(organConfiguration.generateUniqueCode());
         }
-        sysOrgan.setExamineState(examineState);
+        // 自动同意
+        sysOrgan.setExamineState(1);
         if (StringUtils.isNotBlank(examineMsg)){
             sysOrgan.setExamineMsg(sysOrgan.getExamineMsg()+examineMsg+"\n");
         }

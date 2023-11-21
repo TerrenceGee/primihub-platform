@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
@@ -61,12 +62,15 @@ public class OrganController {
      * @return
      */
     @RequestMapping("joiningPartners")
-    public BaseResultEntity joiningPartners(String gateway,String publicKey){
+    public BaseResultEntity joiningPartners(String gateway, String publicKey){
         if (StringUtils.isBlank(gateway)) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"gateway");
         }
         if (StringUtils.isBlank(publicKey)) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"publicKey");
+        }
+        if (publicKey.contains(" ")) {
+            publicKey = publicKey.replace(" ", "+");
         }
         return sysOrganService.joiningPartners(gateway,publicKey);
     }
@@ -99,7 +103,8 @@ public class OrganController {
         return sysOrganService.changeOtherOrganInfo(changeOtherOrganInfoParam);
     }
     /**
-     * 审核机构连接申请
+     * 1.启用合作机构
+     * 2.审核意见（功能取消）
      * @param id                申请数字ID
      * @param examineState      审核状态    0再次申请 1同意 2拒绝
      * @param examineMsg        审核意见
@@ -120,7 +125,7 @@ public class OrganController {
     }
 
     /**
-     * 开启状态修改
+     * 开启状态修改，0启用 1禁用
      * @param id
      * @param status
      * @return
