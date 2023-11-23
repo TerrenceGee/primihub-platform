@@ -166,4 +166,24 @@
     <delete id="deleteResourceUserAssignByResourceId">
         delete from data_resource_user_assign where resource_id=#{resourceId}
     </delete>
+
+    <update id="updateDataResourceUserAssignment" parameterType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        update data_resource_user_assign
+        <set>
+            <if test="auditStatus!=null">audit_status= #{auditStatus},</if>
+            <if test="assignTime!=null">assign_time = #{assignTime},</if>
+            u_time = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateDataResourceVisibilityAuth" parameterType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
+        update data_resource_visibility_auth
+        <set>
+            <if test="auditStatus!=null">audit_status= #{auditStatus},</if>
+            <if test="assignTime!=null">assign_time = #{assignTime},</if>
+            u_time = now()
+        </set>
+        where id = #{id}
+    </update>
 </mapper>

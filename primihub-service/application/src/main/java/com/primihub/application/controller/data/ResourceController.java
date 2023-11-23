@@ -9,7 +9,6 @@ import com.primihub.biz.entity.data.dataenum.SourceEnum;
 import com.primihub.biz.entity.data.po.DataResource;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.service.data.DataResourceService;
-import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +29,6 @@ public class ResourceController {
 
     @Autowired
     private DataResourceService dataResourceService;
-    @Autowired
-    private SysUserService sysUserService;
 
     /**
      * 获取资源标签列表
@@ -55,22 +52,6 @@ public class ResourceController {
         return dataResourceService.getDataResourceList(req,userId, roleType);
     }
 
-    /**
-     * 获取机构资源列表
-     * @param userId
-     * @param req 分页、条件信息
-     * @return
-     */
-    @GetMapping("getdataresourcelistbyorgan")
-    public BaseResultEntity getDataResourceListByOrgan(@RequestHeader("userId") Long userId,
-                                                       DataResourceReq req){
-        // check that user is organ admin or not
-        Boolean flag = sysUserService.checkUserIsAdminOrNot(userId);
-        if (!flag) {
-            return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"role");
-        }
-        return dataResourceService.getDataResourceListByOrgan(req,userId);
-    }
 
     /**
      * 获取衍生数据列表
@@ -78,8 +59,18 @@ public class ResourceController {
      * @return
      */
     @GetMapping("getDerivationResourceList")
-    public BaseResultEntity getDerivationResourceList(DerivationResourceReq req){
-        return dataResourceService.getDerivationResourceList(req);
+    public BaseResultEntity getDerivationResourceList(DerivationResourceReq req,
+                                                      @RequestHeader("userId") Long userId,
+                                                      @RequestHeader("roleType") Integer roleType
+                                                      ){
+        // 查询机构
+        if (req.getQueryType() == 1) {
+            // 需要有管事员权限
+            if (roleType != 1) {
+                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
+            }
+        }
+        return dataResourceService.getDerivationResourceList(req, userId);
     }
 
     /**
@@ -346,27 +337,15 @@ public class ResourceController {
         response.getWriter().println(JSONObject.toJSONString(BaseResultEntity.failure(BaseResultEnum.DATA_DOWNLOAD_TASK_ERROR_FAIL,message)));
     }
 
-
     /**
-     *
+     * 数据授权情况
      * @param userId
      * @param roleType
      * @param resourceId
      * @param req
      * @return
      */
-    @GetMapping("getDataSourceUsagePage")
-    public BaseResultEntity getDataSourceUsagePage(@RequestHeader("userId") Long userId,
-                                                   @RequestHeader("roleType")Integer roleType,
-                                                   Long resourceId,
-                                                   PageReq req) {
-        if (resourceId==null||resourceId==0L){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
-        }
-        return dataResourceService.getDataSourceUsagePage(resourceId,req);
-    }
-
-    @GetMapping("getDataSourceAssignmentPage")
+   /* @GetMapping("getDataSourceAssignmentPage")
     public BaseResultEntity getDataSourceAssignmentPage(@RequestHeader("userId") Long userId,
                                                         @RequestHeader("roleType")Integer roleType,
                                                         Long resourceId,
@@ -375,8 +354,15 @@ public class ResourceController {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
         }
         return dataResourceService.findDataResourceAssignmentPage(resourceId, req);
-    }
+    }*/
 
+    /**
+     * 审核数据资源申请
+     * @param userId
+     * @param roleType
+     * @param req
+     * @return
+     */
     @PostMapping("auditDataResourceApply")
     public BaseResultEntity auditDataResourceApply(@RequestHeader("userId") Long userId,
                                                    @RequestHeader("roleType")Integer roleType,
@@ -388,8 +374,8 @@ public class ResourceController {
         if (req.getAssignType()==null||req.getAssignType()==1 || req.getAssignType()==2){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"assignType");
         }
-        if (req.getOperation()==null||req.getOperation()==1 || req.getOperation()==2){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"operation");
+        if (req.getAuditStatus()==null||req.getAuditStatus()==1 || req.getAuditStatus()==2){
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"auditStatus");
         }
         return dataResourceService.auditDataResourceApply(req);
     }
@@ -398,16 +384,17 @@ public class ResourceController {
     /**
      * 授权给我的资源
      */
-    @GetMapping("getDataResourceAssignedToMe")
+   /* @GetMapping("getDataResourceAssignedToMe")
     public BaseResultEntity getDataResourceAssignedToMe(@RequestHeader("userId") Long userId,
                                                         @RequestHeader("roleType") Integer roleType,
+                                                        Integer queryType,
                                                         PageReq req
     ) {
         return dataResourceService.getDataResourceAssignedToMe(userId, roleType, req);
-    }
+    }*/
 
     /**
-     * 可申请的资源
+     * 可申请的资源，todo 删除，可申请资源从数据中心获取
      */
     @GetMapping("getDataResourceToApply")
     public BaseResultEntity getDataResourceToApply(@RequestHeader("userId") Long userId,
@@ -418,16 +405,4 @@ public class ResourceController {
     }
 
 
-    /**
-     * 我的资源
-     * @param userId
-     * @param req 分页、条件信息
-     * @return
-     */
-    @GetMapping("getDataResourceOfMine")
-    public BaseResultEntity getDataResourceOfMine(@RequestHeader("userId") Long userId,
-                                                       @RequestHeader("roleType") Integer roleType,
-                                                       DataResourceReq req){
-        return dataResourceService.getDataResourceOfMine(userId, roleType, req);
-    }
 }

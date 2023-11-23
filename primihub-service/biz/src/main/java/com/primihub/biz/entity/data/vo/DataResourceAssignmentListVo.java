@@ -12,6 +12,10 @@ import java.util.Date;
 @Data
 public class DataResourceAssignmentListVo {
     /**
+     * 目标资源
+     */
+    private String resourceFusionId;
+    /**
      * 1.user   2.organ
      */
     private String assignType;
@@ -22,11 +26,15 @@ public class DataResourceAssignmentListVo {
     /**
      * 授权的用户Id
      */
-    private Long dataResourceAssignUserId;
+    private Long userId;
+    /**
+     * 授权的用户Id
+     */
+    private String userOrganId;
     /**
      * 授权的机构Id
      */
-    private Long dataResourceAssignOrganId;
+    private String organId;
     /**
      * 申请时间
      */

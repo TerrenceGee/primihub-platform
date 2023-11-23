@@ -120,7 +120,6 @@ public class PirService {
         if (dataTask==null) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"未查询到任务详情");
         }
-
         DataPirTaskDetailVo vo = new DataPirTaskDetailVo();
         if (StringUtils.isNotEmpty(dataTask.getTaskResultPath())){
             vo.setList(FileUtil.getCsvData(dataTask.getTaskResultPath(), 50));

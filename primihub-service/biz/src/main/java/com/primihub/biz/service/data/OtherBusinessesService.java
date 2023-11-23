@@ -233,13 +233,14 @@ public class OtherBusinessesService {
                 param.setPageNo(req.getPageNo());
                 param.setPageSize(req.getPageSize());
                 log.info(JSONObject.toJSONString(param));
-                BaseResultEntity resultEntity= fusionResourceService.getResourceListOrgan(param);
+                BaseResultEntity resultEntity= fusionResourceService.getDataResourceAvailableOfOrgan(param);
                 return BaseResultEntity.success(resultEntity.getResult());
             }catch (Exception e){
                 log.info("元数据资源数据异常:{}",e.getMessage());
                 return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
             }
         }
+        // 用户
         if (roleType == 2) {
             try{
                 List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();

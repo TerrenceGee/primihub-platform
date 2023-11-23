@@ -2,11 +2,14 @@ package com.primihub.biz.service.feign;
 
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
+import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.po.DataResourceOrganAssign;
 import com.primihub.biz.entity.data.req.PageReq;
+import com.primihub.biz.entity.data.vo.DataResourceAssignmentListVo;
 import com.primihub.biz.entity.data.vo.DataResourceCopyVo;
 import com.primihub.biz.entity.fusion.param.OrganResourceParam;
 import com.primihub.biz.entity.fusion.param.ResourceParam;
+import com.primihub.biz.entity.fusion.vo.FusionResourceVo;
 import com.primihub.biz.entity.sys.po.DataSet;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,8 @@ public interface FusionResourceService {
 
     @RequestMapping("/fusionResource/getResourceListById")
     BaseResultEntity getResourceListById(@RequestParam("resourceIdArray") List<String> resourceIdArray, @RequestParam("globalId") String globalId);
+    @RequestMapping("/fusionResource/getResourceListByIdList")
+    void getDataResourceByIdList(@RequestParam("resourceIdList")List<String> resourceFusionIds);
 
     @RequestMapping("/fusionResource/getResourceTagList")
     BaseResultEntity getResourceTagList();
@@ -71,4 +76,34 @@ public interface FusionResourceService {
     @PostMapping("/fusionResource/saveResourceOrganAssignList")
     BaseResultEntity saveDataResourceOrganAssignList(@RequestParam("globalId") String globalId, @RequestBody List<DataResourceOrganAssign> dataResourceOrganAssigns);
 
+    @GetMapping("/fusionResource/getDataResourceOrganAssignmentByResourceId")
+    List<DataResourceAssignmentListVo> getDataResourceOrganAssignmentByResourceId(@RequestParam("resourceFusionId") String resourceFusionId);
+
+    // ----------------------------------------------------------------------------------
+
+    @GetMapping("/fusionResource/getDataResourceAvailableOfOrgan")
+    BaseResultEntity<PageDataEntity> getDataResourceAvailableOfOrgan(ResourceParam param);
+
+    /**
+     * 用户可用
+     */
+    @GetMapping("/fusionResource/getDataResourceAvailableOfUser")
+    List getDataResourceAvailableOfUser(@RequestParam("resourceIdList") List<String> resourceIdList);
+
+    /**
+     * 机构已获得授权
+     */
+    @GetMapping("/fusionResource/getDataResourceAssignmentOfOrgan")
+    List getDataResourceAssignmentOfOrgan(@RequestParam("organId") String organId);
+
+    /**
+     * 用户已获得授权
+     */
+    @GetMapping("/fusionResource/getDataResourceAssignmentOfUser")
+    List getDataResourceAssignmentOfUser(@RequestParam("resourceIdList") List<String> resourceIdList);
+    /**
+     * 机构可申请的
+     */
+    @GetMapping("/fusionResource/getDataResourceToApplyOfOrgan")
+    List getDataResourceToApplyOfOrgan(@RequestParam("organId") String organId);
 }

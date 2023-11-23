@@ -26,7 +26,7 @@ public class DataResourceApplyReq {
     /**
      * 对应的操作，1是同意，2是拒绝
      */
-    private Integer operation;
+    private Integer auditStatus;
     /**
      * 授权通过时间
      */

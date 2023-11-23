@@ -10,13 +10,15 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 项目管理
+ */
 @RequestMapping("project")
 @RestController
 public class ProjectController {
 
     @Autowired
     private DataProjectService dataProjectService;
-
     @RequestMapping("getListStatistics")
     public BaseResultEntity getListStatistics(){
         return dataProjectService.getListStatistics();

@@ -11,6 +11,7 @@
         update sys_role
         <set>
             <if test="roleName!=null">role_name = #{roleName},</if>
+            <if test="roleType!=null">role_type = #{roleType},</if>
         </set>
         where role_id=#{roleId}
     </update>

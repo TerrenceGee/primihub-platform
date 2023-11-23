@@ -35,4 +35,13 @@ public class DerivationResourceReq extends PageReq {
      * 结尾时间
      */
     private String endDate;
+    /**
+     * 0 个人资源列表
+     * 1 机构资源列表
+     */
+    private Integer queryType;
+    /**
+     * userId
+     */
+    private Long userId;
 }

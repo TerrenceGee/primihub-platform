@@ -91,9 +91,8 @@ public interface DataResourcePrRepository {
 
     void deleteResourceUserAssignByResourceId(@Param("resourceId") Long resourceId);
 
-    // todo
-    void updateDataResourceUserAssignment(DataResourceApplyReq req);
+    // ------------------------
+    void updateDataResourceUserAssignment(DataResourceUserAssign userAssign);
 
-    // todo
-    void updateDataResourceOrganAssignment(DataResourceApplyReq req);
+    void updateDataResourceVisibilityAuth(DataResourceVisibilityAuth auth);
 }

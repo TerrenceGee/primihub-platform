@@ -21,7 +21,6 @@ public class FusionResourceController {
     private OtherBusinessesService otherBusinessesService;
 
     /**
-     * Pir选择合作方的资源列表
      *
      * @param req
      * @return

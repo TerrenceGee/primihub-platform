@@ -504,16 +504,6 @@ public class SysUserService {
         return BaseResultEntity.success(map);
     }
 
-    public Boolean checkUserIsAdminOrNot(Long userId) {
-        // check that user is organ admin or not
-        List<SysRole> sysRole = this.findUserRoleByUserId(userId);
-        if (sysRole == null) {
-            return false;
-        }
-        Set<Integer> collect = sysRole.stream().map(SysRole::getRoleType).collect(Collectors.toSet());
-        return collect.contains(RoleTypeEnum.ORGAN_ADMIN.getRoleCode());
-    }
-
     public List<SysRole> findUserRoleByUserId(Long userId) {
         SysUser sysUser = this.getSysUserById(userId);
         if (sysUser == null) {

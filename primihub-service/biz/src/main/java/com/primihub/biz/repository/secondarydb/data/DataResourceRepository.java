@@ -71,10 +71,6 @@ public interface DataResourceRepository {
 
     Integer queryDataResourceUsageCount(@Param("resourceId")Long resourceId);
 
-    List<DataResourceAssignmentListVo> queryDataResourceAssignmentListByResourceId(@Param("resourceId")Long resourceId);
-
-    Integer queryDataResourceAssignmentByResourceIdCount(@Param("resourceId")Long resourceId);
-
     // todo
     List<DataResource> findUserAssignByParam(Map<String, Object> paramMap);
     Integer findUserAssignCountByParam(Map<String,Object> paramMap);
@@ -84,4 +80,11 @@ public interface DataResourceRepository {
 
     // todo
     Integer queryDataResourceOtherUserCount(HashMap<String, Object> paramMap);
+
+    List<DataResourceAssignmentListVo> queryDataResourceUserAssignmentByResourceId(Long resourceId);
+
+    // --------------------------------------------------
+    DataResourceUserAssign queryDataResourceUserAssignmentById(@Param("id") Long id);
+
+    DataResourceVisibilityAuth queryDataResourceAuthById(@Param("id") Long id);
 }

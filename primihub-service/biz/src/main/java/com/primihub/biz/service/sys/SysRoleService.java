@@ -91,7 +91,7 @@ public class SysRoleService {
         if(cancelAuthArray!=null&&cancelAuthArray.length!=0){
             sysRolePrimarydbRepository.deleteSysRaBatch(cancelAuthArray,roleId);
         }
-
+        sysRole=sysRoleSecondarydbRepository.selectSysRoleByRoleId(roleId);
         Map map=new HashMap<>();
         map.put("sysRole",sysRole);
         return BaseResultEntity.success(map);

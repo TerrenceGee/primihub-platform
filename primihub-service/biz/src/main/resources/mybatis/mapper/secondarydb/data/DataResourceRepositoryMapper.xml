@@ -356,6 +356,9 @@
         <if test="endDate!=null and endDate!=''">
             and dr.create_date &lt;= #{endDate}
         </if>
+        <if test="userId!=null">
+            and dr.user_id = #{userId}
+        </if>
     </sql>
     <select id="queryDataFileFieldById" resultType="com.primihub.biz.entity.data.po.DataFileField">
         select field_id          as fieldId,
@@ -440,43 +443,6 @@
         </foreach>
     </select>
 
-    <select id="queryDataResourceAssignmentListByResourceId"
-            resultType="com.primihub.biz.entity.data.vo.DataResourceAssignmentListVo">
-        select organ_id      dataResourceAssignOrganId,
-               apply_time    applyTime,
-               assign_time   assignTime,
-               assign_status assignStatus,
-               '2'           assign_staus
-        from data_resource_organ_assign
-        where resource_id = #{resourceId}
-        union
-        select user_id       dataResourceAssignUserId,
-               apply_time    applyTime,
-               assign_time   assignTime,
-               assign_status assignStatus,
-               '1'           assign_staus
-        from data_resource_user_assign
-        where resource_id = #{resourceId}
-    </select>
-
-    <select id="queryDataResourceAssignmentByResourceIdCount" resultType="java.lang.Integer">
-        select count(resource_id)
-        from (select organ_id      dataResourceAssignOrganId,
-                     apply_time    applyTime,
-                     assign_time   assignTime,
-                     assign_status assignStatus,
-                     '2'           assign_staus
-              from data_resource_organ_assign
-              where resource_id = #{resourceId}
-              union
-              select user_id       dataResourceAssignUserId,
-                     apply_time    applyTime,
-                     assign_time   assignTime,
-                     assign_status assignStatus,
-                     '1'           assign_staus
-              from data_resource_user_assign
-              where resource_id = #{resourceId})
-    </select>
 
     <!--<select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
         select id,
@@ -492,5 +458,28 @@
         from data_resource_user_assign
         where resource_id = #{resourceId}
     </select>-->
+
+    <select id="queryDataResourceUserAssignmentByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select id                 id,
+               resource_fusion_id resourceFusionId,
+               user_id            userId,
+               audit_status       auditStatus,
+               assign_time        assignTime,
+               apply_time         applyTime,
+               c_time             cTime,
+               u_time             uTime
+        from data_resource_user_assign
+        where resource_id = #{resourceId}
+    </select>
+
+    <select id="queryDataResourceUserAssignmentById" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select * from data_resource_user_assign
+        where id = #{id}
+    </select>
+
+    <select id="queryDataResourceAuthById" resultType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
+        select * from data_resource_visibility_auth
+        where id = #{id}
+    </select>
 
 </mapper>
