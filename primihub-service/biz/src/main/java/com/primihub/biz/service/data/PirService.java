@@ -137,9 +137,9 @@ public class PirService {
         if (dataTask.getTaskUserId() != null) {
             SysUser sysUser = userService.getSysUserById(dataTask.getTaskUserId());
             if (sysUser != null) {
-                vo.setTaskUserId(dataTask.getTaskUserId());
-                vo.setTaskUserAccount(sysUser.getUserAccount());
-                vo.setTaskUserName(sysUser.getUserName());
+                vo.setUserId(dataTask.getTaskUserId());
+                vo.setUserAccount(sysUser.getUserAccount());
+                vo.setUserName(sysUser.getUserName());
             }
         }
         return BaseResultEntity.success(vo);

@@ -61,8 +61,8 @@ public interface FusionResourceService {
     BaseResultEntity getDataResourceOrganAssignment(Map<String, Object> param);
     @GetMapping("/fusionResource/getDataResourceToApply")
     BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, @RequestParam("organGlobalId")Integer pageNo, @RequestParam("organGlobalId")Integer pageSize);
-    @GetMapping("/fusionResource/getDataResourceOrganAssignmentByResourceId")
-    BaseResultEntity<PageDataEntity> getDataResourceOrganAssignmentByResourceId(String resourceFusionId, PageReq pageReq);
+//    @GetMapping("/fusionResource/getDataResourceOrganAssignmentByResourceId")
+//    BaseResultEntity<PageDataEntity> getDataResourceOrganAssignmentByResourceId(String resourceFusionId, PageReq pageReq);
 
     // ----------------------------------------------------------------------------------
     /** 用户可使用 */

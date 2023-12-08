@@ -10,6 +10,7 @@ import com.primihub.biz.entity.data.vo.DataProjectOrganVo;
 import com.primihub.biz.entity.data.vo.DataProjectResourceVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
+import com.primihub.biz.entity.sys.po.SysUser;
 import org.apache.commons.lang.StringUtils;
 
 import java.math.BigDecimal;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 public class DataProjectConvert {
 
-    public static DataProject dataProjectReqConvertPo(DataProjectReq req, SysLocalOrganInfo organInfo,String userName){
+    public static DataProject dataProjectReqConvertPo(DataProjectReq req, SysLocalOrganInfo organInfo, SysUser sysUser){
         DataProject dataProject = new DataProject();
         dataProject.setId(req.getId());
         dataProject.setProjectId(req.getProjectId());
@@ -27,7 +28,8 @@ public class DataProjectConvert {
         dataProject.setProjectDesc(req.getProjectDesc());
         dataProject.setCreatedOrganId(organInfo.getOrganId());
         dataProject.setCreatedOrganName(organInfo.getOrganName());
-        dataProject.setCreatedUsername(userName);
+        dataProject.setCreatedUserId(sysUser.getUserId());
+        dataProject.setCreatedUsername(sysUser.getUserName());
         dataProject.setResourceNum(0);
         dataProject.setProviderOrganNames("");
         dataProject.setStatus(0);

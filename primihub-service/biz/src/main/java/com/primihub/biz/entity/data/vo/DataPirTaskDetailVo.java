@@ -45,7 +45,7 @@ public class DataPirTaskDetailVo {
     /**
      * 发起人
      */
-    private Long taskUserId;
-    private String taskUserAccount;
-    private String taskUserName;
+    private Long userId;
+    private String userAccount;
+    private String userName;
 }

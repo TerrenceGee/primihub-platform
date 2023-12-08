@@ -3,7 +3,7 @@
 <mapper namespace="com.primihub.biz.repository.secondarydb.sys.SysRoleSecondarydbRepository">
 
     <select id="selectSysRoleByRoleId" resultType="com.primihub.biz.entity.sys.po.SysRole">
-        select role_id roleId,role_name roleName,is_editable isEditable,is_del isDel,c_time cTime,u_time uTime
+        select role_id roleId,role_name roleName,is_editable isEditable,is_del isDel,c_time cTime,u_time uTime, role_type roleType
         from sys_role where role_id=#{roleId} limit 1
     </select>
 

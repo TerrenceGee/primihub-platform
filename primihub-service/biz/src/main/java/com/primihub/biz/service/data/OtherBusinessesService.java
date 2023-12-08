@@ -326,13 +326,13 @@ public class OtherBusinessesService {
                 paramMap.put("userId", userId);
                 paramMap.put("auditStatus", 1); // 状态为同意申请
                 paramMap.put("organGlobalId", req.getOrganId());
-                List<DataResourceUserAssign> dataResourceUserAssigns = dataResourceUserAssignRepository.selectUserAssignRepository(paramMap);
-                if (dataResourceUserAssigns.size() == 0) {
+                List<DataResourceUserAssign> userAssignByParam = dataResourceRepository.findUserAssignByParam(paramMap);
+                if (userAssignByParam.size() == 0) {
                     return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
                 }
-                List<String> assignResourceIdList = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
-                Map<String, Long> userAssignMap = dataResourceUserAssigns.stream().collect(Collectors.toMap(DataResourceUserAssign::getResourceFusionId, DataResourceUserAssign::getOperateUserId));
-                Set<Long> userIdSet = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getOperateUserId).collect(Collectors.toSet());
+                List<String> assignResourceIdList = userAssignByParam.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
+                Map<String, Long> userAssignMap = userAssignByParam.stream().collect(Collectors.toMap(DataResourceUserAssign::getResourceFusionId, DataResourceUserAssign::getOperateUserId));
+                Set<Long> userIdSet = userAssignByParam.stream().map(DataResourceUserAssign::getOperateUserId).collect(Collectors.toSet());
 
                 List<SysUser> sysUsers = userSecondarydbRepository.selectSysUserByUserIdSet(userIdSet);
                 Map<Long, String> userMap = sysUsers.stream().collect(Collectors.toMap(SysUser::getUserId, SysUser::getUserName));

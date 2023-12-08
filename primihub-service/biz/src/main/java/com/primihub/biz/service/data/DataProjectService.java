@@ -73,7 +73,7 @@ public class DataProjectService {
         DataProject dataProject;
         if (req.getId()==null){
             SysUser sysUser = sysUserSecondarydbRepository.selectSysUserByUserId(userId);
-            dataProject = DataProjectConvert.dataProjectReqConvertPo(req,sysLocalOrganInfo,sysUser.getUserName());
+            dataProject = DataProjectConvert.dataProjectReqConvertPo(req,sysLocalOrganInfo,sysUser);
             if (StringUtils.isBlank(req.getProjectId())) {
                 dataProject.setProjectId(organConfiguration.generateUniqueCode());
             }

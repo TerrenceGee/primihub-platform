@@ -3,14 +3,20 @@ server:
 spring:
   application:
     name: platform
+  rabbitmq:
+    host: 192.168.99.43
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: 192.168.99.10:31048
         namespace: dev1
 nacos:
   config:
-    server-addr: localhost:8848
+    server-addr: 192.168.99.10:31048
     namespace: dev1
     max-retry: 3
     config-long-poll-timeout: 1000

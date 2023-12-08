@@ -390,13 +390,13 @@ public class ResourceController {
     /**
      * 可申请的资源，todo 删除，可申请资源从数据中心获取
      */
-    @GetMapping("getDataResourceToApply")
+    /*@GetMapping("getDataResourceToApply")
     public BaseResultEntity getDataResourceToApply(@RequestHeader("userId") Long userId,
                                                    @RequestHeader("roleType") Integer roleType,
                                                    PageReq req
     ) {
         return dataResourceService.getDataResourceToApply(userId, roleType, req);
-    }
+    }*/
 
     /**
      * 给资源授权，包括本方资源和已获得授权的合作方资源

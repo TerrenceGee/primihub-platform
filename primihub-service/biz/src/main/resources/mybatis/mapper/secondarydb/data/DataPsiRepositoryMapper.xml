@@ -45,13 +45,13 @@
     </select>
 
     <sql id="pageListWhere">
-        <if test="resultName!=null"> and dp.result_name like CONCAT('%',#{resultName},'%')</if>
-         <if test="organId!=null"> and dp.other_organ_id = #{organId}</if>
-         <if test="taskName!=null"> and dt.task_name like CONCAT('%',#{taskName},'%')</if>
+        <if test="resultName!=null and resultName!=''"> and dp.result_name like CONCAT('%',#{resultName},'%')</if>
+         <if test="organId!=null and organId!=''"> and dp.other_organ_id = #{organId}</if>
+         <if test="taskName!=null and taskName!=''"> and dt.task_name like CONCAT('%',#{taskName},'%')</if>
          <if test="taskState!=null"> and dpt.task_state = #{taskState}</if>
-        <if test="startDate!=null">and dpt.create_date &gt;=#{startDate} </if>
-        <if test="endDate!=null">and dpt.create_date &lt;=#{endDate} </if>
-        <if test="userId!=null">and dp.task_user_id = #{userId}</if>
+        <if test="startDate!=null and startDate!=''">and dpt.create_date &gt;=#{startDate} </if>
+        <if test="endDate!=null and endDate!=''">and dpt.create_date &lt;=#{endDate} </if>
+        <if test="userId!=null">and dt.task_user_id = #{userId}</if>
     </sql>
     <select id="selectOrganPsiTaskPage" resultType="com.primihub.biz.entity.data.vo.DataOrganPsiTaskVo">
         SELECT
