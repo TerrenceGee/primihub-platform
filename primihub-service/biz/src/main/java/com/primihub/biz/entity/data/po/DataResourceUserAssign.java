@@ -49,6 +49,15 @@ public class DataResourceUserAssign {
      */
     private Date uTime;
 
+    /**
+     * 授权人
+     * @param resourceId
+     * @param resourceGlobalId
+     * @param resourceOrganId
+     * @param userId
+     */
+    private Long operateUserId;
+
     public DataResourceUserAssign(Long resourceId, String resourceGlobalId, String resourceOrganId, Long userId) {
         this.resourceId = resourceId;
         this.resourceFusionId = resourceGlobalId;

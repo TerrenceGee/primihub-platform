@@ -45,4 +45,11 @@ public class FusionResourceController {
     public BaseResultEntity getResourceTagList() {
         return otherBusinessesService.getResourceTagList();
     }
+
+    @RequestMapping("getAssignedResourceList")
+    public BaseResultEntity getAssignedResourceList(DataFResourceReq req,
+                                                     @RequestHeader("userId") Long userId,
+                                                     @RequestHeader("roleType") Integer roleType) {
+        return otherBusinessesService.getAssignedResourceList(req, userId, roleType);
+    }
 }

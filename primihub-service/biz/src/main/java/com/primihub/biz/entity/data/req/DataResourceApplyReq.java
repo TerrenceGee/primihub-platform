@@ -16,23 +16,23 @@ import java.util.Date;
 @NoArgsConstructor
 public class DataResourceApplyReq {
     /**
-     * 1.user   2.organ
-     */
-    private Integer assignType;
-    /**
-     * 相对应的id
-     */
-    private Long id;
-    /**
      * 对应的操作，1是同意，2是拒绝
      */
     private Integer auditStatus;
     /**
-     * 授权通过时间
-     */
-    private Date assignTime;
-    /**
      * 资源Id
      */
     private Long resourceId;
+    /**
+     * 用户Id
+     */
+    private Long userId;
+    /**
+     * 机构Id
+     */
+    private String organId;
+    /**
+     * 0用户 1机构
+     */
+    private Integer queryType;
 }

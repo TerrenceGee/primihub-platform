@@ -62,17 +62,11 @@ public interface DataResourceRepository {
 
     List<DataResourceVisibilityAuth> findAuthOrganByResourceId(@Param("resourceIds") List<Long> resourceIds);
 
-    List<DataResourceUserAssign> findUserAssignByResourceId(@Param("resourceId") Long resourceId);
-
-    List<DataResourceOrganAssign> findOrganAssignByResourceId(@Param("resourceId") Long resourceId);
-    List<DataResourceOrganAssign> findOrganAssignByResourceIdList(@Param("resourceIds") List<Long> resourceIds);
-
     List<DataResourceUsageListVo> queryDataResourceUsageList(@Param("resourceId")Long resourceId);
 
     Integer queryDataResourceUsageCount(@Param("resourceId")Long resourceId);
 
-    // todo
-    List<DataResource> findUserAssignByParam(Map<String, Object> paramMap);
+    List<DataResourceUserAssign> findUserAssignByParam(Map<String, Object> paramMap);
     Integer findUserAssignCountByParam(Map<String,Object> paramMap);
 
     // todo
@@ -81,10 +75,11 @@ public interface DataResourceRepository {
     // todo
     Integer queryDataResourceOtherUserCount(HashMap<String, Object> paramMap);
 
-    List<DataResourceAssignmentListVo> queryDataResourceUserAssignmentByResourceId(Long resourceId);
+    List<DataResourceAssignmentListVo> queryDataResourceUserAssignmentByResourceId(@Param("resourceFusionId") String resourceFusionId);
 
     // --------------------------------------------------
     DataResourceUserAssign queryDataResourceUserAssignmentById(@Param("id") Long id);
-
     DataResourceVisibilityAuth queryDataResourceAuthById(@Param("id") Long id);
+    List<DataResourceVisibilityAuth> findAuthOrganByParam(Map<String,Object> paramMap);
+    Integer findAuthOrganCountByParam(Map<String,Object> paramMap);
 }

@@ -47,7 +47,7 @@ public class PirService {
     public String getResultFilePath(String taskId,String taskDate){
         return new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append(taskDate).append("/").append(taskId).append(".csv").toString();
     }
-    public BaseResultEntity pirSubmitTask(String resourceId, String pirParam,String taskName) {
+    public BaseResultEntity pirSubmitTask(String resourceId, String pirParam,String taskName, Long userId) {
         BaseResultEntity dataResource = otherBusinessesService.getDataResource(resourceId);
         if (dataResource.getCode()!=0) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"资源查询失败");
@@ -64,6 +64,7 @@ public class PirService {
         dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
         dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
         dataTask.setTaskStartTime(System.currentTimeMillis());
+        dataTask.setTaskUserId(userId);
         dataTaskPrRepository.saveDataTask(dataTask);
         DataPirTask dataPirTask = new DataPirTask();
         dataPirTask.setTaskId(dataTask.getTaskId());
@@ -79,12 +80,10 @@ public class PirService {
     }
 
     public BaseResultEntity getPirTaskList(DataPirTaskReq req, Long userId, Integer roleType) {
-        if (Objects.equals(req.getQueryType(), "USER")) {
-            // sql 添加参数
+        if (Objects.equals(req.getQueryType(), 0)) {
             req.setUserId(userId);
         }
-        if (Objects.equals(req.getQueryType(), "ORGAN")) {
-            // 查询机构下的全部 pir 任务
+        if (Objects.equals(req.getQueryType(), 1)) {
             if (roleType != 1) {
                 return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"没有机构权限");
             }

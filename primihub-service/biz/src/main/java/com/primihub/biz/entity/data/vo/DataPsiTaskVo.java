@@ -61,7 +61,6 @@ public class DataPsiTaskVo {
         }
         return (taskEnd - taskStart)/1000;
     }
-
     /**
      * 发起人Id
      */

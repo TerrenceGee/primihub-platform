@@ -588,7 +588,6 @@ public class DataModelService {
         if (StringUtils.isNotBlank(req.getEndDate())){
             req.setEndTime(DateUtil.parseDate(req.getEndDate(),DateUtil.DateStyle.DATE_FORMAT_NORMAL.getFormat()).getTime());
         }
-        // 这里更换下管理员的判定方式
 //        if (baseConfiguration.getAdminUserIds().contains(req.getUserId())) {
 //            req.setIsAdmin(1);
 //        }
@@ -599,7 +598,7 @@ public class DataModelService {
         if (modelTaskSuccessVos.size()==0){
             return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
         }
-        Integer tolal = dataModelRepository.queryModelTaskSuccessCount(req);
+        Integer total = dataModelRepository.queryModelTaskSuccessCount(req);
         Set<Long> taskIds = modelTaskSuccessVos.stream().map(ModelTaskSuccessVo::getTaskId).collect(Collectors.toSet());
         List<DataModelTask> dataModelTasks = dataModelRepository.queryModelTaskByTaskIds(taskIds);
         Map<Long,List<Map<String,String>>> taskResource = getTaskResource(dataModelTasks,modelTaskSuccessVos);
@@ -611,7 +610,7 @@ public class DataModelService {
                 modelTaskSuccessVo.setProviderOrgans(taskResource.get(modelTaskSuccessVo.getTaskId()));
             }
         }
-        return BaseResultEntity.success(new PageDataEntity(tolal,req.getPageSize(),req.getPageNo(),modelTaskSuccessVos));
+        return BaseResultEntity.success(new PageDataEntity(total,req.getPageSize(),req.getPageNo(),modelTaskSuccessVos));
     }
 
     private Map<Long,List<Map<String,String>>> getTaskResource(List<DataModelTask> dataModelTasks,List<ModelTaskSuccessVo> modelTaskSuccessVos){

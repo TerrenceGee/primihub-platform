@@ -130,14 +130,14 @@ public class DataPsiService {
 
     public BaseResultEntity getPsiTaskList(DataPsiQueryReq req, Long userId, Integer roleType) {
         log.info(JSONObject.toJSONString(req));
-        if (Objects.equals(req.getQueryType(), "USER")) {
+        if (Objects.equals(req.getQueryType(), 0)) {
             // sql 添加参数
             req.setUserId(userId);
         }
-        if (Objects.equals(req.getQueryType(), "ORGAN")) {
+        if (Objects.equals(req.getQueryType(), 1)) {
             // 查询机构下的全部 pir 任务
             if (roleType != 1) {
-                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"没有机构权限");
+                return BaseResultEntity.failure(BaseResultEnum.NO_AUTH,"没有机构管理员权限");
             }
         }
         List<DataPsiTaskVo> dataPsiTaskVos = dataPsiRepository.selectPsiTaskPage(req);
@@ -184,7 +184,6 @@ public class DataPsiService {
         if (dataTask.getTaskUserId() != null) {
             sysUser = sysUserSecondarydbRepository.selectSysUserByUserId(dataTask.getTaskUserId());
         }
-
         DataResource dataResource = dataResourceRepository.queryDataResourceByResourceFusionId(dataPsi.getOwnResourceId());
         if (dataResource==null){
             dataResource = dataResourceRepository.queryDataResourceById(Long.valueOf(dataPsi.getOwnResourceId()));

@@ -11,9 +11,9 @@ public class DataPsiQueryReq extends PageReq{
     private String startDate;
     private String endDate;
     /**
-     * USER:个人上传数据列表
-     * ORGAN:整个机构数据列表
+     * 0: 个人上传数据列表
+     * 1: 整个机构数据列表
      */
-    private String queryType = "USER";
+    private Integer queryType = 0;
     private Long userId;
 }

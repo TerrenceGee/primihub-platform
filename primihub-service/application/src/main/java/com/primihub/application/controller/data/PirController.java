@@ -33,7 +33,8 @@ public class PirController {
     private PirService pirService;
 
     @RequestMapping("pirSubmitTask")
-    public BaseResultEntity pirSubmitTask(String resourceId,String pirParam,String taskName){
+    public BaseResultEntity pirSubmitTask(String resourceId,String pirParam,String taskName,
+                                          @RequestHeader Long userId){
         if (StringUtils.isBlank(resourceId)){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
         }
@@ -43,7 +44,7 @@ public class PirController {
         if (StringUtils.isBlank(taskName)){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"taskName");
         }
-        return pirService.pirSubmitTask(resourceId,pirParam,taskName);
+        return pirService.pirSubmitTask(resourceId,pirParam,taskName, userId);
     }
 
     /**
@@ -67,7 +68,8 @@ public class PirController {
             // Cancel mysql like _ Wildcard action
             req.setResourceName(req.getResourceName().replace("_","\\_"));
         }
-        if (req.getQueryType() == null|| !Arrays.asList("USER", "ORGAN").contains(req.getQueryType())) {
+        // 0用户查询 1机构查询
+        if (req.getQueryType() == null || !Arrays.asList(0, 1).contains(req.getQueryType())) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"queryType");
         }
         return pirService.getPirTaskList(req, userId, roleType);

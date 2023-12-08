@@ -11,9 +11,9 @@ public class DataProjectQueryReq extends PageReq {
     /**
      * 查询类型
      * 0 全部，此字段无值，默认是0
-     * 1 我发起的
-     * 2 我协作的
-     * 3 机构下的
+     * 1 机构发起的
+     * 2 机构协作的
+     * 3 用户发起的
      */
     private Integer queryType = 0;
     /**

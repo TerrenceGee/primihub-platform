@@ -516,4 +516,8 @@ public class SysUserService {
         }
         return sysRoleSecondarydbRepository.selectSysRoleByBatchRoleId(roleIdSet);
     }
+
+    public List<SysUser> findAllUser() {
+        return sysUserSecondarydbRepository.selectAllSysUser();
+    }
 }

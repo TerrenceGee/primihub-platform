@@ -106,4 +106,6 @@ public class FusionResourceVo {
 
     private String userName;
 
+    private String operateUserName;
+
 }

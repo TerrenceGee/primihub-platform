@@ -9,9 +9,12 @@ import com.primihub.biz.entity.data.po.DataResourceUserAssign;
 import com.primihub.biz.entity.data.req.DataFResourceReq;
 import com.primihub.biz.entity.data.req.OrganResourceReq;
 import com.primihub.biz.entity.fusion.param.ResourceParam;
+import com.primihub.biz.entity.fusion.vo.FusionResourceVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
-import com.primihub.biz.repository.secondarydb.data.DataResourceUserAssignRepository;
+import com.primihub.biz.entity.sys.po.SysUser;
+import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
+import com.primihub.biz.repository.secondarydb.sys.SysUserSecondarydbRepository;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
 import com.primihub.biz.util.crypt.CryptUtil;
@@ -25,10 +28,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,7 +45,9 @@ public class OtherBusinessesService {
     @Autowired
     private SysOrganSecondarydbRepository sysOrganSecondarydbRepository;
     @Autowired
-    private DataResourceUserAssignRepository dataResourceUserAssignRepository;
+    private SysUserSecondarydbRepository userSecondarydbRepository;
+    @Autowired
+    private DataResourceRepository dataResourceRepository;
 
 
     public BaseResultEntity getResourceList(DataFResourceReq req) {
@@ -205,7 +207,7 @@ public class OtherBusinessesService {
     }
 
     /**
-     * 根据角色权限获取 中心的数据资源
+     * 根据角色权限获取 远程的数据资源
      * @param req
      * @param userId
      * @param roleType
@@ -233,7 +235,7 @@ public class OtherBusinessesService {
                 param.setPageNo(req.getPageNo());
                 param.setPageSize(req.getPageSize());
                 log.info(JSONObject.toJSONString(param));
-                BaseResultEntity resultEntity= fusionResourceService.getDataResourceAvailableOfOrgan(param);
+                BaseResultEntity resultEntity= fusionResourceService.getResourceListOrgan(param);
                 return BaseResultEntity.success(resultEntity.getResult());
             }catch (Exception e){
                 log.info("元数据资源数据异常:{}",e.getMessage());
@@ -253,9 +255,87 @@ public class OtherBusinessesService {
                 paramMap.put("pageSize", 10000000);
                 paramMap.put("userId", userId);
                 paramMap.put("auditStatus", 1); // 状态为同意申请
+                List<DataResourceUserAssign> dataResourceUserAssigns = dataResourceRepository.findUserAssignByParam(paramMap);
+                List<String> assignResourceIdList = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
+
+                ResourceParam param = new ResourceParam();
+                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
+                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
+                param.setGlobalId(sysLocalOrganInfo.getOrganId());
+                param.setResourceId(req.getResourceId());
+                param.setResourceName(req.getResourceName());
+                param.setResourceType(req.getResourceSource());
+                param.setOrganId(req.getOrganId());
+                param.setFileContainsY(req.getFileContainsY());
+                param.setTagName(req.getTagName());
+                param.setPageNo(req.getPageNo());
+                param.setPageSize(req.getPageSize());
+
+                param.setResourceFusionIds(assignResourceIdList);
+                log.info(JSONObject.toJSONString(param));
+                BaseResultEntity resultEntity= fusionResourceService.getResourceListUser(param);
+                return BaseResultEntity.success(resultEntity.getResult());
+            }catch (Exception e){
+                log.info("元数据资源数据异常:{}",e.getMessage());
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+            }
+        }
+        return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
+    }
+
+    public BaseResultEntity getAssignedResourceList(DataFResourceReq req, Long userId, Integer roleType) {
+        SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
+        // 机构
+        if (roleType == 1) {
+            try{
+                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
+                if (sysOrgans.size()==0){
+                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+                }
+                ResourceParam param = new ResourceParam();
+                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
+                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
+                param.setGlobalId(sysLocalOrganInfo.getOrganId());
+                param.setResourceId(req.getResourceId());
+                param.setResourceName(req.getResourceName());
+                param.setResourceType(req.getResourceSource());
+                param.setOrganId(req.getOrganId());
+                param.setFileContainsY(req.getFileContainsY());
+                param.setTagName(req.getTagName());
+                param.setPageNo(req.getPageNo());
+                param.setPageSize(req.getPageSize());
+                log.info(JSONObject.toJSONString(param));
+                BaseResultEntity resultEntity= fusionResourceService.getDataResourceAssignmentOfOrgan(param);
+                return BaseResultEntity.success(resultEntity.getResult());
+            }catch (Exception e){
+                log.info("元数据资源数据异常:{}",e.getMessage());
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+            }
+        }
+        // 用户，用户需要添加上授权人
+        if (roleType == 2) {
+            try{
+                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
+                if (sysOrgans.size()==0){
+                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+                }
+                // 这里需要先本地过滤出用户已获得的 远程数据资源授权
+                Map<String, Object> paramMap = new HashMap<String, Object>();
+                paramMap.put("offset", 0);
+                paramMap.put("pageSize", 10000000);
+                paramMap.put("userId", userId);
+                paramMap.put("auditStatus", 1); // 状态为同意申请
                 paramMap.put("organGlobalId", req.getOrganId());
                 List<DataResourceUserAssign> dataResourceUserAssigns = dataResourceUserAssignRepository.selectUserAssignRepository(paramMap);
+                if (dataResourceUserAssigns.size() == 0) {
+                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+                }
                 List<String> assignResourceIdList = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
+                Map<String, Long> userAssignMap = dataResourceUserAssigns.stream().collect(Collectors.toMap(DataResourceUserAssign::getResourceFusionId, DataResourceUserAssign::getOperateUserId));
+                Set<Long> userIdSet = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getOperateUserId).collect(Collectors.toSet());
+
+                List<SysUser> sysUsers = userSecondarydbRepository.selectSysUserByUserIdSet(userIdSet);
+                Map<Long, String> userMap = sysUsers.stream().collect(Collectors.toMap(SysUser::getUserId, SysUser::getUserName));
 
                 ResourceParam param = new ResourceParam();
                 param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
@@ -273,7 +353,17 @@ public class OtherBusinessesService {
                 // 额外带上已获取授权的列表
                 param.setResourceFusionIds(assignResourceIdList);
                 log.info(JSONObject.toJSONString(param));
-                BaseResultEntity resultEntity= fusionResourceService.getResourceListUser(param);
+                BaseResultEntity resultEntity= fusionResourceService.getDataResourceAssignmentOfUser(param);
+                if (resultEntity.getCode() == 0) {
+                    PageDataEntity result = (PageDataEntity) resultEntity.getResult();
+                    List<FusionResourceVo> data = result.getData();
+                    data.forEach(fusionResourceVo -> {
+                        long operateUserId = userAssignMap.get(fusionResourceVo.getResourceId());
+                        String userName = userMap.get(operateUserId);
+                        // 授权人姓名
+                        fusionResourceVo.setOperateUserName(userName);
+                    });
+                }
                 return BaseResultEntity.success(resultEntity.getResult());
             }catch (Exception e){
                 log.info("元数据资源数据异常:{}",e.getMessage());

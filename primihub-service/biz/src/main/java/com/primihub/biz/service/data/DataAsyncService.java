@@ -235,6 +235,7 @@ public class DataAsyncService implements ApplicationContextAware {
         dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
         dataTask.setTaskType(TaskTypeEnum.PSI.getTaskType());
         dataTask.setTaskStartTime(System.currentTimeMillis());
+        dataTask.setTaskUserId(dataPsi.getUserId());
         dataTaskPrRepository.saveDataTask(dataTask);
         String teeResourceId = "";
         if (dataPsi.getTag().equals(2)){

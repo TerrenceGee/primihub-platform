@@ -95,4 +95,6 @@ public interface DataResourcePrRepository {
     void updateDataResourceUserAssignment(DataResourceUserAssign userAssign);
 
     void updateDataResourceVisibilityAuth(DataResourceVisibilityAuth auth);
+
+    void deleteResourceUserAssignByResourceFusionId(@Param("resourceFusionId") String resourceFusionId);
 }

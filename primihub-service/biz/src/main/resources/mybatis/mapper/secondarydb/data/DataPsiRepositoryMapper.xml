@@ -25,7 +25,7 @@
         LEFT JOIN sys_user su ON dt.task_user_id = su.user_id
         WHERE
             dp.id = dpt.psi_id
-            and dpt.task_id = dt.task_id_name and dt.task_id_name
+            and dpt.task_id = dt.task_id_name
         <include refid="pageListWhere"/>
         ORDER BY dp.id desc
         LIMIT #{offset},#{pageSize}

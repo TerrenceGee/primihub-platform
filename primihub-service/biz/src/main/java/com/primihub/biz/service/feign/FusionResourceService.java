@@ -1,15 +1,11 @@
 package com.primihub.biz.service.feign;
 
 import com.primihub.biz.entity.base.BaseResultEntity;
-import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageDataEntity;
-import com.primihub.biz.entity.data.po.DataResourceOrganAssign;
 import com.primihub.biz.entity.data.req.PageReq;
-import com.primihub.biz.entity.data.vo.DataResourceAssignmentListVo;
 import com.primihub.biz.entity.data.vo.DataResourceCopyVo;
 import com.primihub.biz.entity.fusion.param.OrganResourceParam;
 import com.primihub.biz.entity.fusion.param.ResourceParam;
-import com.primihub.biz.entity.fusion.vo.FusionResourceVo;
 import com.primihub.biz.entity.sys.po.DataSet;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -63,44 +59,28 @@ public interface FusionResourceService {
 
     @GetMapping("/fusionResource/getDataResourceOrganAssignment")
     BaseResultEntity getDataResourceOrganAssignment(Map<String, Object> param);
-
     @GetMapping("/fusionResource/getDataResourceToApply")
     BaseResultEntity getDataResourceToApply(@RequestParam("organGlobalId") String sysLocalOrganId, @RequestParam("organGlobalId")Integer pageNo, @RequestParam("organGlobalId")Integer pageSize);
-
-    @RequestMapping("/fusionResource/getResourceListUser")
-    BaseResultEntity getResourceListUser(@RequestBody ResourceParam resourceParam);
-
-    @RequestMapping("/fusionResource/getResourceListOrgan")
-    BaseResultEntity getResourceListOrgan(@RequestBody ResourceParam resourceParam);
-
-    @PostMapping("/fusionResource/saveResourceOrganAssignList")
-    BaseResultEntity saveDataResourceOrganAssignList(@RequestParam("globalId") String globalId, @RequestBody List<DataResourceOrganAssign> dataResourceOrganAssigns);
-
     @GetMapping("/fusionResource/getDataResourceOrganAssignmentByResourceId")
-    List<DataResourceAssignmentListVo> getDataResourceOrganAssignmentByResourceId(@RequestParam("resourceFusionId") String resourceFusionId);
+    BaseResultEntity<PageDataEntity> getDataResourceOrganAssignmentByResourceId(String resourceFusionId, PageReq pageReq);
 
     // ----------------------------------------------------------------------------------
-
-    @GetMapping("/fusionResource/getDataResourceAvailableOfOrgan")
-    BaseResultEntity<PageDataEntity> getDataResourceAvailableOfOrgan(ResourceParam param);
-
-    /**
-     * 用户可用
-     */
-    @GetMapping("/fusionResource/getDataResourceAvailableOfUser")
-    List getDataResourceAvailableOfUser(@RequestParam("resourceIdList") List<String> resourceIdList);
-
+    /** 用户可使用 */
+    @RequestMapping("/fusionResource/getResourceListUser")
+    BaseResultEntity getResourceListUser(@RequestBody ResourceParam resourceParam);
+    /** 机构可使用 */
+    @RequestMapping("/fusionResource/getResourceListOrgan")
+    BaseResultEntity getResourceListOrgan(@RequestBody ResourceParam resourceParam);
     /**
      * 机构已获得授权
      */
     @GetMapping("/fusionResource/getDataResourceAssignmentOfOrgan")
-    List getDataResourceAssignmentOfOrgan(@RequestParam("organId") String organId);
-
+    BaseResultEntity<PageDataEntity> getDataResourceAssignmentOfOrgan(ResourceParam param);
     /**
      * 用户已获得授权
      */
     @GetMapping("/fusionResource/getDataResourceAssignmentOfUser")
-    List getDataResourceAssignmentOfUser(@RequestParam("resourceIdList") List<String> resourceIdList);
+    BaseResultEntity<PageDataEntity> getDataResourceAssignmentOfUser(ResourceParam param);
     /**
      * 机构可申请的
      */

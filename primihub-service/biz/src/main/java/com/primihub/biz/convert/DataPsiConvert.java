@@ -94,7 +94,7 @@ public class DataPsiConvert {
         dataPsiVo.setTeeOrganId(dataPsi.getTeeOrganId());
         dataPsiVo.setTeeOrganName(teeOrganName);
 
-        dataPsiVo.setUserId(dataPsi.getUserId());
+        dataPsiVo.setUserId(dataTask.getTaskUserId());
         if (user != null) {
             dataPsiVo.setUserName(user.getUserName());
         }

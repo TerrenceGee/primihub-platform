@@ -65,7 +65,7 @@ public class ResourceController {
                                                       ){
         // 查询机构
         if (req.getQueryType() == 1) {
-            // 需要有管事员权限
+            // 需要有管理员权限
             if (roleType != 1) {
                 return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
             }
@@ -357,41 +357,35 @@ public class ResourceController {
     }*/
 
     /**
-     * 审核数据资源申请
+     * 修改授权状态
      * @param userId
      * @param roleType
      * @param req
      * @return
      */
-    @PostMapping("auditDataResourceApply")
-    public BaseResultEntity auditDataResourceApply(@RequestHeader("userId") Long userId,
+    @PostMapping("changeDataResourceAuthStatus")
+    public BaseResultEntity changeDataResourceAuthStatus(@RequestHeader("userId") Long userId,
                                                    @RequestHeader("roleType")Integer roleType,
                                                    DataResourceApplyReq req
                                                    ) {
-        if (req.getId()==null||req.getId()==0L){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"id");
-        }
-        if (req.getAssignType()==null||req.getAssignType()==1 || req.getAssignType()==2){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"assignType");
-        }
         if (req.getAuditStatus()==null||req.getAuditStatus()==1 || req.getAuditStatus()==2){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"auditStatus");
         }
-        return dataResourceService.auditDataResourceApply(req);
+        return dataResourceService.changeDataResourceAuthStatus(req, userId);
     }
 
 
     /**
      * 授权给我的资源
      */
-   /* @GetMapping("getDataResourceAssignedToMe")
+    @GetMapping("getDataResourceAssignedToMe")
     public BaseResultEntity getDataResourceAssignedToMe(@RequestHeader("userId") Long userId,
                                                         @RequestHeader("roleType") Integer roleType,
                                                         Integer queryType,
                                                         PageReq req
     ) {
-        return dataResourceService.getDataResourceAssignedToMe(userId, roleType, req);
-    }*/
+        return dataResourceService.getDataResourceAssignedToMe(userId, roleType, req, queryType);
+    }
 
     /**
      * 可申请的资源，todo 删除，可申请资源从数据中心获取
@@ -402,6 +396,41 @@ public class ResourceController {
                                                    PageReq req
     ) {
         return dataResourceService.getDataResourceToApply(userId, roleType, req);
+    }
+
+    /**
+     * 给资源授权，包括本方资源和已获得授权的合作方资源
+     */
+    @PostMapping("saveDataResourceUserAssignment")
+    public BaseResultEntity saveUserAssignment(@RequestHeader("userId")Long userId,
+                                               @RequestHeader("roleType") Integer roleType,
+                                               UserAssignReq req
+                                               ) {
+        return dataResourceService.saveUserAssignment(req,userId, roleType);
+    }
+    /**
+     * 查看资源的用户授权详情
+     */
+    @GetMapping("getDataResourceUserAssignment")
+    public BaseResultEntity getUserAssignment(
+            @RequestHeader("userId")Long userId,
+            @RequestHeader("roleType") Integer roleType,
+            String resourceFusionId
+    ) {
+        return dataResourceService.getDataResourceUserAssignment(resourceFusionId, userId, roleType);
+    }
+
+    /**
+     * 查看资源授权详情
+     */
+    @GetMapping("getDataResourceAssignmentDetail")
+    public BaseResultEntity getDataResourceAssignmentDetail(
+            @RequestHeader("userId")Long userId,
+            @RequestHeader("roleType") Integer roleType,
+            Long resourceId,PageReq pageReq,
+            Integer queryType   // 1查询机构授权 2查询用户授权
+    ) {
+        return dataResourceService.getDataResourceAssignmentDetail(resourceId, userId, pageReq, queryType);
     }
 
 

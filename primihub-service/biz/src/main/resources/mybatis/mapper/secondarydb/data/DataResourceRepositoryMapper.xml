@@ -402,17 +402,6 @@
         where id = #{id}
     </select>
 
-    <select id="findOrganAssignByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceOrganAssign">
-        select id,
-               resource_id     resourceId,
-               organ_global_id organGlobalId,
-               organ_name      organName,
-               is_del          isDel,
-               c_time          cTime,
-               u_time          uTime
-        from data_resource_organ_assign
-        where resource_id = #{resourceId}
-    </select>
 
     <select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
         select id,
@@ -429,19 +418,6 @@
         where resource_id = #{resourceId}
     </select>
 
-    <select id="findOrganAssignByResourceIdList" resultType="com.primihub.biz.entity.data.po.DataResourceOrganAssign">
-        select
-        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,is_del isDel,c_time cTime,u_time
-        uTime
-        from
-        data_resource_organ_assign
-        where
-        resource_id in
-        <foreach collection="resourceIds" index="index" item="item" open="("
-                 separator="," close=")">
-            #{item}
-        </foreach>
-    </select>
 
 
     <!--<select id="findUserAssign" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
@@ -469,7 +445,8 @@
                c_time             cTime,
                u_time             uTime
         from data_resource_user_assign
-        where resource_id = #{resourceId}
+        where resource_fusion_id = #{resourceFusionId}
+        and audit_status = 1
     </select>
 
     <select id="queryDataResourceUserAssignmentById" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
@@ -480,6 +457,82 @@
     <select id="queryDataResourceAuthById" resultType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
         select * from data_resource_visibility_auth
         where id = #{id}
+    </select>
+
+    <select id="findUserAssignByParam" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select * from data_resource_user_assign o
+        <where>
+            <if test="resourceId!=null">
+                and o.resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId!=null and resourceFusionId!=''">
+                and o.resource_fusion_id = #{resourceFusionId}
+            </if>
+            <if test="auditStatus!=null">
+                and o.audit_status = #{auditStatus}
+            </if>
+            <if test="userId!=null">
+                and o.user_id = #{userId}
+            </if>
+        </where>
+        order by o.id desc
+        limit #{offset}, #{pageSize}
+    </select>
+    <select id="findUserAssignCountByParam">
+        select count(resource_id) from data_resource_user_assign o
+        <where>
+            <if test="resourceId!=null">
+                and o.resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId!=null and resourceFusionId!=''">
+                and o.resource_fusion_id = #{resourceFusionId}
+            </if>
+            <if test="auditStatus!=null">
+                and o.audit_status = #{auditStatus}
+            </if>
+            <if test="userId!=null">
+                and o.user_id = #{userId}
+            </if>
+        </where>
+        order by o.id desc
+    </select>
+
+    <select id="findAuthOrganByParam" resultType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
+        select * from data_resource_visibility_auth o
+        <where>
+            <if test="resourceId!=null">
+                and o.resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId!=null and resourceFusionId!=''">
+                and o.resource_fusion_id = #{resourceFusionId}
+            </if>
+            <if test="auditStatus!=null">
+                and o.audit_status = #{auditStatus}
+            </if>
+            <if test="userId!=null">
+                and o.user_id = #{userId}
+            </if>
+        </where>
+        order by o.id desc
+        limit #{offset}, #{pageSize}
+    </select>
+    <select id="findAuthOrganCountByParam">
+        select count(id) from data_resource_visibility_auth o
+        <where>
+            <if test="resourceId!=null">
+                and o.resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId!=null and resourceFusionId!=''">
+                and o.resource_fusion_id = #{resourceFusionId}
+            </if>
+            <if test="auditStatus!=null">
+                and o.audit_status = #{auditStatus}
+            </if>
+            <if test="userId!=null">
+                and o.user_id = #{userId}
+            </if>
+        </where>
+        order by o.id desc
     </select>
 
 </mapper>

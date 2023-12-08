@@ -61,9 +61,7 @@ public class DataResourceReq extends PageReq{
     private Integer derivation = 0;
 
     private Integer fileContainsY;
-
-    private DataResourceAssignReq dataResourceAssign;
-
+    private List<DataResourceAssignUserReq> userAssignList;
     /**
      * 0 个人资源列表
      * 1 机构资源列表

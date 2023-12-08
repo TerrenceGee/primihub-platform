@@ -174,7 +174,7 @@
             <if test="assignTime!=null">assign_time = #{assignTime},</if>
             u_time = now()
         </set>
-        where id = #{id}
+        where resource_id = #{resourceId} and user_id = #{userId}
     </update>
 
     <update id="updateDataResourceVisibilityAuth" parameterType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
@@ -184,6 +184,10 @@
             <if test="assignTime!=null">assign_time = #{assignTime},</if>
             u_time = now()
         </set>
-        where id = #{id}
+        where resource_id = #{resourceId} and organ_global_id = #{organGlobalId}
     </update>
+
+    <delete id="deleteResourceUserAssignByResourceFusionId">
+        delete from data_resource_user_assign where resource_fusion_id=#{resourceFusionId}
+    </delete>
 </mapper>

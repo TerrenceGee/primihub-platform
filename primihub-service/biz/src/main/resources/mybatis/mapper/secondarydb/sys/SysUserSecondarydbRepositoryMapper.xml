@@ -63,5 +63,9 @@
             user_id userId,user_account userAccount,user_name userName,user_password userPassword,role_id_list roleIdList,is_forbid isForbid,is_editable isEditable,register_type registerType,auth_uuid authUuid,ip,is_del isDel,c_time cTime,u_time uTime
         from sys_user where is_del=0 and auth_uuid=#{authUuid} limit 1
     </select>
-
+    <select id="selectAllSysUser" resultType="com.primihub.biz.entity.sys.po.SysUser">
+        select
+        user_id userId,user_account userAccount,user_name userName,role_id_list roleIdList,is_forbid isForbid,is_editable isEditable,register_type registerType,auth_uuid authUuid,ip,is_del isDel,c_time cTime,u_time uTime
+        from sys_user
+    </select>
 </mapper>

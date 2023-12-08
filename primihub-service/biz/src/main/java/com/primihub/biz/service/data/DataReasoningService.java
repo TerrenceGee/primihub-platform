@@ -55,8 +55,8 @@ public class DataReasoningService {
         if (dataReasonings.size()==0){
             return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
         }
-        Integer tolal = dataReasoningRepository.selectDataReasoninCount(req);
-        return BaseResultEntity.success(new PageDataEntity(tolal,req.getPageSize(),req.getPageNo(),dataReasonings));
+        Integer total = dataReasoningRepository.selectDataReasoninCount(req);
+        return BaseResultEntity.success(new PageDataEntity(total,req.getPageSize(),req.getPageNo(),dataReasonings));
     }
 
     public BaseResultEntity saveReasoning(DataReasoningReq req) {
