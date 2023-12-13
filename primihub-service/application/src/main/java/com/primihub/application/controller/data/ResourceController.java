@@ -10,6 +10,7 @@ import com.primihub.biz.entity.data.po.DataResource;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.service.data.DataResourceService;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +20,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * 数据资源管理
  */
 @RequestMapping("resource")
 @RestController
+@Slf4j
 public class ResourceController {
 
     @Autowired
@@ -338,26 +341,7 @@ public class ResourceController {
     }
 
     /**
-     * 数据授权情况
-     * @param userId
-     * @param roleType
-     * @param resourceId
-     * @param req
-     * @return
-     */
-   /* @GetMapping("getDataSourceAssignmentPage")
-    public BaseResultEntity getDataSourceAssignmentPage(@RequestHeader("userId") Long userId,
-                                                        @RequestHeader("roleType")Integer roleType,
-                                                        Long resourceId,
-                                                        PageReq req) {
-        if (resourceId==null||resourceId==0L){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
-        }
-        return dataResourceService.findDataResourceAssignmentPage(resourceId, req);
-    }*/
-
-    /**
-     * 修改授权状态
+     * 修改授权状态，审核
      * @param userId
      * @param roleType
      * @param req
@@ -404,7 +388,7 @@ public class ResourceController {
     @PostMapping("saveDataResourceUserAssignment")
     public BaseResultEntity saveUserAssignment(@RequestHeader("userId")Long userId,
                                                @RequestHeader("roleType") Integer roleType,
-                                               UserAssignReq req
+                                               @RequestBody UserAssignReq req
                                                ) {
         return dataResourceService.saveUserAssignment(req,userId, roleType);
     }
@@ -427,11 +411,35 @@ public class ResourceController {
     public BaseResultEntity getDataResourceAssignmentDetail(
             @RequestHeader("userId")Long userId,
             @RequestHeader("roleType") Integer roleType,
-            Long resourceId,PageReq pageReq,
+            String resourceFusionId,PageReq pageReq,
             Integer queryType   // 1查询机构授权 2查询用户授权
     ) {
-        return dataResourceService.getDataResourceAssignmentDetail(resourceId, userId, pageReq, queryType);
+        if (queryType == null || !Arrays.asList(1, 2).contains(queryType)) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "queryType");
+        }
+        return dataResourceService.getDataResourceAssignmentDetail(resourceFusionId, userId, pageReq, queryType);
     }
 
+    /**
+     * 发起资源申请
+     */
+    @PostMapping("saveDataResourceAssign")
+    public BaseResultEntity saveDataResourceAssign(
+            @RequestHeader("userId")Long userId,
+            @RequestHeader("roleType") Integer roleType,
+            @RequestBody DataResourceAssignReq req
+    ) {
+        return dataResourceService.saveDataResourceAssign(userId, roleType, req);
+    }
 
+    /**
+     * 处理资源申请
+     */
+    @PostMapping("saveDataResourceOrganAssign")
+    public BaseResultEntity saveDataResourceOrganAssign(
+            @RequestBody DataResourceAssignReq req
+    ) {
+        log.info("处理资源申请");
+        return dataResourceService.saveDataResourceOrganAssign(req);
+    }
 }

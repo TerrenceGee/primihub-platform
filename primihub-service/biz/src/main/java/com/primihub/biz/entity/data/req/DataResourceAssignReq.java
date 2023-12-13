@@ -9,6 +9,9 @@ import lombok.Setter;
  **/
 @Getter
 @Setter
-public class DataResourceAssignOrganReq {
+public class DataResourceAssignReq {
+    private String resourceFusionId;
     private String organId;
+    private String timestamp;
+    private String nonce;
 }

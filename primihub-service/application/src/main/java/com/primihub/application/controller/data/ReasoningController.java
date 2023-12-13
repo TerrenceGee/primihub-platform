@@ -9,6 +9,9 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 推理服务管理
+ */
 @RequestMapping("reasoning")
 @RestController
 public class ReasoningController {
@@ -29,6 +32,13 @@ public class ReasoningController {
         }
         return dataReasoningService.getReasoningList(req, userId, roleType);
     }
+
+    /**
+     * 保存推理服务
+     * @param req
+     * @param userId
+     * @return
+     */
     @PostMapping("saveReasoning")
     public BaseResultEntity saveReasoning(DataReasoningReq req,
                                           @RequestHeader("userId") Long userId){
@@ -54,6 +64,11 @@ public class ReasoningController {
         return dataReasoningService.saveReasoning(req);
     }
 
+    /**
+     * 获取推理服务详情
+     * @param id
+     * @return
+     */
     @GetMapping("getReasoning")
     public BaseResultEntity getReasoning(Long id){
         if (id==null || id==0L) {

@@ -33,6 +33,19 @@ public class FusionResourceController {
         return otherBusinessesService.getResourceList(req, userId, roleType);
     }
 
+    /**
+     * 获取协作方资源
+     * @param req
+     * @return
+     */
+    @RequestMapping("getCoopResourceList")
+    public BaseResultEntity getCoopResourceList(DataFResourceReq req,
+                                            @RequestHeader("userId") Long userId,
+                                            @RequestHeader("roleType") Integer roleType // 1.管理员 2.普通用户
+    ) {
+        return otherBusinessesService.getCoopResourceList(req, userId, roleType);
+    }
+
     @RequestMapping("getDataResource")
     public BaseResultEntity getDataResource(String resourceId) {
         if (StringUtils.isBlank(resourceId)) {

@@ -108,4 +108,6 @@ public class FusionResourceVo {
 
     private String operateUserName;
 
+    private Integer auditStatus;
+
 }

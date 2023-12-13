@@ -21,8 +21,6 @@ public interface FusionResourceService {
 
     @RequestMapping("/fusionResource/getResourceListById")
     BaseResultEntity getResourceListById(@RequestParam("resourceIdArray") List<String> resourceIdArray, @RequestParam("globalId") String globalId);
-    @RequestMapping("/fusionResource/getResourceListByIdList")
-    void getDataResourceByIdList(@RequestParam("resourceIdList")List<String> resourceFusionIds);
 
     @RequestMapping("/fusionResource/getResourceTagList")
     BaseResultEntity getResourceTagList();
@@ -84,6 +82,9 @@ public interface FusionResourceService {
     /**
      * 机构可申请的
      */
-    @GetMapping("/fusionResource/getDataResourceToApplyOfOrgan")
-    List getDataResourceToApplyOfOrgan(@RequestParam("organId") String organId);
+//    @GetMapping("/fusionResource/getDataResourceToApplyOfOrgan")
+//    List getDataResourceToApplyOfOrgan(@RequestParam("organId") String organId);
+
+    @RequestMapping("/fusionResource/getCoopResourceListOrgan")
+    BaseResultEntity getCoopResourceListOrgan(@RequestBody ResourceParam resourceParam);
 }

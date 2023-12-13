@@ -66,6 +66,6 @@ public class DataResourceReq extends PageReq{
      * 0 个人资源列表
      * 1 机构资源列表
      */
-    private Integer queryType;
+    private Integer queryType = 0;
 
 }

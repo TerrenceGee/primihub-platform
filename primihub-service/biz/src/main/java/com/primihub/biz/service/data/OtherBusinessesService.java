@@ -372,4 +372,81 @@ public class OtherBusinessesService {
         }
         return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
     }
+
+    public BaseResultEntity getCoopResourceList(DataFResourceReq req, Long userId, Integer roleType) {
+        SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
+        // 机构
+        if (roleType == 1) {
+            try{
+                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
+                if (sysOrgans.size()==0){
+                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+                }
+                ResourceParam param = new ResourceParam();
+                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
+                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
+                param.setGlobalId(sysLocalOrganInfo.getOrganId());
+                param.setResourceId(req.getResourceId());
+                param.setResourceName(req.getResourceName());
+                param.setResourceType(req.getResourceSource());
+                param.setOrganId(req.getOrganId());
+                param.setFileContainsY(req.getFileContainsY());
+                param.setTagName(req.getTagName());
+                param.setPageNo(req.getPageNo());
+                param.setPageSize(req.getPageSize());
+                log.info(JSONObject.toJSONString(param));
+                BaseResultEntity resultEntity= fusionResourceService.getCoopResourceListOrgan(param);
+                return BaseResultEntity.success(resultEntity.getResult());
+            }catch (Exception e){
+                log.info("元数据资源数据异常:{}",e.getMessage());
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+            }
+        }
+        // 用户
+        if (roleType == 2) {
+            try{
+                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
+                if (sysOrgans.size()==0){
+                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
+                }
+                // 这里需要先本地过滤出用户已获得的 远程数据资源授权
+                Map<String, Object> paramMap = new HashMap<String, Object>();
+                paramMap.put("offset", 0);
+                paramMap.put("pageSize", 10000000);
+                paramMap.put("userId", userId);
+                paramMap.put("auditStatus", 1); // 状态为同意申请
+                List<DataResourceUserAssign> dataResourceUserAssigns = dataResourceRepository.findUserAssignByParam(paramMap);
+                Map<String, DataResourceUserAssign> userAssignMap = dataResourceUserAssigns.stream().collect(Collectors.toMap(DataResourceUserAssign::getResourceFusionId, Function.identity()));
+                List<String> assignResourceIdList = dataResourceUserAssigns.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
+
+                ResourceParam param = new ResourceParam();
+                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
+                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
+                param.setGlobalId(sysLocalOrganInfo.getOrganId());
+                param.setResourceId(req.getResourceId());
+                param.setResourceName(req.getResourceName());
+                param.setResourceType(req.getResourceSource());
+                param.setOrganId(req.getOrganId());
+                param.setFileContainsY(req.getFileContainsY());
+                param.setTagName(req.getTagName());
+                param.setPageNo(req.getPageNo());
+                param.setPageSize(req.getPageSize());
+                log.info(JSONObject.toJSONString(param));
+                BaseResultEntity resultEntity= fusionResourceService.getCoopResourceListOrgan(param);
+                if (resultEntity.getCode() == 0) {
+                    PageDataEntity result = (PageDataEntity) resultEntity.getResult();
+                    List<FusionResourceVo> data = result.getData();
+                    data.forEach(fusionResourceVo -> {
+                        DataResourceUserAssign userAssign = userAssignMap.get(fusionResourceVo.getResourceId());
+                        fusionResourceVo.setAuditStatus(userAssign == null?null:userAssign.getAuditStatus());
+                    });
+                }
+                return BaseResultEntity.success(resultEntity.getResult());
+            }catch (Exception e){
+                log.info("元数据资源数据异常:{}",e.getMessage());
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+            }
+        }
+        return BaseResultEntity.failure(BaseResultEnum.NO_AUTH);
+    }
 }

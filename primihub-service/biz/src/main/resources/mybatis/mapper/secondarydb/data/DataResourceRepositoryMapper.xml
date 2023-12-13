@@ -268,8 +268,7 @@
 
     <select id="findAuthOrganByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
         select
-        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,is_del isDel,c_time cTime,u_time
-        uTime
+        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,is_del isDel,c_time cTime,u_time uTime, resource_fusion_id resourceFusionId, audit_status auditStatus, apply_time applyTime, assign_time assignTime
         from
         data_resource_visibility_auth
         where
@@ -460,25 +459,37 @@
     </select>
 
     <select id="findUserAssignByParam" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
-        select * from data_resource_user_assign o
+        select
+        id                 id,
+        resource_fusion_id resourceFusionId,
+        resource_id        resourceId,
+        resource_organ_id        resourceOrganId,
+        operate_user_id     operateUserId,
+        user_id            userId,
+        audit_status       auditStatus,
+        assign_time        assignTime,
+        apply_time         applyTime,
+        c_time             cTime,
+        u_time             uTime
+        from data_resource_user_assign
         <where>
             <if test="resourceId!=null">
-                and o.resource_id = #{resourceId}
+                and resource_id = #{resourceId}
             </if>
             <if test="resourceFusionId!=null and resourceFusionId!=''">
-                and o.resource_fusion_id = #{resourceFusionId}
+                and resource_fusion_id = #{resourceFusionId}
             </if>
             <if test="auditStatus!=null">
-                and o.audit_status = #{auditStatus}
+                and audit_status = #{auditStatus}
             </if>
             <if test="userId!=null">
-                and o.user_id = #{userId}
+                and user_id = #{userId}
             </if>
         </where>
-        order by o.id desc
+        order by id desc
         limit #{offset}, #{pageSize}
     </select>
-    <select id="findUserAssignCountByParam">
+    <select id="findUserAssignCountByParam" resultType="java.lang.Integer">
         select count(resource_id) from data_resource_user_assign o
         <where>
             <if test="resourceId!=null">
@@ -498,25 +509,28 @@
     </select>
 
     <select id="findAuthOrganByParam" resultType="com.primihub.biz.entity.data.po.DataResourceVisibilityAuth">
-        select * from data_resource_visibility_auth o
+        select
+        id,resource_id resourceId,organ_global_id organGlobalId,organ_name organName,is_del isDel,c_time cTime,u_time uTime, resource_fusion_id resourceFusionId, audit_status auditStatus, apply_time applyTime, assign_time assignTime
+        from
+        data_resource_visibility_auth
         <where>
             <if test="resourceId!=null">
-                and o.resource_id = #{resourceId}
+                and resource_id = #{resourceId}
             </if>
             <if test="resourceFusionId!=null and resourceFusionId!=''">
-                and o.resource_fusion_id = #{resourceFusionId}
+                and resource_fusion_id = #{resourceFusionId}
             </if>
             <if test="auditStatus!=null">
-                and o.audit_status = #{auditStatus}
+                and audit_status = #{auditStatus}
             </if>
             <if test="userId!=null">
-                and o.user_id = #{userId}
+                and user_id = #{userId}
             </if>
         </where>
-        order by o.id desc
+        order by id desc
         limit #{offset}, #{pageSize}
     </select>
-    <select id="findAuthOrganCountByParam">
+    <select id="findAuthOrganCountByParam" resultType="java.lang.Integer">
         select count(id) from data_resource_visibility_auth o
         <where>
             <if test="resourceId!=null">

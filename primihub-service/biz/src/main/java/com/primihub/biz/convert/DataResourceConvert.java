@@ -5,8 +5,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.primihub.biz.entity.data.po.DataFileField;
 import com.primihub.biz.entity.data.po.DataResource;
 import com.primihub.biz.entity.data.po.DataResourceTag;
+import com.primihub.biz.entity.data.po.DataResourceVisibilityAuth;
 import com.primihub.biz.entity.data.req.DataResourceFieldReq;
 import com.primihub.biz.entity.data.req.DataResourceReq;
+import com.primihub.biz.entity.data.req.DataResourceVisibilityAuthReq;
 import com.primihub.biz.entity.data.vo.*;
 import com.primihub.biz.entity.sys.po.SysFile;
 import com.primihub.biz.entity.sys.po.SysUser;
@@ -201,7 +203,7 @@ public class DataResourceConvert {
         return vo;
     }
 
-    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String organName, String tags, List<String> authOrganList, List<DataFileField> fieldList, SysUser sysUser){
+    public static DataResourceCopyVo dataResourcePoConvertCopyVo(DataResource dataResource, String organId, String organName, String tags, List<DataResourceVisibilityAuthReq> authOrganList, List<DataFileField> fieldList, SysUser sysUser){
         DataResourceCopyVo dataResourceCopyVo = new DataResourceCopyVo();
         dataResourceCopyVo.setResourceId(dataResource.getResourceFusionId());
         dataResourceCopyVo.setResourceName(dataResource.getResourceName());
@@ -320,5 +322,16 @@ public class DataResourceConvert {
         dataDerivationResourceDataVo.setProjectId(dataDerivationResourceVo.getProjectId());
         return dataDerivationResourceDataVo;
 
+    }
+
+    public static DataResourceVisibilityAuthReq dataResourcePoConvertAuthReq(DataResourceVisibilityAuth auth) {
+        DataResourceVisibilityAuthReq authReq = new DataResourceVisibilityAuthReq();
+        authReq.setResourceFusionId(auth.getResourceFusionId());
+        authReq.setOrganGlobalId(auth.getOrganGlobalId());
+        authReq.setOrganName(auth.getOrganName());
+        authReq.setAuditStatus(auth.getAuditStatus());
+        authReq.setApplyTime(auth.getApplyTime());
+        authReq.setAssignTime(auth.getAssignTime());
+        return authReq;
     }
 }

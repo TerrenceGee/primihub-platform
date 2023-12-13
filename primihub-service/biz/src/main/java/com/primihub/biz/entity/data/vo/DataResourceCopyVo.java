@@ -1,5 +1,6 @@
 package com.primihub.biz.entity.data.vo;
 
+import com.primihub.biz.entity.data.req.DataResourceVisibilityAuthReq;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -84,12 +85,7 @@ public class DataResourceCopyVo {
     /**
      * 可见机构id
      */
-    private List<String> authOrganList;
-
-    /**
-     * 授权机构
-     */
-    private List<String> assignOrganList;
+    private List<DataResourceVisibilityAuthReq> authOrganList;
 
     /**
      * 资源字段列表
