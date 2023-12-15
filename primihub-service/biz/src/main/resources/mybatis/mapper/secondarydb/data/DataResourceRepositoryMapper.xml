@@ -526,6 +526,9 @@
             <if test="userId!=null">
                 and user_id = #{userId}
             </if>
+            <if test="organId!=null and organId!=''">
+                and organ_global_id = #{organId}
+            </if>
         </where>
         order by id desc
         limit #{offset}, #{pageSize}

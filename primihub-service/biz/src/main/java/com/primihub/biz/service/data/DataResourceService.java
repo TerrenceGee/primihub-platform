@@ -35,6 +35,7 @@ import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.biz.util.DataUtil;
 import com.primihub.biz.util.FileUtil;
+import com.primihub.biz.util.crypt.CryptUtil;
 import com.primihub.biz.util.crypt.SignUtil;
 import com.primihub.sdk.task.TaskHelper;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
@@ -1262,19 +1263,19 @@ public class DataResourceService {
 
     public BaseResultEntity saveDataResourceAssign(Long userId, Integer roleType, DataResourceAssignReq req) {
         SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
+        if (Objects.equals(req.getOrganId(), sysLocalOrganInfo.getOrganId())) {
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE,"申请目标不可以是本机构!!!");
+        }
+        List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectOrganByOrganId(req.getOrganId());
+        if (sysOrgans.isEmpty()) {
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE,"无此协作方!!!");
+        }
+        SysOrgan sysOrgan = sysOrgans.get(0);
         // 管理员
         if (roleType == 1) {
-            if (Objects.equals(req.getOrganId(), sysLocalOrganInfo.getOrganId())) {
-                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"申请目标不可以是本机构!!!");
-            }
-            List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectOrganByOrganId(req.getOrganId());
-            if (sysOrgans.isEmpty()) {
-                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"无此协作方!!!");
-            }
-
-            SysOrgan sysOrgan = sysOrgans.get(0);
             String gateway = sysOrgan.getOrganGateway();
             String route = "/data/resource/saveDataResourceOrganAssign";
+            String url = gateway+route;
             DataResourceAssignReq remoteReq = new DataResourceAssignReq();
             remoteReq.setOrganId(sysLocalOrganInfo.getOrganId());
             remoteReq.setResourceFusionId(req.getResourceFusionId());
@@ -1284,13 +1285,51 @@ public class DataResourceService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> request = new HttpEntity(remoteReq, headers);
-            Object o = restTemplate.postForObject(gateway + route, request, Object.class);
-
-            return BaseResultEntity.success();
+            try {
+                BaseResultEntity resultEntity = restTemplate.postForObject(url, request, BaseResultEntity.class);
+                log.info("url:【{}】 - baseResultEntity {}",url,JSONObject.toJSONString(resultEntity));
+                return BaseResultEntity.success();
+            }catch (Exception e){
+                log.info("url:【{}】 Exception:{}", url, e.getMessage());
+                e.printStackTrace();
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE, "对方机构不可用");
+            }
         }
         // 普通用户
         if (roleType == 2) {
-            // 机构新增
+            String gateway = sysOrgan.getOrganGateway();
+            String route = "/data/resource/getDataResourceOrganAssign";
+            String url = gateway+route;
+            DataResourceAssignReq remoteReq = new DataResourceAssignReq();
+            remoteReq.setOrganId(sysLocalOrganInfo.getOrganId());
+            remoteReq.setResourceFusionId(req.getResourceFusionId());
+            remoteReq.setTimestamp(String.valueOf(new Date().getTime()));
+            remoteReq.setNonce(String.valueOf(Math.floor(Math.random() * 1000 + 1)));
+
+            BaseResultEntity resultEntity = null;
+            try {
+                resultEntity = restTemplate.getForObject(url, BaseResultEntity.class);
+                log.info("url:【{}】 - baseResultEntity {}",url,JSONObject.toJSONString(resultEntity));
+            }catch (Exception e){
+                log.info("url:【{}】 Exception:{}", url, e.getMessage());
+                e.printStackTrace();
+                return BaseResultEntity.failure(BaseResultEnum.FAILURE, "对方机构不可用");
+            }
+            List<DataResourceVisibilityAuth> authList = (List<DataResourceVisibilityAuth>) resultEntity.getResult();
+            if (!authList.isEmpty()) {
+                DataResourceVisibilityAuth auth = authList.get(0);
+                if (auth.getAuditStatus() != 1) {
+                    return BaseResultEntity.failure(BaseResultEnum.FAILURE, "本机构尚未获得该资源授权");
+                }
+            }
+
+            // 可以进行本地用户授权
+            DataResourceUserAssign userAssign = new DataResourceUserAssign();
+            userAssign.setApplyTime(new Date());
+            userAssign.setAuditStatus(0);
+            userAssign.setResourceFusionId(req.getResourceFusionId());
+            userAssign.setUserId(req.getUserId());
+            dataResourcePrRepository.saveDataResourceUserAssignList(Collections.singletonList(userAssign));
             return BaseResultEntity.success();
         }
         return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "roleType");
@@ -1302,8 +1341,12 @@ public class DataResourceService {
             return BaseResultEntity.failure(BaseResultEnum.FAILURE, "资源不存在或已删除");
         }
         List<DataResourceVisibilityAuth> authOrganList = dataResourceRepository.findAuthOrganByResourceId(Collections.singletonList(dataResource.getResourceId()));
-        List<Long> resourceIsList = authOrganList.stream().map(DataResourceVisibilityAuth::getResourceId).collect(Collectors.toList());
-        if (resourceIsList.contains(dataResource.getResourceId())) {
+        List<String> authOrganIdList = authOrganList.stream().map(DataResourceVisibilityAuth::getOrganGlobalId).collect(Collectors.toList());
+        if (authOrganIdList.contains(req.getOrganId())) {
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE, "已存在该申请");
+        }
+        List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectOrganByOrganId(req.getOrganId());
+        if (sysOrgans == null || sysOrgans.isEmpty()) {
             return BaseResultEntity.failure(BaseResultEnum.FAILURE, "已存在该申请");
         }
         DataResourceVisibilityAuth auth = new DataResourceVisibilityAuth();
@@ -1318,6 +1361,59 @@ public class DataResourceService {
         fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
         singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
 
+        return BaseResultEntity.success();
+    }
+
+    /**
+     * 查询资源申请
+     * @param req
+     * @return
+     */
+    public BaseResultEntity getDataResourceOrganAssign(DataResourceAssignReq req) {
+        Map<String, Object> paramMap = new HashMap<String, Object>() {
+            {
+                put("resourceFusionId", req.getResourceFusionId());
+                put("organId", req.getOrganId());
+            }
+        };
+        List<DataResourceVisibilityAuth> authOrganByParam = dataResourceRepository.findAuthOrganByParam(paramMap);
+        return BaseResultEntity.success(authOrganByParam);
+    }
+
+    public BaseResultEntity approvalDataResourceAssign(DataResourceAssignReq req) {
+        // 机构授权
+        if (req.getType() == 1) {
+            DataResourceVisibilityAuth auth = dataResourceRepository.queryDataResourceAuthById(req.getId());
+            if (auth == null) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"无授权信息");
+            }
+            DataResource dataResource = dataResourceRepository.queryDataResourceById(auth.getResourceId());
+            if (dataResource == null) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"无此资源信息");
+            }
+            auth.setAuditStatus(req.getAuditStatus());
+            if (req.getAuditStatus() == 1) {
+                auth.setAssignTime(new Date());
+            }
+            dataResourcePrRepository.updateDataResourceVisibilityAuth(auth);
+
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+
+        }
+        // 用户授权
+        if (req.getType() == 2) {
+            DataResourceUserAssign userAssign = dataResourceRepository.queryDataResourceUserAssignmentById(req.getId());
+            if (userAssign == null) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"无授权信息");
+            }
+            userAssign.setAuditStatus(req.getAuditStatus());
+            if (req.getAuditStatus() == 1) {
+                userAssign.setAssignTime(new Date());
+            }
+            dataResourcePrRepository.updateDataResourceUserAssignment(userAssign);
+        }
+        return BaseResultEntity.success();
     }
 }
 

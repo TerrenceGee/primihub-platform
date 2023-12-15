@@ -6,8 +6,12 @@ import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.dataenum.DataResourceAuthTypeEnum;
 import com.primihub.biz.entity.data.dataenum.ResourceStateEnum;
 import com.primihub.biz.entity.data.dataenum.SourceEnum;
+import com.primihub.biz.entity.data.po.DataProject;
+import com.primihub.biz.entity.data.po.DataProjectOrgan;
+import com.primihub.biz.entity.data.po.DataProjectResource;
 import com.primihub.biz.entity.data.po.DataResource;
 import com.primihub.biz.entity.data.req.*;
+import com.primihub.biz.entity.data.vo.ShareProjectVo;
 import com.primihub.biz.service.data.DataResourceService;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -429,6 +433,12 @@ public class ResourceController {
             @RequestHeader("roleType") Integer roleType,
             @RequestBody DataResourceAssignReq req
     ) {
+        if (req.getOrganId() == null || req.getOrganId().length() == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organId");
+        }
+        if (req.getResourceFusionId() == null || req.getResourceFusionId().length() == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceFusionId");
+        }
         return dataResourceService.saveDataResourceAssign(userId, roleType, req);
     }
 
@@ -439,7 +449,39 @@ public class ResourceController {
     public BaseResultEntity saveDataResourceOrganAssign(
             @RequestBody DataResourceAssignReq req
     ) {
-        log.info("处理资源申请");
         return dataResourceService.saveDataResourceOrganAssign(req);
     }
+    /**
+     * 查询资源申请
+     */
+    @GetMapping("getDataResourceOrganAssign")
+    public BaseResultEntity getDataResourceOrganAssign(
+            DataResourceAssignReq req
+    ) {
+        if (req.getOrganId() == null || req.getOrganId().length() == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organId");
+        }
+        if (req.getResourceFusionId() == null || req.getResourceFusionId().length() == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceFusionId");
+        }
+        return dataResourceService.getDataResourceOrganAssign(req);
+    }
+
+    /**
+     * 资源授权审核接口
+     */
+    @PostMapping("approvalDataResourceAssign")
+    public BaseResultEntity approvalDataResourceAssign(DataResourceAssignReq req){
+        if (req.getType() == null || !Arrays.asList(1, 2).contains(req.getType())) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"type");
+        }
+        if (req.getAuditStatus()==null||req.getAuditStatus()==0||req.getAuditStatus()>=3) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"auditStatus");
+        }
+        if (req.getId()==null) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"id");
+        }
+        return dataResourceService.approvalDataResourceAssign(req);
+    }
+
 }
