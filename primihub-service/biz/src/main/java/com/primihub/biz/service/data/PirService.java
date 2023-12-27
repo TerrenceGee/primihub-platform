@@ -1,6 +1,7 @@
 package com.primihub.biz.service.data;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.convert.DataTaskConvert;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -10,6 +11,7 @@ import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.dataenum.TaskTypeEnum;
 import com.primihub.biz.entity.data.po.DataPirTask;
 import com.primihub.biz.entity.data.po.DataTask;
+import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskVo;

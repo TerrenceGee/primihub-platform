@@ -4,15 +4,21 @@ import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.req.DataFResourceReq;
 import com.primihub.biz.service.data.OtherBusinessesService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * fusion数据资源管理
  */
+@Api(value = "Meta服务数据集接口",tags = "Meta服务数据集接口")
 @RequestMapping("fusionResource")
 @RestController
 public class FusionResourceController {
@@ -31,6 +37,10 @@ public class FusionResourceController {
                                             @RequestHeader("roleType") Integer roleType // 1.管理员 2.普通用户
                                             ) {
         return otherBusinessesService.getResourceList(req, userId, roleType);
+    @ApiOperation(value = "获取资源详情列表",httpMethod = "GET")
+    @GetMapping("getResourceList")
+    public BaseResultEntity getResourceList(DataFResourceReq req){
+        return otherBusinessesService.getResourceList(req);
     }
 
     /**
@@ -48,6 +58,10 @@ public class FusionResourceController {
 
     @RequestMapping("getDataResource")
     public BaseResultEntity getDataResource(String resourceId) {
+    @ApiOperation(value = "根据资源唯一ID获取资源详情",httpMethod = "GET",consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @ApiImplicitParam(name = "resourceId", value = "资源唯一ID", dataType = "String", paramType = "query")
+    @GetMapping(value = "getDataResource")
+    public BaseResultEntity getDataResource(String resourceId){
         if (StringUtils.isBlank(resourceId)) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceId");
         }
@@ -56,6 +70,9 @@ public class FusionResourceController {
 
     @RequestMapping("getResourceTagList")
     public BaseResultEntity getResourceTagList() {
+    @ApiOperation(value = "获取资源集标签",httpMethod = "GET")
+    @GetMapping("getResourceTagList")
+    public BaseResultEntity getResourceTagList(){
         return otherBusinessesService.getResourceTagList();
     }
 

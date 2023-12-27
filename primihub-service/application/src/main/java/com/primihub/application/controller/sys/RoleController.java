@@ -4,14 +4,15 @@ import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.sys.param.SaveOrUpdateRoleParam;
 import com.primihub.biz.service.sys.SysRoleService;
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 角色管理
  */
+
+@Api(value = "角色接口",tags = "角色接口")
 @RequestMapping("role")
 @RestController
 public class RoleController {
@@ -25,6 +26,7 @@ public class RoleController {
      * @return
      */
     @RequestMapping("saveOrUpdateRole")
+    @PostMapping("saveOrUpdateRole")
     public BaseResultEntity saveOrUpdateRole(SaveOrUpdateRoleParam saveOrUpdateRoleParam){
         if(saveOrUpdateRoleParam.getRoleId()!=null){
             if(saveOrUpdateRoleParam.getRoleId()<=0L) {
@@ -34,7 +36,7 @@ public class RoleController {
         return sysRoleService.saveOrUpdateRole(saveOrUpdateRoleParam);
     }
 
-    @RequestMapping("deleteSysRole")
+    @PostMapping("deleteSysRole")
     public BaseResultEntity deleteSysRole(Long roleId){
         if(roleId==null) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"roleId");
@@ -42,7 +44,7 @@ public class RoleController {
         return sysRoleService.deleteSysRole(roleId);
     }
 
-    @RequestMapping("getRoleAuthTree")
+    @GetMapping("getRoleAuthTree")
     public BaseResultEntity getRoleAuthTree(Long roleId){
         if(roleId==null) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"roleId");
@@ -58,6 +60,7 @@ public class RoleController {
      * @return
      */
     @RequestMapping("findRolePage")
+    @GetMapping("findRolePage")
     public BaseResultEntity findRolePage(String roleName,
                                          @RequestParam(defaultValue = "1") Integer pageNum,
                                          @RequestParam(defaultValue = "10")Integer pageSize){
