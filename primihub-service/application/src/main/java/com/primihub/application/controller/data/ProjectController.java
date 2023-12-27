@@ -50,13 +50,14 @@ public class ProjectController {
      * 项目列表接口
      * @return
      */
-    @RequestMapping("getProjectList")
-    public BaseResultEntity getProjectList(DataProjectQueryReq req,
-                                           @RequestHeader("userId") Long userId,
-                                           @RequestHeader("roleType") Integer roleType
-                                           ){
     @GetMapping("getProjectList")
-    public BaseResultEntity getProjectList(DataProjectQueryReq req){
+        public BaseResultEntity getProjectList(DataProjectQueryReq req,
+                @RequestHeader("userId") Long userId,
+                @RequestHeader("roleType") Integer roleType
+                                           ){
+        if (req.getQueryType() == null ) {
+            req.setQueryType(0);
+        }
         try {
             if (StringUtils.isNotBlank(req.getStartDate())) {
                 DateUtil.parseDate(req.getStartDate(),DateUtil.DateStyle.TIME_FORMAT_NORMAL.getFormat());

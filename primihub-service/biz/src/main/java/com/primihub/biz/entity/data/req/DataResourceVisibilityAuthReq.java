@@ -1,5 +1,6 @@
 package com.primihub.biz.entity.data.req;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,8 +13,10 @@ public class DataResourceVisibilityAuthReq {
     /** 0申请中 1通过 2拒绝 */
     private Integer auditStatus;
     /** 申请时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date applyTime;
     /** 授权时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date assignTime;
 
     public DataResourceVisibilityAuthReq() {

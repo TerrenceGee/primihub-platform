@@ -8,6 +8,7 @@ import com.primihub.biz.constant.RedisKeyConstant;
 import com.primihub.biz.constant.SysConstant;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
+import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.base.PageParam;
 import com.primihub.biz.entity.sys.enumeration.RoleTypeEnum;
 import com.primihub.biz.entity.sys.param.*;
@@ -25,6 +26,7 @@ import com.primihub.biz.tool.PlatformHelper;
 import com.primihub.biz.util.crypt.CryptUtil;
 import com.primihub.biz.util.crypt.SignUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
+import com.rabbitmq.http.client.domain.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
@@ -519,5 +521,26 @@ public class SysUserService {
 
     public List<SysUser> findAllUser() {
         return sysUserSecondarydbRepository.selectAllSysUser();
+    }
+
+    public BaseResultEntity findUserPageSummary(FindUserPageParam findUserPageParam, Integer pageNum, Integer pageSize) {
+        PageParam pageParam=new PageParam(pageNum,pageSize);
+        Map paramMap=new HashMap(){
+            {
+                put("userName",findUserPageParam.getUserName());
+                put("roleId",findUserPageParam.getRoleId());
+                put("pageIndex",pageParam.getPageIndex());
+                put("pageSize",pageParam.getPageSize()+1);
+            }
+        };
+        List<SysUserListVO> sysUserList =sysUserSecondarydbRepository.selectSysUserListByParam(paramMap);
+        List<Map<String, Object>> returnMap = sysUserList.stream().map(sysUserVO -> new HashMap<String, Object>() {
+            {
+                put("userId", sysUserVO.getUserId());
+                put("userName", sysUserVO.getUserName());
+            }
+        }).collect(Collectors.toList());
+        Long count=sysUserSecondarydbRepository.selectSysUserListCountByParam(paramMap);
+        return BaseResultEntity.success(new PageDataEntity(Math.toIntExact(count),pageSize,pageNum,returnMap));
     }
 }

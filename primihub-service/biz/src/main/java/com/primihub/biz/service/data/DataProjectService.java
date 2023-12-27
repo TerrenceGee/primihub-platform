@@ -77,6 +77,7 @@ public class DataProjectService {
             if (StringUtils.isBlank(req.getProjectId())) {
                 dataProject.setProjectId(organConfiguration.generateUniqueCode());
             }
+            dataProject.setCreatedUserId(userId);
             // Available by default
             dataProject.setStatus(1);
             updateProjectProviderOrganName(req.getProjectOrgans(),dataProject);

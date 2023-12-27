@@ -15,13 +15,12 @@ import com.primihub.biz.entity.data.dataenum.DataResourceAuthTypeEnum;
 import com.primihub.biz.entity.data.dataenum.ResourceStateEnum;
 import com.primihub.biz.entity.data.dataenum.SourceEnum;
 import com.primihub.biz.entity.data.dto.DataFusionCopyDto;
-import com.primihub.biz.entity.data.dto.LokiDto;
 import com.primihub.biz.entity.data.dto.ModelDerivationDto;
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.entity.data.vo.*;
 import com.primihub.biz.entity.event.RemoteDataResourceEvent;
-import com.primihub.biz.entity.fusion.param.ResourceParam;
+import com.primihub.biz.entity.sys.param.OrganParam;
 import com.primihub.biz.entity.sys.po.SysFile;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
@@ -31,20 +30,19 @@ import com.primihub.biz.repository.secondarydb.data.DataModelRepository;
 import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysFileSecondarydbRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
+import com.primihub.biz.repository.secondarydb.sys.SysUserSecondarydbRepository;
 import com.primihub.biz.service.feign.FusionResourceService;
+import com.primihub.biz.service.sys.SysOrganService;
 import com.primihub.biz.service.sys.SysUserService;
 import com.primihub.biz.util.DataUtil;
 import com.primihub.biz.util.FileUtil;
-import com.primihub.biz.util.crypt.CryptUtil;
 import com.primihub.biz.util.crypt.SignUtil;
 import com.primihub.sdk.task.TaskHelper;
 import com.primihub.sdk.task.dataenum.FieldTypeEnum;
 import com.primihub.sdk.task.param.TaskDataSetParam;
 import com.primihub.sdk.task.param.TaskParam;
-import io.lettuce.core.api.reactive.BaseRedisReactiveCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpEntity;
@@ -97,8 +95,12 @@ public class DataResourceService {
     private ApplicationContext applicationContext;
     @Autowired
     private SysOrganSecondarydbRepository sysOrganSecondarydbRepository;
-    @Resource(name="soaRestTemplate")
+    @Resource(name = "soaRestTemplate")
     private RestTemplate restTemplate;
+    @Autowired
+    private SysOrganService sysOrganService;
+    @Autowired
+    private SysUserSecondarydbRepository sysUserSecondarydbRepository;
 
     public BaseResultEntity getDataResourceList(DataResourceReq req, Long userId) {
         Map<String, Object> paramMap = new HashMap<>();
@@ -126,9 +128,7 @@ public class DataResourceService {
             userIds.add(vo.getUserId());
             return DataResourceConvert.dataResourcePoConvertVo(vo);
         }).collect(Collectors.toList());
-        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds)
-                .stream()
-                .collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds).stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
         Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
         for (DataResourceVo dataResourceVo : voList) {
             SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
@@ -175,9 +175,7 @@ public class DataResourceService {
             userIds.add(vo.getUserId());
             return DataResourceConvert.dataResourcePoConvertVo(vo);
         }).collect(Collectors.toList());
-        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds)
-                .stream()
-                .collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds).stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
         Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
         for (DataResourceVo dataResourceVo : voList) {
             SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
@@ -238,10 +236,10 @@ public class DataResourceService {
                 dataResourcePrRepository.saveResourceTag(dataResourceTag);
                 dataResourcePrRepository.saveResourceTagRelation(dataResourceTag.getTagId(), dataResource.getResourceId());
             }
-            if((req.getResourceAuthType().equals(DataResourceAuthTypeEnum.ASSIGN.getAuthType()) || req.getResourceAuthType().equals(DataResourceAuthTypeEnum.PRIVATE.getAuthType()))&&req.getFusionOrganList()!=null&&req.getFusionOrganList().size()!=0){
-                List<DataResourceVisibilityAuth> authList=new ArrayList<>();
-                for(DataSourceOrganReq organ:req.getFusionOrganList()){
-                    DataResourceVisibilityAuth dataResourceVisibilityAuth=new DataResourceVisibilityAuth(dataResource.getResourceId(),organ.getOrganGlobalId(),organ.getOrganName());
+            if ((req.getResourceAuthType().equals(DataResourceAuthTypeEnum.ASSIGN.getAuthType()) || req.getResourceAuthType().equals(DataResourceAuthTypeEnum.PRIVATE.getAuthType())) && req.getFusionOrganList() != null && req.getFusionOrganList().size() != 0) {
+                List<DataResourceVisibilityAuth> authList = new ArrayList<>();
+                for (DataSourceOrganReq organ : req.getFusionOrganList()) {
+                    DataResourceVisibilityAuth dataResourceVisibilityAuth = new DataResourceVisibilityAuth(dataResource.getResourceId(), organ.getOrganGlobalId(), organ.getOrganName());
                     dataResourceVisibilityAuth.setResourceFusionId(dataResource.getResourceFusionId());
                     dataResourceVisibilityAuth.setAuditStatus(1);
                     dataResourceVisibilityAuth.setApplyTime(new Date());
@@ -254,36 +252,34 @@ public class DataResourceService {
                 List<DataResourceAssignUserReq> userAssignList = req.getUserAssignList();
                 if (userAssignList != null && userAssignList.size() != 0) {
                     DataResource finalDataResource1 = dataResource;
-                    List<DataResourceUserAssign> collect = userAssignList.stream().map(
-                            userReq -> {
-                                DataResourceUserAssign userAssign = new DataResourceUserAssign();
-                                userAssign.setAssignTime(new Date());
-                                userAssign.setResourceId(finalDataResource1.getResourceId());
-                                userAssign.setResourceFusionId(finalDataResource1.getResourceFusionId());
-                                userAssign.setResourceOrganId(sysLocalOrganInfo.getOrganId());
-                                userAssign.setAuditStatus(1);
-                                userAssign.setApplyTime(new Date());
-                                userAssign.setUserId(userReq.getUserId());
-                                userAssign.setOperateUserId(userId);
-                                return userAssign;
-                            }
-                    ).collect(Collectors.toList());
+                    List<DataResourceUserAssign> collect = userAssignList.stream().map(userReq -> {
+                        DataResourceUserAssign userAssign = new DataResourceUserAssign();
+                        userAssign.setAssignTime(new Date());
+                        userAssign.setResourceId(finalDataResource1.getResourceId());
+                        userAssign.setResourceFusionId(finalDataResource1.getResourceFusionId());
+                        userAssign.setResourceOrganId(sysLocalOrganInfo.getOrganId());
+                        userAssign.setAuditStatus(1);
+                        userAssign.setApplyTime(new Date());
+                        userAssign.setUserId(userReq.getUserId());
+                        userAssign.setOperateUserId(userId);
+                        return userAssign;
+                    }).collect(Collectors.toList());
                     dataResourcePrRepository.saveDataResourceUserAssignList(collect);
                 }
             }
-            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
-            map.put("resourceId",dataResource.getResourceId());
-            map.put("resourceFusionId",dataResource.getResourceFusionId());
-            map.put("resourceName",dataResource.getResourceName());
-            map.put("resourceDesc",dataResource.getResourceDesc());
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
+            map.put("resourceId", dataResource.getResourceId());
+            map.put("resourceFusionId", dataResource.getResourceFusionId());
+            map.put("resourceName", dataResource.getResourceName());
+            map.put("resourceDesc", dataResource.getResourceDesc());
 
             // 传送任务
             if (dataResource.getResourceAuthType().equals(DataResourceAuthTypeEnum.PUBLIC.getAuthType())) {
                 applicationContext.publishEvent(new RemoteDataResourceEvent(dataResource.getResourceId(), null));
             }
-        }catch (Exception e){
-            log.info("save DataResource Exception：{}",e.getMessage());
+        } catch (Exception e) {
+            log.info("save DataResource Exception：{}", e.getMessage());
             e.printStackTrace();
             return BaseResultEntity.failure(BaseResultEnum.FAILURE);
         }
@@ -324,20 +320,18 @@ public class DataResourceService {
                 List<DataResourceAssignUserReq> userAssignList = req.getUserAssignList();
                 if (userAssignList != null && userAssignList.size() != 0) {
                     DataResource finalDataResource1 = dataResource;
-                    List<DataResourceUserAssign> collect = userAssignList.stream().map(
-                            userReq -> {
-                                DataResourceUserAssign userAssign = new DataResourceUserAssign();
-                                userAssign.setAssignTime(new Date());
-                                userAssign.setResourceId(finalDataResource1.getResourceId());
-                                userAssign.setResourceFusionId(finalDataResource1.getResourceFusionId());
-                                userAssign.setResourceOrganId(sysLocalOrganInfo.getOrganId());
-                                userAssign.setAuditStatus(1);
-                                userAssign.setApplyTime(new Date());
-                                userAssign.setUserId(userReq.getUserId());
-                                userAssign.setOperateUserId(userId);
-                                return userAssign;
-                            }
-                    ).collect(Collectors.toList());
+                    List<DataResourceUserAssign> collect = userAssignList.stream().map(userReq -> {
+                        DataResourceUserAssign userAssign = new DataResourceUserAssign();
+                        userAssign.setAssignTime(new Date());
+                        userAssign.setResourceId(finalDataResource1.getResourceId());
+                        userAssign.setResourceFusionId(finalDataResource1.getResourceFusionId());
+                        userAssign.setResourceOrganId(sysLocalOrganInfo.getOrganId());
+                        userAssign.setAuditStatus(1);
+                        userAssign.setApplyTime(new Date());
+                        userAssign.setUserId(userReq.getUserId());
+                        userAssign.setOperateUserId(userId);
+                        return userAssign;
+                    }).collect(Collectors.toList());
                     dataResourcePrRepository.saveDataResourceUserAssignList(collect);
                 }
             }
@@ -352,12 +346,12 @@ public class DataResourceService {
         if (!taskParam.getSuccess()) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_EDIT_FAIL, "无法将资源注册到数据集中:" + taskParam.getError());
         }
-        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
-        Map<String,Object> map = new HashMap<>();
-        map.put("resourceId",dataResource.getResourceId());
-        map.put("resourceName",dataResource.getResourceName());
-        map.put("resourceDesc",dataResource.getResourceDesc());
+        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
+        Map<String, Object> map = new HashMap<>();
+        map.put("resourceId", dataResource.getResourceId());
+        map.put("resourceName", dataResource.getResourceName());
+        map.put("resourceDesc", dataResource.getResourceDesc());
 
         if (Objects.equals(dataResource.getResourceAuthType(), DataResourceAuthTypeEnum.PUBLIC.getAuthType()) || Objects.equals(req.getResourceAuthType(), DataResourceAuthTypeEnum.PRIVATE.getAuthType())) {
             if (Objects.equals(req.getResourceAuthType(), DataResourceAuthTypeEnum.PUBLIC.getAuthType())) {
@@ -375,7 +369,7 @@ public class DataResourceService {
 
     public BaseResultEntity getDataResource(String resourceId) {
         DataResource dataResource = dataResourceRepository.queryDataResourceByResourceFusionId(resourceId);
-        if (dataResource == null){
+        if (dataResource == null) {
             try {
                 long l = Long.parseLong(resourceId);
                 dataResource = dataResourceRepository.queryDataResourceById(Long.parseLong(resourceId));
@@ -392,9 +386,7 @@ public class DataResourceService {
         SysUser sysUser = sysUserService.getSysUserById(dataResourceVo.getUserId());
         dataResourceVo.setUserName(sysUser == null ? "" : sysUser.getUserName());
         dataResourceVo.setTags(dataResourceTags.stream().map(DataResourceConvert::dataResourceTagPoConvertListVo).collect(Collectors.toList()));
-        List<DataFileFieldVo> dataFileFieldList = dataResourceRepository.queryDataFileFieldByFileId(dataResource.getResourceId())
-                .stream().map(DataResourceConvert::DataFileFieldPoConvertVo)
-                .collect(Collectors.toList());
+        List<DataFileFieldVo> dataFileFieldList = dataResourceRepository.queryDataFileFieldByFileId(dataResource.getResourceId()).stream().map(DataResourceConvert::DataFileFieldPoConvertVo).collect(Collectors.toList());
         Map<String, Object> map = new HashMap<>();
         try {
             if (dataResource.getResourceSource() == 2) {
@@ -414,10 +406,15 @@ public class DataResourceService {
             log.info("资源id:{}-文件读取失败：{}", dataResource.getResourceId(), e.getMessage());
             map.put("dataList", new ArrayList());
         }
-        map.put("resource",dataResourceVo);
+        map.put("resource", dataResourceVo);
         DataResource finalDataResource = dataResource;
-        map.put("fusionOrganList",dataResourceRepository.findAuthOrganByResourceId(new ArrayList(){{add(finalDataResource.getResourceId());}}));
-        map.put("fieldList",dataFileFieldList);
+        map.put("fusionOrganList", dataResourceRepository.findAuthOrganByResourceId(new ArrayList() {{
+            add(finalDataResource.getResourceId());
+        }}));
+        map.put("userAssignList", dataResourceRepository.findUserAssignByResourceId(new ArrayList() {{
+            add(finalDataResource.getResourceId());
+        }}));
+        map.put("fieldList", dataFileFieldList);
         return BaseResultEntity.success(map);
     }
 
@@ -443,17 +440,14 @@ public class DataResourceService {
         Integer count = dataResourceRepository.queryResourceProjectRelationCount(dataResource.getResourceFusionId());
         if (count > 0) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_DEL_FAIL, "该资源已关联项目");
-//        Integer count = dataResourceRepository.queryResourceProjectRelationCount(dataResource.getResourceFusionId());
-//        if (count>0){
-//            return BaseResultEntity.failure(BaseResultEnum.DATA_DEL_FAIL,"该资源已关联项目");
-//        }
-        if (dataResource.getResourceSource().equals(1)){
+        }
+        if (dataResource.getResourceSource().equals(1)) {
             SysFile sysFile = sysFileSecondarydbRepository.selectSysFileByFileId(dataResource.getFileId());
             try {
                 Files.delete(Paths.get(sysFile.getFileUrl()));
-            }catch (Exception e){
-                log.info("filePaht:{} 删除失败:{}",sysFile.getFileUrl(),e.getMessage());
-                return BaseResultEntity.failure(BaseResultEnum.DATA_DEL_FAIL,"文件删除失败:"+e.getMessage());
+            } catch (Exception e) {
+                log.info("filePaht:{} 删除失败:{}", sysFile.getFileUrl(), e.getMessage());
+                return BaseResultEntity.failure(BaseResultEnum.DATA_DEL_FAIL, "文件删除失败:" + e.getMessage());
             }
         }
         dataResourcePrRepository.deleteResource(resourceId);
@@ -462,11 +456,11 @@ public class DataResourceService {
         dataResource.setIsDel(1);
         singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
         dataResource.setResourceState(1);
-        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
         return BaseResultEntity.success("删除资源成功");
-    }
 
+    }
 
     public BaseResultEntity getDataResourceFieldPage(Long resourceId, PageReq req, Long userId) {
         Map<String, Object> map = new HashMap<>();
@@ -552,7 +546,8 @@ public class DataResourceService {
         return BaseResultEntity.success(csvVo);
     }
 
-    public List<DataFileField> batchInsertDataFileField(SysFile sysFile, String[] headers, LinkedHashMap<String, Object> dataMap) {
+    public List<DataFileField> batchInsertDataFileField(SysFile sysFile, String[]
+            headers, LinkedHashMap<String, Object> dataMap) {
         List<DataFileField> fileFieldList = new ArrayList<>();
         int i = 1;
         for (String fieldName : headers) {
@@ -572,7 +567,8 @@ public class DataResourceService {
         return fileFieldList;
     }
 
-    public List<DataFileField> batchInsertDataDataSourceField(List<String> headers, Map<String, Object> dataMap) {
+    public List<DataFileField> batchInsertDataDataSourceField
+            (List<String> headers, Map<String, Object> dataMap) {
         List<DataFileField> fileFieldList = new ArrayList<>();
         int i = 1;
         Iterator<String> iterator = headers.iterator();
@@ -593,7 +589,6 @@ public class DataResourceService {
         }
         return fileFieldList;
     }
-
 
 
     public FieldTypeEnum getFieldType(String fieldVal) {
@@ -619,9 +614,9 @@ public class DataResourceService {
         return BaseResultEntity.success(dataResourceRepository.queryAllResourceTag());
     }
 
-    public Object findFusionCopyResourceList(Long startOffset, Long endOffset){
+    public Object findFusionCopyResourceList(Long startOffset, Long endOffset) {
         log.info("本方机构：{}, 查找fusionCopy的， startOffset :{}, endOffset:{}", organConfiguration.getSysLocalOrganName(), startOffset, endOffset);
-        List<DataResource> resourceList=dataResourceRepository.findCopyResourceList(startOffset,endOffset);
+        List<DataResource> resourceList = dataResourceRepository.findCopyResourceList(startOffset, endOffset);
         log.info("本地查找出的资源: {}", resourceList.size());
         Set<String> ids = resourceList.stream().map(DataResource::getResourceFusionId).collect(Collectors.toSet());
         log.info("远程查找备份的资源ids: {}", ids);
@@ -665,9 +660,9 @@ public class DataResourceService {
                 }
             }
             List<String> tags = Optional.ofNullable(resourceTagMap.get(dataResource.getResourceId())).map(list -> list.stream().map(ResourceTagListVo::getTagName).collect(Collectors.toList())).orElse(null);
-            List<DataResourceVisibilityAuth> authOrganList = Optional.ofNullable(resourceAuthMap.get(dataResource.getResourceId())).orElse(null);
+            List<DataResourceVisibilityAuth> authOrganList = Optional.ofNullable(resourceAuthMap.get(dataResource.getResourceId())).orElse(Collections.emptyList());
             List<DataResourceVisibilityAuthReq> authReqList = authOrganList.stream().map(DataResourceConvert::dataResourcePoConvertAuthReq).collect(Collectors.toList());
-            copyVolist.add(DataResourceConvert.dataResourcePoConvertCopyVo(dataResource, organConfiguration.getSysLocalOrganId(), organConfiguration.getSysLocalOrganName(),StringUtils.join(tags, ","), authReqList, fileFieldListMap.get(dataResource.getResourceId()), sysUserMap.get(dataResource.getUserId())));
+            copyVolist.add(DataResourceConvert.dataResourcePoConvertCopyVo(dataResource, organConfiguration.getSysLocalOrganId(), organConfiguration.getSysLocalOrganName(), StringUtils.join(tags, ","), authReqList, fileFieldListMap.get(dataResource.getResourceId()), sysUserMap.get(dataResource.getUserId())));
         }
         return copyVolist;
     }
@@ -703,7 +698,8 @@ public class DataResourceService {
         return BaseResultEntity.success();
     }
 
-    public BaseResultEntity handleDataResourceSource(DataResource dataResource, List<DataResourceFieldReq> fieldList, DataSource dataSource) {
+    public BaseResultEntity handleDataResourceSource(DataResource
+                                                             dataResource, List<DataResourceFieldReq> fieldList, DataSource dataSource) {
         List<String> fieldNames = fieldList.stream().map(DataResourceFieldReq::getFieldName).collect(Collectors.toList());
         BaseResultEntity baseResultEntity = dataSourceService.tableDataStatistics(dataSource, fieldNames.contains("y") || fieldNames.contains("Y"));
         if (!baseResultEntity.getCode().equals(BaseResultEnum.SUCCESS.getReturnCode())) {
@@ -807,7 +803,8 @@ public class DataResourceService {
         return yRow;
     }
 
-    public TaskParam resourceSynGRPCDataSet(DataSource dataSource, DataResource dataResource, List<DataFileField> fieldList) {
+    public TaskParam resourceSynGRPCDataSet(DataSource dataSource, DataResource
+            dataResource, List<DataFileField> fieldList) {
         if (dataResource.getResourceSource() != 2) {
             return resourceSynGRPCDataSet(dataResource.getFileSuffix(), dataResource.getResourceFusionId(), dataResource.getUrl(), fieldList);
         }
@@ -815,11 +812,11 @@ public class DataResourceService {
         map.put("dbType", dataSource.getDbType());
         map.put("dbUrl", dataSource.getDbUrl());
         map.put("tableName", dataSource.getDbTableName());
-        map.put("dbDriver",dataSource.getDbDriver());
-        if (SourceEnum.sqlite.getSourceType().equals(dataSource.getDbType())){
-            map.put("db_path",dataSource.getDbUrl());
-        }else {
-            map.put("username",dataSource.getDbUsername());
+        map.put("dbDriver", dataSource.getDbDriver());
+        if (SourceEnum.sqlite.getSourceType().equals(dataSource.getDbType())) {
+            map.put("db_path", dataSource.getDbUrl());
+        } else {
+            map.put("username", dataSource.getDbUsername());
             map.put("password", dataSource.getDbPassword());
             map.put("dbName", dataSource.getDbName());
             map.putAll(DataUtil.getJDBCData(dataSource.getDbUrl()));
@@ -851,8 +848,8 @@ public class DataResourceService {
         if (!dataResource.getResourceState().equals(resourceState)) {
             dataResource.setResourceState(resourceState);
             dataResourcePrRepository.editResource(dataResource);
-            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
 
             applicationContext.publishEvent(new RemoteDataResourceEvent(resourceId, null));
         }
@@ -1058,6 +1055,7 @@ public class DataResourceService {
 
     /**
      * 组装传输实体
+     *
      * @param resourceId
      * @return
      */
@@ -1070,11 +1068,9 @@ public class DataResourceService {
             dataResource.setResourceState(resourceState);
         }
         List<DataResourceTag> dataResourceTags = dataResourceRepository.queryTagsByResourceId(resourceId);
-        DataResourceVo dataResourceVo = DataResourceConvert.dataResourcePoConvertVo(dataResource, organConfiguration.getSysLocalOrganId() ,organConfiguration.getSysLocalOrganName());
+        DataResourceVo dataResourceVo = DataResourceConvert.dataResourcePoConvertVo(dataResource, organConfiguration.getSysLocalOrganId(), organConfiguration.getSysLocalOrganName());
         dataResourceVo.setTags(dataResourceTags.stream().map(DataResourceConvert::dataResourceTagPoConvertListVo).collect(Collectors.toList()));
-        List<DataFileFieldVo> dataFileFieldList = dataResourceRepository.queryDataFileFieldByFileId(dataResource.getResourceId())
-                .stream().map(DataResourceConvert::DataFileFieldPoConvertVo)
-                .collect(Collectors.toList());
+        List<DataFileFieldVo> dataFileFieldList = dataResourceRepository.queryDataFileFieldByFileId(dataResource.getResourceId()).stream().map(DataResourceConvert::DataFileFieldPoConvertVo).collect(Collectors.toList());
         Map<String, Object> map = new HashMap<>();
         try {
             // 数据库格式或者是csv格式
@@ -1108,19 +1104,65 @@ public class DataResourceService {
         return map;
     }
 
-    public BaseResultEntity saveUserAssignment(UserAssignReq req, Long userId, Integer roleType) {
-        dataResourcePrRepository.deleteResourceUserAssignByResourceFusionId(req.getResourceFusionId());
-        List<DataResourceUserAssign> collect = req.getUserId().stream().map(aLong -> {
-            DataResourceUserAssign userAssign = new DataResourceUserAssign();
-            userAssign.setResourceFusionId(req.getResourceFusionId());
-            userAssign.setOperateUserId(userId);
-            userAssign.setUserId(aLong);
-            userAssign.setAssignTime(new Date());
-            userAssign.setApplyTime(new Date());
-            userAssign.setAuditStatus(1);
-            return userAssign;
-        }).collect(Collectors.toList());
-        dataResourcePrRepository.saveDataResourceUserAssignList(collect);
+    public BaseResultEntity saveAssignment(AssignReq req, Long userId, Integer roleType) {
+//        dataResourcePrRepository.deleteResourceUserAssignByResourceFusionId(req.getResourceFusionId());
+        if (req.getResourceId() == null && StringUtils.isBlank(req.getResourceFusionId())) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceId");
+        }
+        if (req.getResourceId() != null) {
+            DataResource dataResource = dataResourceRepository.queryDataResourceById(req.getResourceId());
+            if (dataResource == null) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "dataResource");
+            }
+            if (req.getFusionOrganList() != null && !req.getFusionOrganList().isEmpty()) {
+                List<DataResourceVisibilityAuth> organList = req.getFusionOrganList().stream().map(organReq -> {
+                    DataResourceVisibilityAuth auth = new DataResourceVisibilityAuth();
+                    auth.setResourceId(dataResource.getResourceId());
+                    auth.setResourceFusionId(dataResource.getResourceFusionId());
+                    auth.setOrganGlobalId(organReq.getOrganGlobalId());
+                    auth.setOrganName(organReq.getOrganName());
+                    auth.setAuditStatus(1);
+                    auth.setApplyTime(new Date());
+                    auth.setAssignTime(new Date());
+                    auth.setIsDel(0);
+                    return auth;
+                }).collect(Collectors.toList());
+                dataResourcePrRepository.saveVisibilityAuth(organList);
+                fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+                singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
+            }
+
+            if (req.getUserAssignList() != null && !req.getUserAssignList().isEmpty()) {
+                List<DataResourceUserAssign> userAssignList = req.getUserAssignList().stream().map(userAssignReq -> {
+                    DataResourceUserAssign userAssign = new DataResourceUserAssign();
+                    userAssign.setApplyTime(new Date());
+                    userAssign.setAssignTime(new Date());
+                    userAssign.setAuditStatus(1);
+                    userAssign.setOperateUserId(userId);
+                    userAssign.setResourceFusionId(dataResource.getResourceFusionId());
+                    userAssign.setResourceId(dataResource.getResourceId());
+                    userAssign.setResourceOrganId(dataResource.getPublicOrganId());
+                    userAssign.setUserId(userAssignReq.getUserId());
+                    return userAssign;
+                }).collect(Collectors.toList());
+                dataResourcePrRepository.saveDataResourceUserAssignList(userAssignList);
+            }
+        } else {
+            if (req.getUserAssignList() != null && !req.getUserAssignList().isEmpty()) {
+                List<DataResourceUserAssign> userAssignList = req.getUserAssignList().stream().map(userAssignReq -> {
+                    DataResourceUserAssign userAssign = new DataResourceUserAssign();
+                    userAssign.setApplyTime(new Date());
+                    userAssign.setAssignTime(new Date());
+                    userAssign.setAuditStatus(1);
+                    userAssign.setOperateUserId(userId);
+                    userAssign.setResourceFusionId(req.getResourceFusionId());
+                    userAssign.setResourceId(null);
+                    userAssign.setUserId(userAssignReq.getUserId());
+                    return userAssign;
+                }).collect(Collectors.toList());
+                dataResourcePrRepository.saveDataResourceUserAssignList(userAssignList);
+            }
+        }
         return BaseResultEntity.success();
     }
 
@@ -1147,22 +1189,29 @@ public class DataResourceService {
         return BaseResultEntity.success(returnMap);
     }
 
-    public BaseResultEntity getDataResourceAssignmentDetail(String resourceFusionId, Long userId, PageReq pageReq, Integer queryType) {
+    public BaseResultEntity getDataResourceAssignmentDetail(String resourceFusionId, Long resourceId, Long userId, PageReq pageReq, Integer queryType) {
         if (queryType == null) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "queryType");
+        }if (StringUtils.isBlank(resourceFusionId)) {
+            DataResource dataResource = dataResourceRepository.queryDataResourceById(resourceId);
+            if (dataResource == null) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "dataResource");
+            }
+            resourceFusionId = dataResource.getResourceFusionId();
         }
+        String finalResourceFusionId = resourceFusionId;
         // 机构
         if (queryType == 1) {
             Map<String, Object> paramMap = new HashMap() {
                 {
-                    put("resourceFusionId", resourceFusionId);
+                    put("resourceFusionId", finalResourceFusionId);
                     put("offset", pageReq.getOffset());
                     put("pageSize", pageReq.getPageSize());
                 }
             };
             List<DataResourceVisibilityAuth> authOrganList = dataResourceRepository.findAuthOrganByParam(paramMap);
             if (authOrganList.isEmpty()) {
-                return BaseResultEntity.success(new PageDataEntity(0,pageReq.getPageSize(),pageReq.getPageNo(),new ArrayList()));
+                return BaseResultEntity.success(new PageDataEntity(0, pageReq.getPageSize(), pageReq.getPageNo(), new ArrayList()));
             }
             Integer count = dataResourceRepository.findAuthOrganCountByParam(paramMap);
             return BaseResultEntity.success(new PageDataEntity(count, pageReq.getPageSize(), pageReq.getPageNo(), authOrganList));
@@ -1171,17 +1220,27 @@ public class DataResourceService {
         if (queryType == 2) {
             Map<String, Object> paramMap = new HashMap() {
                 {
-                    put("resourceFusionId", resourceFusionId);
+                    put("resourceFusionId", finalResourceFusionId);
                     put("offset", pageReq.getOffset());
                     put("pageSize", pageReq.getPageSize());
                 }
             };
             List<DataResourceUserAssign> userAssignByParam = dataResourceRepository.findUserAssignByParam(paramMap);
             if (userAssignByParam.isEmpty()) {
-                return BaseResultEntity.success(new PageDataEntity(0,pageReq.getPageSize(),pageReq.getPageNo(),new ArrayList()));
+                return BaseResultEntity.success(new PageDataEntity(0, pageReq.getPageSize(), pageReq.getPageNo(), new ArrayList()));
             }
+            Set<Long> userIdSet = userAssignByParam.stream().map(DataResourceUserAssign::getUserId).collect(Collectors.toSet());
+            List<SysUser> sysUsers = sysUserSecondarydbRepository.selectSysUserByUserIdSet(userIdSet);
+            Map<Long, String> userMap = sysUsers.stream().collect(Collectors.toMap(SysUser::getUserId, SysUser::getUserName));
+
+            List<Object> collect = userAssignByParam.stream().map(dataResourceUserAssign -> {
+                DataResourceUserAssignVo vo = new DataResourceUserAssignVo(dataResourceUserAssign);
+                vo.setUserName(userMap.getOrDefault(vo.getUserId(), ""));
+                vo.setOrganName(organConfiguration.getSysLocalOrganName());
+                return vo;
+            }).collect(Collectors.toList());
             Integer count = dataResourceRepository.findUserAssignCountByParam(paramMap);
-            return BaseResultEntity.success(new PageDataEntity(count, pageReq.getPageSize(), pageReq.getPageNo(), userAssignByParam));
+            return BaseResultEntity.success(new PageDataEntity(count, pageReq.getPageSize(), pageReq.getPageNo(), collect));
         }
         return BaseResultEntity.failure(BaseResultEnum.DATA_NO_MATCHING, "queryType");
     }
@@ -1212,87 +1271,76 @@ public class DataResourceService {
             }
             organAuth.setAuditStatus(req.getAuditStatus());
             dataResourcePrRepository.updateDataResourceVisibilityAuth(organAuth);
-            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(req.getResourceId(), req.getResourceId()));
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(req.getResourceId(), req.getResourceId()));
             DataResource dataResource = dataResourceRepository.queryDataResourceById(req.getResourceId());
-            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
             return BaseResultEntity.success();
         }
         return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "queryType");
     }
 
-    public BaseResultEntity getDataResourceAssignedToMe(Long userId, Integer roleType, PageReq req, Integer queryType) {
+    public BaseResultEntity getDataResourceAssignedToMe(Long userId, PageReq req) {
         SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
         // 1管理员 2普通用户
-        if (roleType == 2) {
-            try {
-                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
-                if (sysOrgans.size() == 0) {
-                    return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+        try {
+            List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
+            if (sysOrgans.size() == 0) {
+                return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+            }
+            Map<String, Object> paramMap = new HashMap<String, Object>() {
+                {
+                    put("userId", userId);
+                    put("auditStatus", 1);
+                    put("offset", req.getOffset());
+                    put("pageSize", req.getPageSize());
                 }
+            };
+            List<DataResourceUserAssign> userAssignList = dataResourceRepository.findUserAssignByParam(paramMap);
+            Set<String> resourceFusionIdList = userAssignList.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toSet());
 
-                Map<String, Object> paramMap = new HashMap<String, Object>() {
-                    {
-                        put("userId", userId);
-                        put("auditStatus", 1);
-                        put("offset", req.getOffset());
-                        put("pageSize", req.getPageSize());
-                    }
-                };
-                List<DataResourceUserAssign> userAssignList = dataResourceRepository.findUserAssignByParam(paramMap);
-                List<String> resourceFusionIdList = userAssignList.stream().map(DataResourceUserAssign::getResourceFusionId).collect(Collectors.toList());
-                ResourceParam param = new ResourceParam();
-                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
-                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
-                param.setGlobalId(sysLocalOrganInfo.getOrganId());
-                param.setPageNo(req.getPageNo());
-                param.setPageSize(req.getPageSize());
-                param.setResourceFusionIds(resourceFusionIdList);
-                BaseResultEntity resultEntity = fusionResourceService.getResourceListUser(param);
-                return BaseResultEntity.success(resultEntity.getResult());
-            }catch (Exception e) {
-                log.info("元数据资源数据异常:{}",e.getMessage());
-                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+
+            List<DataResource> dataResources = dataResourceRepository.queryDataResourceByResourceIds(null, resourceFusionIdList);
+            if (resourceFusionIdList.size() == 0) {
+                return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
             }
-        }
-        // 机构
-        if (roleType == 1) {
-            try{
-                List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectSysOrganByExamine();
-                if (sysOrgans.size()==0){
-                    return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
-                }
-                ResourceParam param = new ResourceParam();
-                param.setOrganIds(sysOrgans.stream().map(SysOrgan::getOrganId).collect(Collectors.toList()));
-                param.getOrganIds().add(organConfiguration.getSysLocalOrganId());
-                param.setGlobalId(sysLocalOrganInfo.getOrganId());
-                param.setPageNo(req.getPageNo());
-                param.setPageSize(req.getPageSize());
-                log.info(JSONObject.toJSONString(param));
-                BaseResultEntity resultEntity= fusionResourceService.getResourceListOrgan(param);
-                return BaseResultEntity.success(resultEntity.getResult());
-            }catch (Exception e){
-                log.info("元数据资源数据异常:{}",e.getMessage());
-                return BaseResultEntity.failure(BaseResultEnum.FAILURE,"请求元数据资源失败");
+            Integer count = dataResourceRepository.findUserAssignCountByParam(paramMap);
+            List<Long> resourceIds = new ArrayList<>();
+            Set<Long> userIds = new HashSet<>();
+            List<DataResourceVo> voList = dataResources.stream().map(vo -> {
+                resourceIds.add(vo.getResourceId());
+                userIds.add(vo.getUserId());
+                return DataResourceConvert.dataResourcePoConvertVo(vo);
+            }).collect(Collectors.toList());
+            Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds).stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+            Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
+            for (DataResourceVo dataResourceVo : voList) {
+                SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
+                dataResourceVo.setUserName(sysUser == null ? "" : sysUser.getUserName());
+                dataResourceVo.setTags(resourceTagMap.get(dataResourceVo.getResourceId()));
+                dataResourceVo.setUrl("");
             }
+            return BaseResultEntity.success(new PageDataEntity(count, req.getPageSize(), req.getPageNo(), voList));
+        } catch (Exception e) {
+            log.info("元数据资源数据异常:{}", e.getMessage());
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE, "请求元数据资源失败");
         }
-        return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "queryType");
     }
 
     public BaseResultEntity saveDataResourceAssign(Long userId, Integer roleType, DataResourceAssignReq req) {
         SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
         if (Objects.equals(req.getOrganId(), sysLocalOrganInfo.getOrganId())) {
-            return BaseResultEntity.failure(BaseResultEnum.FAILURE,"申请目标不可以是本机构!!!");
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE, "申请目标不可以是本机构!!!");
         }
         List<SysOrgan> sysOrgans = sysOrganSecondarydbRepository.selectOrganByOrganId(req.getOrganId());
         if (sysOrgans.isEmpty()) {
-            return BaseResultEntity.failure(BaseResultEnum.FAILURE,"无此协作方!!!");
+            return BaseResultEntity.failure(BaseResultEnum.FAILURE, "无此协作方!!!");
         }
         SysOrgan sysOrgan = sysOrgans.get(0);
         // 管理员
         if (roleType == 1) {
             String gateway = sysOrgan.getOrganGateway();
             String route = "/data/resource/saveDataResourceOrganAssign";
-            String url = gateway+route;
+            String url = gateway + route;
             DataResourceAssignReq remoteReq = new DataResourceAssignReq();
             remoteReq.setOrganId(sysLocalOrganInfo.getOrganId());
             remoteReq.setResourceFusionId(req.getResourceFusionId());
@@ -1304,9 +1352,9 @@ public class DataResourceService {
             HttpEntity<Map<String, Object>> request = new HttpEntity(remoteReq, headers);
             try {
                 BaseResultEntity resultEntity = restTemplate.postForObject(url, request, BaseResultEntity.class);
-                log.info("url:【{}】 - baseResultEntity {}",url,JSONObject.toJSONString(resultEntity));
+                log.info("url:【{}】 - baseResultEntity {}", url, JSONObject.toJSONString(resultEntity));
                 return BaseResultEntity.success();
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.info("url:【{}】 Exception:{}", url, e.getMessage());
                 e.printStackTrace();
                 return BaseResultEntity.failure(BaseResultEnum.FAILURE, "对方机构不可用");
@@ -1316,7 +1364,7 @@ public class DataResourceService {
         if (roleType == 2) {
             String gateway = sysOrgan.getOrganGateway();
             String route = "/data/resource/getDataResourceOrganAssign";
-            String url = gateway+route;
+            String url = gateway + route;
             DataResourceAssignReq remoteReq = new DataResourceAssignReq();
             remoteReq.setOrganId(sysLocalOrganInfo.getOrganId());
             remoteReq.setResourceFusionId(req.getResourceFusionId());
@@ -1326,8 +1374,8 @@ public class DataResourceService {
             BaseResultEntity resultEntity = null;
             try {
                 resultEntity = restTemplate.getForObject(url, BaseResultEntity.class);
-                log.info("url:【{}】 - baseResultEntity {}",url,JSONObject.toJSONString(resultEntity));
-            }catch (Exception e){
+                log.info("url:【{}】 - baseResultEntity {}", url, JSONObject.toJSONString(resultEntity));
+            } catch (Exception e) {
                 log.info("url:【{}】 Exception:{}", url, e.getMessage());
                 e.printStackTrace();
                 return BaseResultEntity.failure(BaseResultEnum.FAILURE, "对方机构不可用");
@@ -1375,14 +1423,15 @@ public class DataResourceService {
         auth.setResourceFusionId(req.getResourceFusionId());
         dataResourcePrRepository.saveVisibilityAuth(Collections.singletonList(auth));
 
-        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+        fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
 
         return BaseResultEntity.success();
     }
 
     /**
      * 查询资源申请
+     *
      * @param req
      * @return
      */
@@ -1402,11 +1451,11 @@ public class DataResourceService {
         if (req.getType() == 1) {
             DataResourceVisibilityAuth auth = dataResourceRepository.queryDataResourceAuthById(req.getId());
             if (auth == null) {
-                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"无授权信息");
+                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL, "无授权信息");
             }
             DataResource dataResource = dataResourceRepository.queryDataResourceById(auth.getResourceId());
             if (dataResource == null) {
-                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"无此资源信息");
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "无此资源信息");
             }
             auth.setAuditStatus(req.getAuditStatus());
             if (req.getAuditStatus() == 1) {
@@ -1414,15 +1463,15 @@ public class DataResourceService {
             }
             dataResourcePrRepository.updateDataResourceVisibilityAuth(auth);
 
-            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(),findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
-            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(),dataResource))).build());
+            fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), findCopyResourceList(dataResource.getResourceId(), dataResource.getResourceId()));
+            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), dataResource))).build());
 
         }
         // 用户授权
         if (req.getType() == 2) {
             DataResourceUserAssign userAssign = dataResourceRepository.queryDataResourceUserAssignmentById(req.getId());
             if (userAssign == null) {
-                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL,"无授权信息");
+                return BaseResultEntity.failure(BaseResultEnum.DATA_APPROVAL, "无授权信息");
             }
             userAssign.setAuditStatus(req.getAuditStatus());
             if (req.getAuditStatus() == 1) {
@@ -1431,6 +1480,76 @@ public class DataResourceService {
             dataResourcePrRepository.updateDataResourceUserAssignment(userAssign);
         }
         return BaseResultEntity.success();
+    }
+
+    /**
+     * 本地可申请资源，只针对普通用户来说
+     * @param userId
+     * @param req
+     * @return
+     */
+    public BaseResultEntity getDataResourceToApply(Long userId, DataResourceReq req) {
+        Map<String, Object> paramMap = new HashMap<>();
+        paramMap.put("offset", req.getOffset());
+        paramMap.put("pageSize", req.getPageSize());
+        paramMap.put("resourceId", req.getResourceId());
+        paramMap.put("resourceAuthType", req.getResourceAuthType());
+        paramMap.put("resourceSource", req.getResourceSource());
+        paramMap.put("resourceName", req.getResourceName());
+        paramMap.put("tag", req.getTag());
+        paramMap.put("selectTag", req.getSelectTag());
+        paramMap.put("userName", req.getUserName());
+        paramMap.put("derivation", req.getDerivation());
+        paramMap.put("fileContainsY", req.getFileContainsY());
+        // 查询个人
+        paramMap.put("userId", userId);
+        List<DataResource> dataResources = dataResourceRepository.queryDataResourceToApply(paramMap);
+        if (dataResources.size() == 0) {
+            return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), new ArrayList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceToApplyCount(paramMap);
+        List<Long> resourceIds = new ArrayList<>();
+        Set<Long> userIds = new HashSet<>();
+        List<DataResourceVo> voList = dataResources.stream().map(vo -> {
+            resourceIds.add(vo.getResourceId());
+            userIds.add(vo.getUserId());
+            return DataResourceConvert.dataResourcePoConvertVo(vo);
+        }).collect(Collectors.toList());
+        Map<Long, List<ResourceTagListVo>> resourceTagMap = dataResourceRepository.queryDataResourceListTags(resourceIds).stream().collect(Collectors.groupingBy(ResourceTagListVo::getResourceId));
+        Map<Long, SysUser> sysUserMap = sysUserService.getSysUserMap(userIds);
+
+        OrganParam param = new OrganParam();
+        param.setPageNo(1);
+        param.setPageSize(10000);
+        List<SysOrgan> list = sysOrganSecondarydbRepository.selectSysOrganByParam(param);
+        SysLocalOrganInfo sysLocalOrganInfo = organConfiguration.getSysLocalOrganInfo();
+        Map<String, String> organMap = list.stream().collect(Collectors.toMap(SysOrgan::getOrganId, SysOrgan::getOrganName));
+        organMap.put(sysLocalOrganInfo.getOrganId(), sysLocalOrganInfo.getOrganName());
+        for (DataResourceVo dataResourceVo : voList) {
+            SysUser sysUser = sysUserMap.get(dataResourceVo.getUserId());
+            dataResourceVo.setUserName(sysUser == null ? "" : sysUser.getUserName());
+            dataResourceVo.setTags(resourceTagMap.get(dataResourceVo.getResourceId()));
+            dataResourceVo.setUrl("");
+            dataResourceVo.setOrganName(organMap.getOrDefault(dataResourceVo.getOrganId(), ""));
+        }
+        return BaseResultEntity.success(new PageDataEntity(count, req.getPageSize(), req.getPageNo(), voList));
+    }
+
+    public BaseResultEntity getDataResourceUsage(DataResourceUsageReq req) {
+        Map<String, Object> paramMap = new HashMap<String, Object>() {
+            {
+                put("resourceId", req.getResourceId());
+                put("resourceFusionId", req.getResourceFusionId());
+                put("offset",req.getOffset());
+                put("pageSize",req.getPageSize());
+            }
+        };
+        List<DataResourceUsage> dataResourceUsageList = dataResourceRepository.queryDataResourceUsageListByParam(paramMap);
+        if (dataResourceUsageList.isEmpty()) {
+            return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), Collections.emptyList()));
+        }
+        Integer count = dataResourceRepository.queryDataResourceUsageCountByParam(paramMap);
+        return BaseResultEntity.success(new PageDataEntity(count, req.getPageSize(), req.getPageNo(), dataResourceUsageList));
     }
 }
 

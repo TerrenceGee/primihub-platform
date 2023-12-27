@@ -66,16 +66,12 @@ public class PirController {
      * @param roleType 角色类型
      * @return
      */
-    @RequestMapping("getPirTaskList")
+    @ApiOperation(value = "匿踪查询任务列表")
+    @GetMapping("getPirTaskList")
     public BaseResultEntity getPirTaskList(DataPirTaskReq req,
                                            @RequestHeader("userId") Long userId,
                                            @RequestHeader("roleType")Integer roleType
                                            ){
-
-
-    @ApiOperation(value = "匿踪查询任务列表")
-    @GetMapping("getPirTaskList")
-    public BaseResultEntity<PageDataEntity<DataPirTaskVo>> getPirTaskList(DataPirTaskReq req){
         if (req.getTaskState()!=null){
             if(!TaskStateEnum.TASK_STATE_MAP.containsKey(req.getTaskState())) {
                 return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"taskState");

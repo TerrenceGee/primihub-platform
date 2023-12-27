@@ -168,14 +168,14 @@
         <include refid="resourceColumns"></include>
         FROM
         data_resource where is_del = 0
-        <if test="resourceIds!=null">
+        <if test="resourceIds!=null and resourceIds.size > 0">
             and resource_id in
             <foreach collection="resourceIds" index="index" item="item" open="("
                      separator="," close=")">
                 #{item}
             </foreach>
         </if>
-        <if test="stringIds!=null">
+        <if test="stringIds!=null and stringIds.size > 0">
             and resource_fusion_id in
             <foreach collection="stringIds" index="index" item="item" open="("
                      separator="," close=")">
@@ -550,6 +550,208 @@
             </if>
         </where>
         order by o.id desc
+    </select>
+
+    <select id="findUserAssignByResourceId" resultType="com.primihub.biz.entity.data.po.DataResourceUserAssign">
+        select
+        id,resource_id resourceId,
+        resource_organ_id resourceOrganId,
+        resource_fusion_id resourceFusionId,
+        c_time cTime,
+        u_time uTime,
+        user_id userId,
+        operate_user_id operateUserId,
+        audit_status auditStatus,
+        apply_time applyTime,
+        assign_time assignTime
+        from
+        data_resource_user_assign
+        where
+        resource_id in
+        <foreach collection="resourceIds" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryDataResourceToApply" resultType="com.primihub.biz.entity.data.po.DataResource">
+        SELECT
+        dr.resource_id as resourceId,
+        dr.resource_name as resourceName,
+        dr.resource_desc as resourceDesc,
+        dr.resource_auth_type as resourceAuthType,
+        dr.resource_source as resourceSource,
+        dr.resource_num as resourceNum,
+        dr.file_id as fileId,
+        dr.file_size as fileSize,
+        dr.file_suffix as fileSuffix,
+        dr.file_columns as fileColumns,
+        dr.file_rows as fileRows,
+        dr.file_handle_field as fileHandleField,
+        dr.file_handle_status as fileHandleStatus,
+        dr.file_contains_y as fileContainsY,
+        dr.file_y_rows as fileYRows,
+        dr.file_y_ratio as fileYRatio,
+        dr.resource_fusion_id as resourceFusionId,
+        dr.public_organ_id as publicOrganId,
+        dr.resource_state as resourceState,
+        dr.resource_hash_code as resourceHashCode,
+        dr.db_id as dbId,
+        dr.user_id as userId,
+        dr.organ_id as organId,
+        dr.url as url,
+        dr.create_date as createDate
+        FROM
+            data_resource dr left join data_resource_user_assign drua on dr.resource_id = drua.resource_id and drua.user_id = #{userId}
+        where dr.is_del = 0 and drua.resource_id is null
+        and  dr.resource_source != 3
+        <if test="resourceState!=null">
+            and  dr.resource_state = #{resourceState}
+        </if>
+        <if test="resourceId!=null and resourceId!=0">
+            and  dr.resource_id = #{resourceId}
+        </if>
+        <if test="resourceAuthType!=null and resourceAuthType!=0">
+            and  dr.resource_auth_type = #{resourceAuthType}
+        </if>
+        <if test="resourceSource!=null">
+            and  dr.resource_source = #{resourceSource}
+        </if>
+        <if test="resourceName!=null and resourceName!=''">
+            and  dr.resource_name like CONCAT('%',#{resourceName,jdbcType=VARCHAR},'%')
+        </if>
+        <choose>
+            <when test="fileContainsY!=null and fileContainsY==1">
+                and  dr.file_contains_y = 1
+            </when>
+            <when test="fileContainsY!=null and fileContainsY==0">
+                and  dr.file_contains_y is null
+            </when>
+        </choose>
+        <if test="tag!=null and tag!=''">
+            and  dr.resource_id in
+            (
+            select DISTINCT rt.resource_id from data_resource_tag drt,data_rt rt
+            where drt.tag_id = rt.tag_id
+            <choose>
+                <when test="selectTag==0">
+                    and drt.tag_name = #{tag}
+                </when>
+                <otherwise>
+                    and drt.tag_name like CONCAT('%',#{tag,jdbcType=VARCHAR},'%')
+                </otherwise>
+            </choose>
+            )
+        </if>
+        <if test="userName!=null and userName!=''">
+            and  dr.user_id in (select user_id from sys_user where is_del=0 and is_forbid=0 and user_name like
+            CONCAT('%',#{userName,jdbcType=VARCHAR},'%'))
+        </if>
+        <if test="fileHandleField!=null and fileHandleField!=''">
+            and cast( dr.file_handle_field as char) = #{fileHandleField}
+        </if>
+        <if test="userId!=null">
+            and  dr.user_id != #{userId}
+        </if>
+        ORDER BY dr.resource_id desc
+        LIMIT #{offset},#{pageSize}
+    </select>
+
+    <select id="queryDataResourceToApplyCount" resultType="java.lang.Integer">
+        SELECT
+        count(*)
+        FROM
+        data_resource dr left join data_resource_user_assign drua on dr.resource_id = drua.resource_id and drua.user_id = #{userId}
+        where dr.is_del = 0 and drua.resource_id is null
+        and  dr.resource_source != 3
+        <if test="resourceState!=null">
+            and  dr.resource_state = #{resourceState}
+        </if>
+        <if test="resourceId!=null and resourceId!=0">
+            and  dr.resource_id = #{resourceId}
+        </if>
+        <if test="resourceAuthType!=null and resourceAuthType!=0">
+            and  dr.resource_auth_type = #{resourceAuthType}
+        </if>
+        <if test="resourceSource!=null">
+            and  dr.resource_source = #{resourceSource}
+        </if>
+        <if test="resourceName!=null and resourceName!=''">
+            and  dr.resource_name like CONCAT('%',#{resourceName,jdbcType=VARCHAR},'%')
+        </if>
+        <choose>
+            <when test="fileContainsY!=null and fileContainsY==1">
+                and  dr.file_contains_y = 1
+            </when>
+            <when test="fileContainsY!=null and fileContainsY==0">
+                and  dr.file_contains_y is null
+            </when>
+        </choose>
+        <if test="tag!=null and tag!=''">
+            and  dr.resource_id in
+            (
+            select DISTINCT rt.resource_id from data_resource_tag drt,data_rt rt
+            where drt.tag_id = rt.tag_id
+            <choose>
+                <when test="selectTag==0">
+                    and drt.tag_name = #{tag}
+                </when>
+                <otherwise>
+                    and drt.tag_name like CONCAT('%',#{tag,jdbcType=VARCHAR},'%')
+                </otherwise>
+            </choose>
+            )
+        </if>
+        <if test="userName!=null and userName!=''">
+            and  dr.user_id in (select user_id from sys_user where is_del=0 and is_forbid=0 and user_name like
+            CONCAT('%',#{userName,jdbcType=VARCHAR},'%'))
+        </if>
+        <if test="fileHandleField!=null and fileHandleField!=''">
+            and cast( dr.file_handle_field as char) = #{fileHandleField}
+        </if>
+        <if test="userId!=null">
+            and  dr.user_id != #{userId}
+        </if>
+    </select>
+
+    <select id="queryDataResourceUsageListByParam" resultType="com.primihub.biz.entity.data.po.DataResourceUsage">
+        select
+        id,
+        resource_id resourceId,
+        resource_fusion_id resourceFusionId,
+        is_del isDel,
+        create_date createDate,
+        update_date updateDate,
+        task_name taskName,
+        task_id taskId,
+        data_project_name dataProjectName,
+        data_project_id dataProjectId,
+        usage_time usageTime,
+        usage_type usageType
+        from data_resource_usage
+        <where>
+            <if test="resourceId != null and resourceId != ''">
+                and resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId != null and resourceFusionId != ''">
+                and resource_fusion_id = #{resourceFusionId}
+            </if>
+        </where>
+        order by id DESC
+        limit #{offset},#{pageSize}
+    </select>
+    <select id="queryDataResourceUsageCountByParam" resultType="java.lang.Integer">
+        select
+            distinct (id)
+        from data_resource_usage
+        <where>
+            <if test="resourceId != null and resourceId != ''">
+                and resource_id = #{resourceId}
+            </if>
+            <if test="resourceFusionId != null and resourceFusionId != ''">
+                and resource_fusion_id = #{resourceFusionId}
+            </if>
+        </where>
     </select>
 
 </mapper>

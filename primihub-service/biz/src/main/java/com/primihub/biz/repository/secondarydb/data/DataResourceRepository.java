@@ -7,10 +7,7 @@ import com.primihub.biz.entity.data.vo.*;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 public interface DataResourceRepository {
@@ -82,4 +79,15 @@ public interface DataResourceRepository {
     DataResourceVisibilityAuth queryDataResourceAuthById(@Param("id") Long id);
     List<DataResourceVisibilityAuth> findAuthOrganByParam(Map<String,Object> paramMap);
     Integer findAuthOrganCountByParam(Map<String,Object> paramMap);
+    List<DataResourceVisibilityAuth> findAuthOrganAndUserByParam(Map<String, Object> paramMap);
+    Integer findAuthOrganAndUserCountByParam(Map<String, Object> paramMap);
+    List<DataResourceUserAssign> findUserAssignByResourceId(@Param("resourceIds") List<Long> resourceIds);
+    /** 本地可申请资源 */
+    List<DataResource> queryDataResourceToApply(Map<String, Object> paramMap);
+
+    Integer queryDataResourceToApplyCount(Map<String, Object> paramMap);
+
+    List<DataResourceUsage> queryDataResourceUsageListByParam(Map<String, Object> paramMap);
+
+    Integer queryDataResourceUsageCountByParam(Map<String, Object> paramMap);
 }

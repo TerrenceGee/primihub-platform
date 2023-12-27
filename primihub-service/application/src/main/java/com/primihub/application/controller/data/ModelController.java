@@ -156,15 +156,12 @@ public class ModelController {
      * @param req
      * @return
      */
-    @RequestMapping("getModelTaskSuccessList")
-    public BaseResultEntity getModelTaskSuccessList(@RequestHeader("userId") Long userId,
-                                                    @RequestHeader("roleType") Integer roleType,
-                                                    ModelTaskSuccessReq req){
-
     @ApiOperation(value = "运行成功的模型列表",httpMethod = "GET",consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @ApiImplicitParam(name="userId", value = "用户ID,不用填写getaway处理", dataType = "Long", paramType = "header")
     @GetMapping("getModelTaskSuccessList")
-    public BaseResultEntity getModelTaskSuccessList(@RequestHeader("userId") Long userId,ModelTaskSuccessReq req){
+        public BaseResultEntity getModelTaskSuccessList(@RequestHeader("userId") Long userId,
+                @RequestHeader("roleType") Integer roleType,
+                ModelTaskSuccessReq req){
         if (userId==null||userId==0L) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"userId");
         }

@@ -30,11 +30,15 @@ public class DataResourceAssignmentListVo {
     /**
      * 授权的用户Id
      */
-    private String userOrganId;
+    private String userName;
     /**
      * 授权的机构Id
      */
     private String organId;
+    /**
+     * 授权机构名称
+     */
+    private String organName;
     /**
      * 申请时间
      */
@@ -49,5 +53,5 @@ public class DataResourceAssignmentListVo {
      * 授权状态
      * 0.申请 1.申请通过，由所有者直接授予 2.申请拒绝
      */
-    private Integer assignStatus;
+    private Integer auditStatus;
 }

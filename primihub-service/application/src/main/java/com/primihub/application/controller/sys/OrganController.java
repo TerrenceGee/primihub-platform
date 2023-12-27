@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
@@ -62,10 +61,8 @@ public class OrganController {
      * @param publicKey
      * @return
      */
-    @RequestMapping("joiningPartners")
-    public BaseResultEntity joiningPartners(String gateway, String publicKey){
     @GetMapping("joiningPartners")
-    public BaseResultEntity joiningPartners(String gateway,String publicKey){
+    public BaseResultEntity joiningPartners(String gateway, String publicKey){
         if (StringUtils.isBlank(gateway)) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"gateway");
         }

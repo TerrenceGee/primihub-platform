@@ -2,7 +2,6 @@ package com.primihub.biz.service.data.component.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.protobuf.ByteString;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.config.base.ComponentsConfiguration;
 import com.primihub.biz.config.base.OrganConfiguration;
@@ -15,19 +14,14 @@ import com.primihub.biz.entity.data.req.ComponentTaskReq;
 import com.primihub.biz.entity.data.req.DataComponentReq;
 import com.primihub.biz.service.data.component.ComponentTaskService;
 import com.primihub.biz.util.ZipUtils;
-import com.primihub.biz.util.snowflake.SnowflakeId;
 import com.primihub.sdk.task.TaskHelper;
 import com.primihub.sdk.task.param.TaskMPCParam;
 import com.primihub.sdk.task.param.TaskParam;
-import java_worker.PushTaskReply;
-import java_worker.PushTaskRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import primihub.rpc.Common;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 

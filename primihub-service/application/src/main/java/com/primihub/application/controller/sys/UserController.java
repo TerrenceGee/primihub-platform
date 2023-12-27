@@ -100,7 +100,6 @@ public class UserController {
      * @param pageSize 页大小
      * @return
      */
-    @RequestMapping("findUserPage")
     @GetMapping("findUserPage")
     public BaseResultEntity findUserPage(FindUserPageParam findUserPageParam,
                                          @RequestParam(defaultValue = "1") Integer pageNum,
@@ -109,6 +108,19 @@ public class UserController {
             return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"roleId");
         }
         return sysUserService.findUserPage(findUserPageParam,pageNum,pageSize);
+    }
+
+    /**
+     *
+     */
+    @GetMapping("findUserPageSummary")
+    public BaseResultEntity findUserPageSummary(FindUserPageParam findUserPageParam,
+                                         @RequestParam(defaultValue = "1") Integer pageNum,
+                                         @RequestParam(defaultValue = "10000")Integer pageSize){
+        if(findUserPageParam.getRoleId()!=null&&findUserPageParam.getRoleId()<0) {
+            return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"roleId");
+        }
+        return sysUserService.findUserPageSummary(findUserPageParam,pageNum,pageSize);
     }
 
     /**
