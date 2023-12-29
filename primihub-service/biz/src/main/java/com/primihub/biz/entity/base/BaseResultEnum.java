@@ -40,7 +40,8 @@ public enum BaseResultEnum implements ResultEnumType<Integer,String> {
     DATA_DOWNLOAD_TASK_ERROR_FAIL(1010,"文件下载失败"),
     DATA_DB_FAIL(1011,"数据库失败"),
     DATA_LOG_FAIL(1012,"查询日志失败"),
-    DECRYPTION_FAILED(1013,"解密失败")
+    DECRYPTION_FAILED(1013,"解密失败"),
+    INCORRECT_PERMISSIONS(1014, "权限不匹配")
     ;
     private Integer returnCode;
     private String message;

@@ -32,7 +32,7 @@ public class DataResourceApplyReq {
      */
     private String organId;
     /**
-     * 0用户 1机构
+     * 0审核用户的资源申请 1审核机构的资源申请
      */
     private Integer queryType;
 }

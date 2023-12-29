@@ -74,7 +74,7 @@ public class ResourceController {
         if (req.getQueryType() == null ) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "queryType");
         }
-        if (!Arrays.asList(1,2).contains(req.getQueryType())) {
+        if (!Arrays.asList(1,0).contains(req.getQueryType())) {
             return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "queryType");
         }
         // 查询机构
@@ -369,8 +369,14 @@ public class ResourceController {
                                                    @RequestHeader("roleType")Integer roleType,
                                                    DataResourceApplyReq req
                                                    ) {
-        if (req.getAuditStatus()==null||req.getAuditStatus()==1 || req.getAuditStatus()==2){
+        if (req.getAuditStatus()==null){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"auditStatus");
+        }
+        if (!Arrays.asList(1,2).contains(req.getAuditStatus())) {
+            return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"auditStatus");
+        }
+        if (!Arrays.asList(1,0).contains(req.getQueryType())) {
+            return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION,"queryType");
         }
         return dataResourceService.changeDataResourceAuthStatus(req, userId);
     }
@@ -452,6 +458,22 @@ public class ResourceController {
         }
         return dataResourceService.saveDataResourceAssign(userId, roleType, req);
     }
+
+    /**
+     * 发起本地资源申请
+     */
+    @PostMapping("saveDataResourceAssignLocal")
+    public BaseResultEntity saveDataResourceAssignLocal(
+            @RequestHeader("userId")Long userId,
+            @RequestHeader("roleType") Integer roleType,
+            @RequestBody DataResourceAssignReq req
+    ) {
+        if (req.getResourceId() == null) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceId");
+        }
+        return dataResourceService.saveDataResourceAssignLocal(userId, roleType, req);
+    }
+
 
     /**
      * 处理资源申请

@@ -1246,7 +1246,8 @@ public class DataResourceService {
     }
 
     public BaseResultEntity changeDataResourceAuthStatus(DataResourceApplyReq req, Long userId) {
-        if (req.getQueryType() == 0) {
+        // 1用户授权
+        if (req.getQueryType() == 1) {
             DataResourceUserAssign userAssign = new DataResourceUserAssign();
             if (req.getUserId() == null) {
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "userId");
@@ -1258,7 +1259,8 @@ public class DataResourceService {
             dataResourcePrRepository.updateDataResourceUserAssignment(userAssign);
             return BaseResultEntity.success();
         }
-        if (req.getQueryType() == 1) {
+        // 0机构授权
+        if (req.getQueryType() == 0) {
             DataResourceVisibilityAuth organAuth = new DataResourceVisibilityAuth();
             if (req.getOrganId() == null) {
                 return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organId");
@@ -1318,6 +1320,7 @@ public class DataResourceService {
                 dataResourceVo.setUserName(sysUser == null ? "" : sysUser.getUserName());
                 dataResourceVo.setTags(resourceTagMap.get(dataResourceVo.getResourceId()));
                 dataResourceVo.setUrl("");
+                dataResourceVo.setOrganName(organConfiguration.getSysLocalOrganName());
             }
             return BaseResultEntity.success(new PageDataEntity(count, req.getPageSize(), req.getPageNo(), voList));
         } catch (Exception e) {
@@ -1394,6 +1397,36 @@ public class DataResourceService {
             userAssign.setAuditStatus(0);
             userAssign.setResourceFusionId(req.getResourceFusionId());
             userAssign.setUserId(req.getUserId());
+            dataResourcePrRepository.saveDataResourceUserAssignList(Collections.singletonList(userAssign));
+            return BaseResultEntity.success();
+        }
+        return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, "roleType");
+    }
+
+    public BaseResultEntity saveDataResourceAssignLocal(Long userId, Integer roleType, DataResourceAssignReq req) {
+        DataResource dataResource = dataResourceRepository.queryDataResourceById(req.getResourceId());
+        if (dataResource == null) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "dataResource");
+        }
+        if (req.getUserId() != null) {
+            userId = req.getUserId();
+        }
+        // 管理员
+        if (roleType == 1) {
+            return BaseResultEntity.failure(BaseResultEnum.NO_AUTH, "管理员无需申请本地资源");
+        }
+        // 普通用户
+        if (roleType == 2) {
+            DataResourceUserAssign userAssign = new DataResourceUserAssign();
+            userAssign.setUserId(userId);
+            userAssign.setAssignTime(null);
+            // 待审核
+            userAssign.setAuditStatus(0);
+            userAssign.setOperateUserId(null);
+            userAssign.setResourceOrganId(dataResource.getPublicOrganId());
+            userAssign.setResourceId(dataResource.getResourceId());
+            userAssign.setResourceFusionId(dataResource.getResourceFusionId());
+            userAssign.setApplyTime(new Date());
             dataResourcePrRepository.saveDataResourceUserAssignList(Collections.singletonList(userAssign));
             return BaseResultEntity.success();
         }

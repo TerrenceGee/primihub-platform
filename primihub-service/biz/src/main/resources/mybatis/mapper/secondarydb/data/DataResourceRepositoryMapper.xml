@@ -742,7 +742,7 @@
     </select>
     <select id="queryDataResourceUsageCountByParam" resultType="java.lang.Integer">
         select
-            distinct (id)
+            count(id)
         from data_resource_usage
         <where>
             <if test="resourceId != null and resourceId != ''">

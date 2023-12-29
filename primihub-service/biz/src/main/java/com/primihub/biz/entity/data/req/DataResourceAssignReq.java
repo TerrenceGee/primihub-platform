@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DataResourceAssignReq {
+    private Long resourceId;
     private String resourceFusionId;
     private String organId;
     /** 授权用户id */
