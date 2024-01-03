@@ -10,11 +10,14 @@ import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.dataenum.TaskTypeEnum;
 import com.primihub.biz.entity.data.po.DataPirTask;
+import com.primihub.biz.entity.data.po.DataResourceUsage;
 import com.primihub.biz.entity.data.po.DataTask;
 import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskVo;
+import com.primihub.biz.entity.data.vo.DataResourceUserAssignVo;
+import com.primihub.biz.entity.event.DataResourceUsageSaveEvent;
 import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
@@ -24,6 +27,7 @@ import com.primihub.biz.util.snowflake.SnowflakeId;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -45,6 +49,8 @@ public class PirService {
     private DataAsyncService dataAsyncService;
     @Autowired
     private SysUserService userService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public String getResultFilePath(String taskId,String taskDate){
         return new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append(taskDate).append("/").append(taskId).append(".csv").toString();
@@ -75,6 +81,13 @@ public class PirService {
         dataPirTask.setResourceName(pirDataResource.get("resourceName").toString());
         dataPirTask.setResourceId(resourceId);
         dataTaskPrRepository.saveDataPirTask(dataPirTask);
+
+        // dataResourceUsage
+        DataResourceUsageSaveEvent event = new DataResourceUsageSaveEvent();
+        DataResourceUsage usage = new DataResourceUsage(null, dataPirTask.getResourceId(), dataTask.getTaskName(), dataTask.getTaskId(), null, null, new Date(dataTask.getTaskStartTime()), TaskTypeEnum.PIR.getTaskName());
+        event.setDataResourceUsageList(Collections.singletonList(usage));
+        applicationEventPublisher.publishEvent(event);
+
         dataAsyncService.pirGrpcTask(dataTask,resourceId,pirParam);
         Map<String, Object> map = new HashMap<>();
         map.put("taskId",dataTask.getTaskId());

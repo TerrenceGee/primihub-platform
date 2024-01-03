@@ -194,4 +194,14 @@
     <delete id="deleteResourceUserAssignByResourceFusionId">
         delete from data_resource_user_assign where resource_fusion_id=#{resourceFusionId}
     </delete>
+
+    <insert id="saveDataResourceUsage" parameterType="com.primihub.biz.entity.data.po.DataResourceUsage">
+        insert into data_resource_usage (is_del,create_date, update_date,task_name, task_id, data_project_name,
+        data_project_id, usage_time, resource_id,resource_fusion_id, usage_type )
+        values
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.isDel},#{item.createDate},#{item.updateDate},#{item.taskName},#{item.taskId},
+            #{item.dataProjectName}, #{item.dataProjectId}, #{item.usageTime}, #{item.resourceId}, #{item.resourceFusionId}, #{item.usageType})
+        </foreach>
+    </insert>
 </mapper>

@@ -754,4 +754,112 @@
         </where>
     </select>
 
+    <select id="findUserAssignDataResourceByParam" resultType="com.primihub.biz.entity.data.po.DataResource">
+        select
+        dr.resource_id as resourceId,
+        dr.resource_name as resourceName,
+        dr.resource_desc as resourceDesc,
+        dr.resource_auth_type as resourceAuthType,
+        dr.resource_source as resourceSource,
+        dr.resource_num as resourceNum,
+        dr.file_id as fileId,
+        dr.file_size as fileSize,
+        dr.file_suffix as fileSuffix,
+        dr.file_columns as fileColumns,
+        dr.file_rows as fileRows,
+        dr.file_handle_field as fileHandleField,
+        dr.file_handle_status as fileHandleStatus,
+        dr.file_contains_y as fileContainsY,
+        dr.file_y_rows as fileYRows,
+        dr.file_y_ratio as fileYRatio,
+        dr.resource_fusion_id as resourceFusionId,
+        dr.public_organ_id as publicOrganId,
+        dr.resource_state as resourceState,
+        dr.resource_hash_code as resourceHashCode,
+        dr.db_id as dbId,
+        dr.user_id as userId,
+        dr.organ_id as organId,
+        dr.url as url,
+        dr.create_date as createDate
+        from data_resource dr
+        join data_resource_user_assign drua on dr.resource_fusion_id = drua.resource_fusion_id
+        where dr.is_del = 0
+        <if test="resourceId!=null">
+            and drua.resource_id = #{resourceId}
+        </if>
+        <if test="resourceFusionId!=null and resourceFusionId!=''">
+            and drua.resource_fusion_id = #{resourceFusionId}
+        </if>
+        <if test="auditStatus!=null">
+            and drua.audit_status = #{auditStatus}
+        </if>
+        <if test="userId!=null">
+            and drua.user_id = #{userId}
+        </if>
+        order by drua.id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="findUserAssignDataResourceCountByParam" resultType="java.lang.Integer">
+        SELECT
+        count(dr.id)
+        from data_resource dr
+        join data_resource_user_assign drua on dr.resource_fusion_id = drua.resource_fusion_id
+        where dr.is_del = 0
+        <if test="resourceId!=null">
+            and drua.resource_id = #{resourceId}
+        </if>
+        <if test="resourceFusionId!=null and resourceFusionId!=''">
+            and drua.resource_fusion_id = #{resourceFusionId}
+        </if>
+        <if test="auditStatus!=null">
+            and drua.audit_status = #{auditStatus}
+        </if>
+        <if test="userId!=null">
+            and drua.user_id = #{userId}
+        </if>
+        <if test="resourceState!=null">
+            and dr.resource_state = #{resourceState}
+        </if>
+        <if test="resourceAuthType!=null and resourceAuthType!=0">
+            and dr.resource_auth_type = #{resourceAuthType}
+        </if>
+        <if test="resourceSource!=null">
+            and dr.resource_source = #{resourceSource}
+        </if>
+        <if test="resourceName!=null and resourceName!=''">
+            and dr.resource_name like CONCAT('%',#{resourceName,jdbcType=VARCHAR},'%')
+        </if>
+        <choose>
+            <when test="fileContainsY!=null and fileContainsY==1">
+                and dr.file_contains_y = 1
+            </when>
+            <when test="fileContainsY!=null and fileContainsY==0">
+                and dr.file_contains_y is null
+            </when>
+        </choose>
+        <if test="tag!=null and tag!=''">
+            and dr.resource_id in
+            (
+            select DISTINCT rt.resource_id from data_resource_tag drt,data_rt rt
+            where drt.tag_id = rt.tag_id
+            <choose>
+                <when test="selectTag==0">
+                    and drt.tag_name = #{tag}
+                </when>
+                <otherwise>
+                    and drt.tag_name like CONCAT('%',#{tag,jdbcType=VARCHAR},'%')
+                </otherwise>
+            </choose>
+            )
+        </if>
+        <if test="userName!=null and userName!=''">
+            and dr.user_id in (select user_id from sys_user where is_del=0 and is_forbid=0 and user_name like
+            CONCAT('%',#{userName,jdbcType=VARCHAR},'%'))
+        </if>
+        <if test="fileHandleField!=null and fileHandleField!=''">
+            and cast(dr.file_handle_field as char) = #{fileHandleField}
+        </if>
+    </select>
+
 </mapper>

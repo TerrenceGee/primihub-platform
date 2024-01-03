@@ -20,6 +20,7 @@ import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.entity.data.vo.ModelProjectResourceVo;
 import com.primihub.biz.entity.data.vo.ShareModelVo;
+import com.primihub.biz.entity.event.DataResourceUsageSaveEvent;
 import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.repository.primarydb.data.*;
 import com.primihub.biz.repository.primaryredis.data.DataRedisRepository;
@@ -42,11 +43,14 @@ import com.primihub.sdk.task.param.TaskPIRParam;
 import com.primihub.sdk.task.param.TaskPSIParam;
 import com.primihub.sdk.task.param.TaskParam;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -76,6 +80,7 @@ public class DataAsyncService implements ApplicationContextAware {
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         context = applicationContext;
     }
+
     @Autowired
     private BaseConfiguration baseConfiguration;
     @Autowired
@@ -113,7 +118,7 @@ public class DataAsyncService implements ApplicationContextAware {
     @Autowired
     private TaskHelper taskHelper;
 
-    public TaskHelper getTaskHelper(){
+    public TaskHelper getTaskHelper() {
         return taskHelper;
     }
 
@@ -216,9 +221,9 @@ public class DataAsyncService implements ApplicationContextAware {
 
 
     @Async
-    public void psiGrpcRun(DataPsiTask psiTask, DataPsi dataPsi,String taskName) {
+    public void psiGrpcRun(DataPsiTask psiTask, DataPsi dataPsi, String taskName) {
         DataResource ownDataResource = dataResourceRepository.queryDataResourceByResourceFusionId(dataPsi.getOwnResourceId());
-        if (ownDataResource==null){
+        if (ownDataResource == null) {
             ownDataResource = dataResourceRepository.queryDataResourceById(Long.parseLong(dataPsi.getOwnResourceId()));
         }
         String resourceId, resourceColumnNameList;
@@ -240,9 +245,9 @@ public class DataAsyncService implements ApplicationContextAware {
         }
         DataTask dataTask = new DataTask();
         dataTask.setTaskIdName(psiTask.getTaskId());
-        if (taskName == null){
+        if (taskName == null) {
             dataTask.setTaskName(dataPsi.getResultName());
-        }else {
+        } else {
             dataTask.setTaskName(taskName);
         }
         dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
@@ -250,23 +255,45 @@ public class DataAsyncService implements ApplicationContextAware {
         dataTask.setTaskStartTime(System.currentTimeMillis());
         dataTask.setTaskUserId(dataPsi.getUserId());
         dataTaskPrRepository.saveDataTask(dataTask);
+
+        List<DataResourceUsage> usageList = Arrays.asList(dataPsi.getOwnResourceId(), dataPsi.getOtherResourceId()).stream().map(usageResourceId -> {
+            // 同时创建任务资源的统计
+            DataResourceUsage usage = new DataResourceUsage();
+            usage.setIsDel(0);
+            usage.setDataProjectId(null);
+            usage.setCreateDate(new Date());
+            usage.setUsageTime(new Date(dataTask.getTaskStartTime()));
+            usage.setDataProjectName(null);
+            usage.setResourceFusionId(usageResourceId);
+            usage.setResourceId(null);
+            usage.setTaskId(dataTask.getTaskId());
+            usage.setTaskName(dataTask.getTaskName());
+            /** 任务类型 1、模型 2、PSI 3、PIR */
+            usage.setUsageType(TaskTypeEnum.TASK_TYPE_MAP.getOrDefault(dataTask.getTaskType(), TaskTypeEnum.MODEL).getTaskName());
+            return usage;
+        }).collect(Collectors.toList());
+        DataResourceUsageSaveEvent event = new DataResourceUsageSaveEvent();
+        event.setDataResourceUsageList(usageList);
+        context.publishEvent(event);
+
+
         String teeResourceId = "";
-        if (dataPsi.getTag().equals(2)){
+        if (dataPsi.getTag().equals(2)) {
             DataFResourceReq fresourceReq = new DataFResourceReq();
             fresourceReq.setOrganId(dataPsi.getTeeOrganId());
             BaseResultEntity resourceList = otherBusinessesService.getResourceList(fresourceReq);
-            if (resourceList.getCode()!=0) {
+            if (resourceList.getCode() != 0) {
                 psiTask.setTaskState(TaskStateEnum.FAIL.getStateType());
                 dataPsiPrRepository.updateDataPsiTask(psiTask);
                 dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
                 dataTask.setTaskEndTime(System.currentTimeMillis());
-                dataTask.setTaskErrorMsg("TEE 机构资源查询失败:"+resourceList.getMsg());
+                dataTask.setTaskErrorMsg("TEE 机构资源查询失败:" + resourceList.getMsg());
                 dataTaskPrRepository.updateDataTask(dataTask);
                 return;
             }
-            LinkedHashMap<String,Object> data = (LinkedHashMap<String,Object>)resourceList.getResult();
-            List<LinkedHashMap<String,Object>> resourceDataList = (List<LinkedHashMap<String,Object>>)data.get("data");
-            if (resourceDataList==null || resourceDataList.size()==0) {
+            LinkedHashMap<String, Object> data = (LinkedHashMap<String, Object>) resourceList.getResult();
+            List<LinkedHashMap<String, Object>> resourceDataList = (List<LinkedHashMap<String, Object>>) data.get("data");
+            if (resourceDataList == null || resourceDataList.size() == 0) {
                 psiTask.setTaskState(TaskStateEnum.FAIL.getStateType());
                 dataPsiPrRepository.updateDataPsiTask(psiTask);
                 dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
@@ -302,9 +329,9 @@ public class DataAsyncService implements ApplicationContextAware {
                 taskParam.setTaskId(dataTask.getTaskIdName());
                 taskParam.setTaskContentParam(psiParam);
                 taskHelper.submit(taskParam);
-                if (taskParam.getSuccess()){
+                if (taskParam.getSuccess()) {
                     dataTask.setTaskState(TaskStateEnum.SUCCESS.getStateType());
-                }else {
+                } else {
                     dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
                     dataTask.setTaskErrorMsg(taskParam.getError());
                 }
@@ -327,7 +354,7 @@ public class DataAsyncService implements ApplicationContextAware {
         updateTaskState(dataTask);
     }
 
-    public FutureTask<TaskParam<TaskPIRParam>> getPirTaskFutureTask(DataPirKeyQuery dataPirKeyQuery,DataTask dataTask, DataPirTask dataPirTask,String resourceColumnNames,String formatDate,int job){
+    public FutureTask<TaskParam<TaskPIRParam>> getPirTaskFutureTask(DataPirKeyQuery dataPirKeyQuery, DataTask dataTask, DataPirTask dataPirTask, String resourceColumnNames, String formatDate, int job) {
         FutureTask<TaskParam<TaskPIRParam>> pirTaskFutureTask = new FutureTask<>(new Callable<TaskParam<TaskPIRParam>>() {
             @Override
             public TaskParam<TaskPIRParam> call() throws Exception {
@@ -346,8 +373,8 @@ public class DataAsyncService implements ApplicationContextAware {
                 List<String> keyColumns = Arrays.asList(dataPirKeyQuery.getKey());
                 taskParam.getTaskContentParam().setKeyColumns(keyColumns.stream().map(columns::indexOf).toArray(Integer[]::new));
                 taskHelper.submit(taskParam);
-                if (taskParam.getSuccess()){
-                    dataRedisRepository.pirTaskResultHandle(dataTask.getTaskIdName(),CsvUtil.csvReader(sb.toString(), null));
+                if (taskParam.getSuccess()) {
+                    dataRedisRepository.pirTaskResultHandle(dataTask.getTaskIdName(), CsvUtil.csvReader(sb.toString(), null));
                     Files.delete(Paths.get(sb.toString()));
                 }
                 return taskParam;
@@ -371,11 +398,11 @@ public class DataAsyncService implements ApplicationContextAware {
             taskParam.setTaskContentParam(pirParam);
             taskParam.setTaskId(dataTask.getTaskIdName());
             taskHelper.submit(taskParam);
-            if (taskParam.getSuccess()){
+            if (taskParam.getSuccess()) {
                 dataTask.setTaskState(TaskStateEnum.SUCCESS.getStateType());
-            }else {
+            } else {
                 dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
-                dataTask.setTaskErrorMsg("运行失败:"+taskParam.getError());
+                dataTask.setTaskErrorMsg("运行失败:" + taskParam.getError());
             }
         } catch (Exception e) {
             dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
@@ -443,6 +470,15 @@ public class DataAsyncService implements ApplicationContextAware {
         dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
         dataTask.setTaskUserId(dataReasoning.getUserId());
         dataTaskPrRepository.saveDataTask(dataTask);
+
+        // dataResourceUsage
+        DataResourceUsageSaveEvent event = new DataResourceUsageSaveEvent();
+        List<DataResourceUsage> usageList = dataReasoningResourceList.stream().map(dataReasoningResource -> {
+            return new DataResourceUsage(null, dataReasoningResource.getResourceId(), dataTask.getTaskName(), dataTask.getTaskId(), null, null, new Date(dataTask.getTaskStartTime()), TaskTypeEnum.REASONING.getTaskName());
+        }).collect(Collectors.toList());
+        event.setDataResourceUsageList(usageList);
+        context.publishEvent(event);
+
         dataReasoning.setRunTaskId(dataTask.getTaskId());
         dataReasoning.setReasoningState(dataTask.getTaskState());
         dataReasoningPrRepository.updateDataReasoning(dataReasoning);
@@ -461,10 +497,10 @@ public class DataAsyncService implements ApplicationContextAware {
                 dataTask.setTaskErrorMsg("未能获取到模型类型信息");
             } else {
                 ModelTypeEnum modelTypeEnum = ModelTypeEnum.MODEL_TYPE_MAP.get(Integer.valueOf(modelType.getVal()));
-                if (modelTypeEnum==null){
+                if (modelTypeEnum == null) {
                     dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
                     dataTask.setTaskErrorMsg("未能匹配到模型类型信息");
-                }else {
+                } else {
                     map.put(PYTHON_GUEST_DATASET, guestDataset);  // 放入合作方资源
                     grpc(dataReasoning, dataTask, modelTypeEnum, map);
                 }
@@ -536,13 +572,13 @@ public class DataAsyncService implements ApplicationContextAware {
             taskParam.getTaskContentParam().setFreemarkerMap(map);
             log.info(taskParam.toString());
             taskHelper.submit(taskParam);
-            if (taskParam.getSuccess()){
+            if (taskParam.getSuccess()) {
                 dataTask.setTaskState(TaskStateEnum.SUCCESS.getStateType());
                 dataTask.setTaskResultPath(modelOutputPathDto.getPredictFileName());
                 dataReasoning.setReleaseDate(new Date());
-            }else {
+            } else {
                 dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());
-                dataTask.setTaskErrorMsg("运行失败:"+taskParam.getError());
+                dataTask.setTaskErrorMsg("运行失败:" + taskParam.getError());
             }
         } catch (Exception e) {
             dataTask.setTaskState(TaskStateEnum.FAIL.getStateType());

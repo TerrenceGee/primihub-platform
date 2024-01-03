@@ -18,6 +18,7 @@ import com.primihub.biz.entity.data.dataenum.TaskTypeEnum;
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.entity.data.vo.*;
+import com.primihub.biz.entity.event.DataResourceUsageSaveEvent;
 import com.primihub.biz.repository.primarydb.data.DataModelPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataProjectPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
@@ -30,6 +31,7 @@ import com.primihub.biz.util.snowflake.SnowflakeId;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -64,6 +66,8 @@ public class DataModelService {
     private DataResourceService dataResourceService;
     @Autowired
     private OtherBusinessesService otherBusinessesService;
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public BaseResultEntity getDataModel(Long taskId,Long userId) {
         DataTask task = dataTaskRepository.selectDataTaskByTaskId(taskId);
@@ -417,6 +421,19 @@ public class DataModelService {
         taskReq.setDataModelTask(modelTask);
         log.info("------------- 模型类型" + dataModel.getModelType());
         taskReq.getDataModel().setModelType(dataModel.getModelType());
+
+        // dataResourceUsage
+        Long projectId = dataModel.getProjectId();
+        DataProject dataProject = dataProjectRepository.selectDataProjectByProjectId(projectId, null);
+        String projectStringId = dataProject.getProjectId();
+        List<DataProjectResource> dataProjectResources = dataProjectRepository.selectProjectResourceByProjectId(projectStringId);
+        List<DataResourceUsage> usageList = dataProjectResources.stream().map(dataProjectResource -> {
+            return new DataResourceUsage(null, dataProjectResource.getResourceId(), dataTask.getTaskName(), dataTask.getTaskId(), dataProject.getProjectName(), dataProject.getId(), new Date(dataTask.getTaskStartTime()), TaskTypeEnum.MODEL.getTaskName());
+        }).collect(Collectors.toList());
+        DataResourceUsageSaveEvent event = new DataResourceUsageSaveEvent();
+        event.setDataResourceUsageList(usageList);
+        applicationEventPublisher.publishEvent(event);
+
         dataAsyncService.runModelTask(taskReq);
         Map<String,Object> returnMap = new HashMap<>();
         returnMap.put("modelId",modelId);

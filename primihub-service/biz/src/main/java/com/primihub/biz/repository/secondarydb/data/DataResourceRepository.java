@@ -90,4 +90,8 @@ public interface DataResourceRepository {
     List<DataResourceUsage> queryDataResourceUsageListByParam(Map<String, Object> paramMap);
 
     Integer queryDataResourceUsageCountByParam(Map<String, Object> paramMap);
+
+    List<DataResource> findUserAssignDataResourceByParam(Map<String, Object> paramMap);
+
+    Integer findUserAssignDataResourceCountByParam(Map<String, Object> paramMap);
 }

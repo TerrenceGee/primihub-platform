@@ -97,4 +97,6 @@ public interface DataResourcePrRepository {
     void updateDataResourceVisibilityAuth(DataResourceVisibilityAuth auth);
 
     void deleteResourceUserAssignByResourceFusionId(@Param("resourceFusionId") String resourceFusionId);
+
+    void saveDataResourceUsage(@Param("list")List<DataResourceUsage> usageList);
 }
