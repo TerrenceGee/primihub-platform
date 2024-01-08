@@ -801,7 +801,7 @@ public class DataResourceService {
                 }else {
                     derivationDataResource.setUserId(userId);
                 }
-                derivationDataResource.setOrganId(0L);
+                derivationDataResource.setOrganId(organConfiguration.getSysLocalOrganId());
                 derivationDataResource.setFileId(0L);
                 derivationDataResource.setFileSize(Integer.parseInt(String.valueOf(file.length())));
                 derivationDataResource.setFileSuffix("csv");

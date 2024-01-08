@@ -32,7 +32,7 @@ public class DataResourceConvert {
         return vo;
     }
 
-    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, Long organId, SysFile sysFile){
+    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, String organId, SysFile sysFile){
         DataResource po = new DataResource();
         po.setResourceId(req.getResourceId());
         po.setResourceName(req.getResourceName());
@@ -55,7 +55,7 @@ public class DataResourceConvert {
         return po;
     }
 
-    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, Long organId){
+    public static DataResource dataResourceReqConvertPo(DataResourceReq req, Long userId, String organId){
         DataResource po = new DataResource();
         po.setResourceId(req.getResourceId());
         po.setResourceName(req.getResourceName());

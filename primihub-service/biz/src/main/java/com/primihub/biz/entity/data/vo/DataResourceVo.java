@@ -86,7 +86,7 @@ public class DataResourceVo {
     /**
      * 机构id
      */
-    private Long organId;
+    private String organId;
 
     /**
      * 机构名称
