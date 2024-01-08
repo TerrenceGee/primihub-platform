@@ -61,4 +61,6 @@ public interface DataResourceRepository {
     Long findMaxDataResource();
 
     List<DataResourceVisibilityAuth> findAuthOrganByResourceId(@Param("resourceIds") List<Long> resourceIds);
+
+    DataResource queryDataResourceByTradeHashCode(@Param("hashCode")String tradeHashCode);
 }

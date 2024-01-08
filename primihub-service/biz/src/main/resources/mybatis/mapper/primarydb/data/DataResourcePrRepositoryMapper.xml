@@ -76,6 +76,7 @@
             <if test="userId!=null">user_id = #{userId},</if>
             <if test="organId!=null">organ_id = #{organId},</if>
             <if test="url!=null">url=#{url},</if>
+            <if test="tradeHashCode!=null and tradeHashCode != ''">trade_hash_code = #{tradeHashCode}, </if>
             update_date = now()
         </set>
         where resource_id = #{resourceId}

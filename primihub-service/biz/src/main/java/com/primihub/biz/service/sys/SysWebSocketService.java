@@ -1,18 +1,14 @@
 package com.primihub.biz.service.sys;
 
-import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.tool.ReadWebSocketClient;
 import com.primihub.biz.util.comm.CommStorageUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.java_websocket.client.WebSocketClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.primihub.biz.repository.primarydb.sys.SysChainPrimarydbRepository">
+
+    <insert id="insertChainInfo" keyProperty="id" useGeneratedKeys="true">
+        insert into sys_chain_info (username, address, is_del, c_time)
+        values (#{username}, #{address}, 0, now())
+    </insert>
+
+    <update id="updateChainInfo">
+        update sys_chain_info
+        set
+        <if test="username != null and username != ''">
+            username = #{username},
+        </if>
+        <if test="address != null and address != ''">
+            address = #{address},
+        </if>
+        u_time = now()
+    </update>
+
+</mapper>

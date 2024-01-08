@@ -26,7 +26,8 @@
         user_id as userId,
         organ_id as organId,
         url as url,
-        create_date as createDate
+        create_date as createDate,
+        trade_hash_code as tradeHashCode
     </sql>
 
     <select id="queryAllResourceTag" resultType="java.lang.String">
@@ -380,6 +381,14 @@
             id,db_type dbType,db_driver dbDriver,db_url dbUrl,
                db_name dbName,db_table_name dbTableName,db_username dbUsername,db_password dbPassword
         from data_source where id = #{id}
+    </select>
+
+    <!--通过存证id查询-->
+    <select id="queryDataResourceByTradeHashCode" resultType="com.primihub.biz.entity.data.po.DataResource">
+        SELECT
+        <include refid="resourceColumns"></include>
+        FROM
+        data_resource where is_del = 0 and trade_hash_code = #{hashCode}
     </select>
 
 </mapper>

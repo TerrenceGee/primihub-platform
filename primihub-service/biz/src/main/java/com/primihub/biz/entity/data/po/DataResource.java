@@ -121,4 +121,8 @@ public class DataResource {
      * 修改时间
      */
     private Date updateDate;
+    /**
+     * 存证Id
+     */
+    private String tradeHashCode;
 }
