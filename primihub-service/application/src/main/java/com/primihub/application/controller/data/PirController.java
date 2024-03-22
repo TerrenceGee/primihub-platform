@@ -1,13 +1,12 @@
 package com.primihub.application.controller.data;
 
-import com.primihub.biz.entity.base.BaseJsonParam;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageDataEntity;
-import com.primihub.biz.entity.data.base.DataPirKeyQuery;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
+import com.primihub.biz.entity.data.req.PirSubmitTaskReq;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskVo;
 import com.primihub.biz.service.data.PirService;
@@ -24,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.util.UUID;
 
 @Api(value = "匿踪查询接口",tags = "匿踪查询接口")
 @RequestMapping("pir")
@@ -36,22 +36,21 @@ public class PirController {
 
     @ApiOperation(value = "提交匿踪查询任务",httpMethod = "POST",consumes = MediaType.APPLICATION_JSON_VALUE)
     @RequestMapping("pirSubmitTask")
-    public BaseResultEntity pirSubmitTask(String resourceId,String pirParam,String taskName){
-//    public BaseResultEntity pirSubmitTask(@RequestBody BaseJsonParam<DataPirReq> req){
+    public BaseResultEntity pirSubmitTask(@RequestBody PirSubmitTaskReq req){
         // 查询条件
         DataPirReq param = new DataPirReq();
-        if (StringUtils.isBlank(resourceId)){
+        if (StringUtils.isBlank(req.getResourceId())){
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"resourceId");
         }
-        if (StringUtils.isBlank(taskName)){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"taskName");
+        if (StringUtils.isBlank(req.getTaskName())){
+            req.setTaskName("PIR" + UUID.randomUUID().toString().replace("-",""));
         }
-        if (StringUtils.isBlank(pirParam)) {
+        if (StringUtils.isBlank(req.getPirParam())) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"pirParam");
         }
-        param.setResourceId(resourceId);
-        param.setTaskName(taskName);
-        return pirService.pirSubmitTask(param, pirParam);
+        param.setResourceId(req.getResourceId());
+        param.setTaskName(req.getTaskName());
+        return pirService.pirSubmitTask(param, req.getPirParam());
     }
 
 
