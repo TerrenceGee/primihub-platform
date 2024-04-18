@@ -55,7 +55,7 @@ public class SingleTaskChannelConsumer implements ApplicationContextAware {
         }
     }
 
-    @StreamListener(SingleTaskChannel.SEATUNNEL_INPUT)
+    @StreamListener(SingleTaskChannel.SEA_TUNNEL_INPUT)
     public void seatunnelReceive(Message<String> message) {
         Object traceId = message.getHeaders().get("traceid");
         String key = RedisKeyConstant.SEATUNNEL_DATA_LIST_KEY.replace("<traceId>", traceId.toString());

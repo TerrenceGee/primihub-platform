@@ -25,11 +25,12 @@ spring:
     stream:
       bindings:
         singleTaskOutput:
-          destination: singlTaskChannel
-        singleTaskInput:
-          destination: singlTaskChannel
+          destination: singleTaskChannel
           group: single
-        singleSeatunnelInput:
+        singleTaskInput:
+          destination: singleTaskChannel
+          group: single
+        singleSeaTunnelInput:
           destination: seatunnel
           group: data
     nacos:

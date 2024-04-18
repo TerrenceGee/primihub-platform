@@ -4,12 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.config.mq.SingleTaskChannel;
-import com.primihub.biz.constant.CommonConstant;
 import com.primihub.biz.convert.DataModelConvert;
 import com.primihub.biz.convert.DataProjectConvert;
 import com.primihub.biz.convert.DataResourceConvert;
 import com.primihub.biz.entity.base.*;
-import com.primihub.biz.entity.data.po.*;
+import com.primihub.biz.entity.data.po.DataProject;
+import com.primihub.biz.entity.data.po.DataProjectOrgan;
+import com.primihub.biz.entity.data.po.DataProjectResource;
+import com.primihub.biz.entity.data.po.DataResource;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.entity.data.vo.*;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
@@ -24,13 +26,8 @@ import com.primihub.biz.service.sys.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
@@ -139,7 +136,7 @@ public class DataProjectService {
     }
 
     public void sendTask(ShareProjectVo shareProjectVo){
-        singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SPREAD_PROJECT_DATA_TASK.getHandleType(),shareProjectVo))).build());
+        singleTaskChannel.output().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SPREAD_PROJECT_DATA_TASK.getHandleType(),shareProjectVo))).build());
     }
 
     public Boolean updateProjectProviderOrganName(List<DataProjectOrganReq> organList,DataProject dataProject){

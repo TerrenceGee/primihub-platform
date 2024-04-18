@@ -8,6 +8,16 @@ spring:
       discovery:
         server-addr: 192.168.99.10:31048
         namespace: dev2
+    stream:
+      bindings:
+        singleTaskOutput:
+          destination: singleTaskChannel
+        singleTaskInput:
+          destination: singleTaskChannel
+          group: single
+        singleSeaTunnelInput:
+          destination: seatunnel
+          group: data
 nacos:
   config:
     server-addr: 192.168.99.10:31048

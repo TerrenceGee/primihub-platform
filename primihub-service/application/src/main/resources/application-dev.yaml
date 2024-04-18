@@ -8,6 +8,16 @@ spring:
       discovery:
         server-addr: localhost:8848
         namespace: dev
+    stream:
+      bindings:
+        singleTaskOutput:
+          destination: singleTaskChannel
+        singleTaskInput:
+          destination: singleTaskChannel
+          group: single
+        singleSeaTunnelInput:
+          destination: seatunnel
+          group: data
 nacos:
   config:
     server-addr: localhost:8848

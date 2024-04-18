@@ -8,8 +8,8 @@ import org.springframework.messaging.SubscribableChannel;
 
 public interface SingleTaskChannel {
     String INPUT = "singleTaskInput";
-    String SEATUNNEL_INPUT = "singleSeatunnelInput";
     String OUTPUT = "singleTaskOutput";
+    String SEA_TUNNEL_INPUT = "singleSeaTunnelInput";
 
     @Input(SingleTaskChannel.INPUT)
     SubscribableChannel input();
@@ -17,6 +17,6 @@ public interface SingleTaskChannel {
     @Output(SingleTaskChannel.OUTPUT)
     MessageChannel output();
 
-    @Input(SingleTaskChannel.SEATUNNEL_INPUT)
+    @Input(SingleTaskChannel.SEA_TUNNEL_INPUT)
     SubscribableChannel seatunnelInput();
 }

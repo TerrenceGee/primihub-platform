@@ -13,10 +13,13 @@ spring:
     stream:
       bindings:
         singleTaskOutput:
-          destination: singlTaskChannel
+          destination: singleTaskChannel
         singleTaskInput:
-          destination: singlTaskChannel
+          destination: singleTaskChannel
           group: single
+        singleSeaTunnelInput:
+          destination: seatunnel
+          group: data
     nacos:
       discovery:
         server-addr: nacos.primihub.svc.cluster.local:8848
