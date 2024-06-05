@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.primihub.biz.repository.secondarydb.SM3DictRepository">
+    <resultMap id="users" type="java.util.HashMap">
+    </resultMap>
+
+    <select id="selectSm3DictList" resultMap="com.primihub.biz.entity.SM3Dict" parameterType="java.util.List">
+        SELECT
+        id_num idNum,
+        phone_num phoneNum
+        FROM sm3_dict
+        <where>
+            <if test="list != null and list.size() > 0">
+                id_num IN
+                <foreach item="id" collection="list" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="list == null or list.size() == 0">
+                1 = 0
+            </if>
+        </where>
+    </select>
+
+</mapper>
