@@ -7,6 +7,7 @@ import com.primihub.biz.convert.DataResourceConvert;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageDataEntity;
+import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.entity.data.vo.DataOrganPsiTaskVo;
@@ -14,12 +15,14 @@ import com.primihub.biz.entity.data.vo.DataPsiTaskVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
 import com.primihub.biz.repository.primarydb.data.DataPsiPrRepository;
+import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.secondarydb.data.DataPsiRepository;
 import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
+import com.primihub.sdk.task.param.TaskParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,8 @@ public class DataPsiService {
     private OrganConfiguration organConfiguration;
     @Autowired
     private SysOrganSecondarydbRepository sysOrganSecondarydbRepository;
+    @Autowired
+    private DataTaskPrRepository dataTaskPrRepository;
 
 
     public BaseResultEntity getPsiResourceList(DataResourceReq req) {
@@ -218,9 +223,30 @@ public class DataPsiService {
 
     public BaseResultEntity cancelPsiTask(Long taskId) {
         DataPsiTask task = dataPsiRepository.selectPsiTaskById(taskId);
+        if (task == null) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"无任务信息");
+        }
         task.setTaskState(4);
         dataPsiPrRepository.updateDataPsiTask(task);
-        return BaseResultEntity.success();
+
+        DataTask rawDataTask = dataTaskRepository.selectDataTaskByTaskIdName(task.getTaskId());
+        if (rawDataTask==null){
+            rawDataTask = dataTaskRepository.selectDataTaskByTaskId(Long.valueOf(task.getTaskId()));
+        }
+        if (rawDataTask==null) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"无任务信息");
+        }
+        if (!rawDataTask.getTaskState().equals(TaskStateEnum.IN_OPERATION.getStateType())) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"无法取消,任务状态不是运行中");
+        }
+        TaskParam taskParam = dataAsyncService.getTaskHelper().killTask(rawDataTask.getTaskIdName());
+        if (taskParam.getSuccess()){
+            rawDataTask.setTaskState(TaskStateEnum.CANCEL.getStateType());
+            rawDataTask.setTaskEndTime(System.currentTimeMillis());
+            dataTaskPrRepository.updateDataTask(rawDataTask);
+            return BaseResultEntity.success(taskId);
+        }
+        return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,taskParam.getError());
     }
 
     public BaseResultEntity retryPsiTask(Long taskId) {
