@@ -4,7 +4,7 @@
     <resultMap id="users" type="java.util.HashMap">
     </resultMap>
 
-    <select id="selectSm3DictList" resultMap="com.primihub.biz.entity.SM3Dict" parameterType="java.util.List">
+    <select id="selectSm3DictList" resultType="com.primihub.biz.entity.SM3Dict" parameterType="java.util.List">
         SELECT
         id_num idNum,
         phone_num phoneNum
