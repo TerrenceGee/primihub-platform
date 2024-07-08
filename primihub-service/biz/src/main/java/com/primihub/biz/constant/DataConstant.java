@@ -53,7 +53,7 @@ public class DataConstant {
     /**
      * lpy
      */
-    public final static String INPUT_FIELD_ID_NUM = "IdNum";
+    public final static String INPUT_FIELD_ID_NUM = "idNum";
     public final static String INPUT_FIELD_IMEI = "imei";
     public final static String INPUT_FIELD_PHONE = "phoneNum";
     public final static String[] INPUT_FIELD_ARRAY = {INPUT_FIELD_ID_NUM, INPUT_FIELD_IMEI, INPUT_FIELD_PHONE};
