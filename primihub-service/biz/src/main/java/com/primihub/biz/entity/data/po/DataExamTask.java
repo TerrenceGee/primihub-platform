@@ -22,6 +22,8 @@ public class DataExamTask {
 
     private String targetResourceId;
 
+    private Integer containsY = 0;
+
     /**
      * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
      */
