@@ -214,8 +214,8 @@
             update_date updateDate,
             target_field targetField
         FROM
-        data_exam_task det
-        <include refid="selectDataExamTaskWhere"/>
+        data_exam_task
+        WHERE task_id = #{taskId}
         ORDER BY id desc
     </select>
 </mapper>
