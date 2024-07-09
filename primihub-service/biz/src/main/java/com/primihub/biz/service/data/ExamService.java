@@ -417,59 +417,13 @@ public class ExamService {
         }
     }
 
-    /*  private List<Map<String, Object>> getDataFromCMCCSource(String cmccScoreUrl, List<Map<String, Object>> resultList) {
-     *//*HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<HashMap<String, Object>> request = new HttpEntity(new Object(), headers);
-        ResponseEntity<Map> exchange = restTemplate.exchange(cmccScoreUrl, HttpMethod.POST, request, Map.class);
-        return exchange.getBody();*//*
-        List<String> targetPhoneNumList = resultList.stream().filter(map -> StringUtils.isNotBlank((String) map.get("phone"))).map(stringObjectMap -> (String) stringObjectMap.get("phone")).collect(Collectors.toList());
-
-        try {
-            InputStream inputStream = ResourceReader.class.getClassLoader().getResourceAsStream("mock/score.json");
-            List<Map<String, Object>> list = objectMapper.readValue(inputStream, new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
-            });
-            // 读取JSON文件内容为字符串
-            // 将JSON字符串解析为List<Map>
-
-            List<Map<String, Object>> result = list.stream().filter(map -> map.get("phone") != null && targetPhoneNumList.contains((String) (map.get("phone")))).collect(Collectors.toList());
-            Map<String, Map<String, Object>> phoneScoreMap = result.stream().collect(Collectors.toMap(stringObjectMap -> (String) stringObjectMap.get("phone"), Function.identity()));
-            List<String> existPhoneNumList = result.stream().filter(map -> StringUtils.isNotBlank((String) map.get("phone"))).map(stringObjectMap -> (String) stringObjectMap.get("phone")).collect(Collectors.toList());
-            List<Map<String, Object>> collect = resultList.stream().filter(map -> map.get("phone") != null && existPhoneNumList.contains((String) (map.get("phone")))).collect(Collectors.toList());
-            collect.forEach(map -> {
-                map.put("score", phoneScoreMap.get(map.get("phone")).getOrDefault("score", 0));
-            });
-            return collect;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        throw new RuntimeException("数据处理出错");
-    }*/
-
-    /*private List<Map<String, Object>> getDataFromFirstSource(String firstUrl, Set<String> fieldValueSet) {
-     */
-
     /**
      * HttpHeaders headers = new HttpHeaders();
      * //        headers.setContentType(MediaType.APPLICATION_JSON);
      * //        HttpEntity<HashMap<String, Object>> request = new HttpEntity(new Object(), headers);
      * //        ResponseEntity<Map> exchange = restTemplate.exchange(firstUrl, HttpMethod.POST, request, Map.class);
      * //        return exchange.getBody();
-     *//*
-
-        try {
-            // 读取JSON文件内容为字符串
-            InputStream inputStream = ResourceReader.class.getClassLoader().getResourceAsStream("mock/data.json");
-            List<Map<String, Object>> list = objectMapper.readValue(inputStream, new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
-            });
-            List<Map<String, Object>> result = list.stream().filter(map -> map.get("code") != null && fieldValueSet.contains((String) (map.get("code")))).collect(Collectors.toList());
-            return result;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        throw new RuntimeException("数据处理出错");
-    }
-*/
+     */
     private void startFutureExamTask(DataExamReq req) {
         // 进行预处理，使用异步
         FutureTask<Object> task = new FutureTask<>(() -> {
@@ -544,15 +498,6 @@ public class ExamService {
             return otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/finishExamTask", organ.getPublicKey());
         }
         return null;
-    }
-
-    private BaseResultEntity getTargetResource(String resourceId, String organId) {
-        BaseResultEntity fusionResult = fusionResourceService.getDataResource(resourceId, organId);
-        if (fusionResult.getCode() != 0 || fusionResult.getResult() == null) {
-            log.info("未找到预处理源数据 resourceId: [{}]", resourceId);
-            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "resourceId");
-        }
-        return fusionResult;
     }
 
     @Transactional

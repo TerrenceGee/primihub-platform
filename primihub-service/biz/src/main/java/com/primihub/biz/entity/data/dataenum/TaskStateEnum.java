@@ -11,6 +11,7 @@ public enum TaskStateEnum {
     FAIL(3,"失败"),
     CANCEL(4,"取消"),
     DELETE(5,"删除"),
+    READY(6, "就绪"),
     ;
     private Integer stateType;
     private String stateDesc;

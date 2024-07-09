@@ -8,6 +8,7 @@ import com.primihub.biz.entity.data.dto.DataFusionCopyDto;
 import com.primihub.biz.entity.data.po.PirRecord;
 import com.primihub.biz.entity.data.po.PsiRecord;
 import com.primihub.biz.entity.data.po.ScoreModel;
+import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.vo.ShareModelVo;
@@ -136,14 +137,6 @@ public class ShareDataController {
     }
 
     /**
-     * #2 处理
-     */
-    @PostMapping(value = "processPirPhase1")
-    public BaseResultEntity processPirPhase1(@RequestBody DataPirCopyReq req) {
-        return pirService.processPirPhase1(req);
-    }
-
-    /**
      * #3 提交phase2
      */
     @PostMapping(value = "submitPirPhase2")
@@ -199,5 +192,15 @@ public class ShareDataController {
     public BaseResultEntity submitPirRecord(@RequestBody PirRecord record) {
         log.info("\n{}\n", JSON.toJSONString(record));
         return recordService.savePirRecord(record);
+    }
+
+    /**
+     * 结束任务
+     */
+    @PostMapping(value = "finishPirTask")
+    public BaseResultEntity finishPirTask(@RequestBody DataPirCopyReq req) {
+        log.info("finishPirTask:");
+        log.info(JSON.toJSONString(req));
+        return pirService.finishPirTask(req);
     }
 }

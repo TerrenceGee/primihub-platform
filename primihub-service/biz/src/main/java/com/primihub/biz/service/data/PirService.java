@@ -1,8 +1,6 @@
 package com.primihub.biz.service.data;
 
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.constant.SysConstant;
@@ -18,12 +16,13 @@ import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.req.ScoreModelReq;
-import com.primihub.biz.entity.data.vo.DataCoreVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
 import com.primihub.biz.entity.data.vo.DataPirTaskVo;
-import com.primihub.biz.entity.data.vo.RemoteRespVo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
-import com.primihub.biz.repository.primarydb.data.*;
+import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
+import com.primihub.biz.repository.primarydb.data.RecordPrRepository;
+import com.primihub.biz.repository.primarydb.data.ResultPrRepository;
+import com.primihub.biz.repository.primarydb.data.ScoreModelPrRepository;
 import com.primihub.biz.repository.secondarydb.data.*;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
 import com.primihub.biz.util.FileUtil;
@@ -36,12 +35,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class PirService {
+    private final Lock lock = new ReentrantLock();
     @Autowired
     private BaseConfiguration baseConfiguration;
     @Autowired
@@ -59,14 +61,6 @@ public class PirService {
     private DataPsiRepository dataPsiRepository;
     @Autowired
     private SysOrganSecondarydbRepository organSecondaryDbRepository;
-    @Autowired
-    private RemoteClient remoteClient;
-    @Qualifier("dataCoreRepository")
-    @Autowired
-    private DataCoreRepository dataCoreRepository;
-    @Qualifier("dataCorePrimarydbRepository")
-    @Autowired
-    private DataCorePrimarydbRepository dataCorePrimarydbRepository;
     @Autowired
     private ExamService examService;
     @Autowired
@@ -193,11 +187,9 @@ public class PirService {
             return map;
         }).collect(Collectors.toList());
         // 生成数据源
-        String resourceName = new StringBuffer()
-                .append("PIR处理资源")
-                .append(SysConstant.HYPHEN_DELIMITER)
-                .append(req.getTaskName())
-                .toString();
+        String resourceName = "PIR处理资源" +
+                SysConstant.HYPHEN_DELIMITER +
+                req.getTaskName();
         DataResource dataResource = examService.generateTargetResource(mapList, resourceName);
         req.setOriginResourceId(dataResource.getResourceFusionId());
 
@@ -217,6 +209,39 @@ public class PirService {
         req.setPirRecordId(recordId);
         req.setTargetOrganId(psiRecord.getTargetOrganId());
 
+        // 这里应该开始创建pir任务了
+        String[] targetValueArray = req.getTargetValueSet().toArray(new String[0]);
+        String[] queryColumnNames = {psiRecord.getTargetField()};
+        List<DataPirKeyQuery> dataPirKeyQueries = convertPirParamToQueryArray(targetValueArray, queryColumnNames);
+
+        DataTask dataTask = new DataTask();
+        dataTask.setTaskIdName(Long.toString(SnowflakeId.getInstance().nextId()));
+        dataTask.setTaskName(req.getTaskName());
+        dataTask.setTaskState(TaskStateEnum.INIT.getStateType());
+        dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
+        dataTask.setTaskStartTime(System.currentTimeMillis());
+        dataTaskPrRepository.saveDataTask(dataTask);
+        DataPirTask dataPirTask = new DataPirTask();
+        dataPirTask.setTaskId(dataTask.getTaskId());
+        // retrievalId will rent in web ,need to be readable
+        dataPirTask.setRetrievalId(String.valueOf(req.getTargetValueSet().size()));
+
+        SysOrgan sysOrgan = organSecondaryDbRepository.selectSysOrganByOrganId(psiRecord.getTargetOrganId());
+        // 协作方机构名称
+        dataPirTask.setProviderOrganName(sysOrgan.getOrganName());
+        dataPirTask.setResourceName("wait");
+        dataPirTask.setResourceId("wait");
+        dataTaskPrRepository.saveDataPirTask(dataPirTask);
+
+        req.setTargetField(psiRecord.getTargetField());
+        req.setDataTaskId(dataTask.getTaskId());
+        req.setDataPirTaskId(dataPirTask.getId());
+        req.setResourceColumnNames("wait");
+        req.setDataPirKeyQueries(dataPirKeyQueries);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("taskId", dataTask.getTaskId());
+
         List<SysOrgan> sysOrgans = organSecondaryDbRepository.selectOrganByOrganId(targetOrganId);
         if (CollectionUtils.isEmpty(sysOrgans)) {
             log.info("查询机构ID: [{}] 失败，未查询到结果", targetOrganId);
@@ -228,6 +253,36 @@ public class PirService {
         }
         return null;
     }
+
+    /*
+        String originResourceId = req.getOriginResourceId();
+        DataResource resource = dataResourceRepository.queryDataResourceByResourceFusionId(originResourceId);
+
+        String[] targetValueArray = req.getTargetValueSet().toArray(new String[0]);
+        String[] queryColumnNames = {pirRecord.getTargetField()};
+        List<DataPirKeyQuery> dataPirKeyQueries = convertPirParamToQueryArray(targetValueArray, queryColumnNames);
+
+        DataTask dataTask = new DataTask();
+        dataTask.setTaskIdName(Long.toString(SnowflakeId.getInstance().nextId()));
+        dataTask.setTaskName(req.getTaskName());
+        dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
+        dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
+        dataTask.setTaskStartTime(System.currentTimeMillis());
+        dataTaskPrRepository.saveDataTask(dataTask);
+        DataPirTask dataPirTask = new DataPirTask();
+        dataPirTask.setTaskId(dataTask.getTaskId());
+        // retrievalId will rent in web ,need to be readable
+        dataPirTask.setRetrievalId(String.valueOf(req.getTargetValueSet().size()));
+        dataPirTask.setProviderOrganName(pirDataResource.get("organName").toString());
+        dataPirTask.setResourceName(pirDataResource.get("resourceName").toString());
+        dataPirTask.setResourceId(param.getResourceId());
+        dataTaskPrRepository.saveDataPirTask(dataPirTask);
+        dataAsyncService.pirGrpcTask(dataTask, dataPirTask, resourceColumnNames, dataPirKeyQueries, req, resource);
+
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("taskId", dataTask.getTaskId());
+     */
 
     /**
      * pir phase2 #3
@@ -307,5 +362,21 @@ public class PirService {
             return otherBusinessesService.syncGatewayApiData(scoreModel, organ.getOrganGateway() + "/share/shareData/submitScoreModelType", organ.getPublicKey());
         }
         return BaseResultEntity.success();
+    }
+
+    public BaseResultEntity finishPirTask(DataPirCopyReq req) {
+        try {
+            lock.lock();
+            updatePirTaskAfterSelect(req);
+        } finally {
+            lock.unlock();
+        }
+        return BaseResultEntity.success();
+    }
+
+    private void updatePirTaskAfterSelect(DataPirCopyReq req) {
+        DataTask dataTask = dataTaskRepository.selectDataTaskByTaskId(req.getDataTaskId());
+        dataTask.setTaskState(req.getTaskState());
+        dataTaskPrRepository.updateDataTask(dataTask);
     }
 }
