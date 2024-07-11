@@ -21,8 +21,8 @@ import com.primihub.biz.entity.data.vo.DataPirTaskVo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.primarydb.data.RecordPrRepository;
-import com.primihub.biz.repository.primarydb.data.ResultPrRepository;
 import com.primihub.biz.repository.primarydb.data.ScoreModelPrRepository;
+import com.primihub.biz.repository.primaryredis.sys.TaskPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.*;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
 import com.primihub.biz.util.FileUtil;
@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -74,7 +75,7 @@ public class PirService {
     @Autowired
     private DataResourceRepository dataResourceRepository;
     @Autowired
-    private ResultPrRepository resultPrRepository;
+    private TaskPrimaryRedisRepository taskPrimaryRedisRepository;
 
     public String getResultFilePath(String taskId, String taskDate) {
         return new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append(taskDate).append("/").append(taskId).append(".csv").toString();
@@ -83,9 +84,7 @@ public class PirService {
     private static List<DataPirKeyQuery> convertPirParamToQueryArray(String pirParam, String[] resourceColumnNameArray) {
         DataPirKeyQuery dataPirKeyQuery = new DataPirKeyQuery();
         dataPirKeyQuery.setKey(resourceColumnNameArray);
-        String[] array = {
-                pirParam
-        };
+        String[] array = {pirParam};
         List<String[]> queries = new ArrayList<>(resourceColumnNameArray.length);
         for (int i = 0; i < resourceColumnNameArray.length; i++) {
             queries.add(i, array);
@@ -98,8 +97,7 @@ public class PirService {
         DataPirKeyQuery dataPirKeyQuery = new DataPirKeyQuery();
         dataPirKeyQuery.setKey(resourceColumnNameArray);
         String[] split = pirParamArray;
-        List<String[]> singleValueQuery = Arrays.stream(split).map(String::trim).filter(StringUtils::isNotBlank)
-                .map(s -> new String[]{s}).collect(Collectors.toList());
+        List<String[]> singleValueQuery = Arrays.stream(split).map(String::trim).filter(StringUtils::isNotBlank).map(s -> new String[]{s}).collect(Collectors.toList());
         dataPirKeyQuery.setQuery(singleValueQuery);
         return Collections.singletonList(dataPirKeyQuery);
     }
@@ -173,8 +171,7 @@ public class PirService {
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "psi结果为空");
         }
         list = FileUtil.getAllCsvData(task.getFilePath());
-        Set<String> idNumSet = list.stream().map(map -> String.valueOf(map.getOrDefault(psiRecord.getTargetField(), "")))
-                .filter(StringUtils::isNotBlank).collect(Collectors.toSet());
+        Set<String> idNumSet = list.stream().map(map -> String.valueOf(map.getOrDefault(psiRecord.getTargetField(), ""))).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
         req.setTargetValueSet(idNumSet);
 
         req.setOriginOrganId(organConfiguration.getSysLocalOrganId());
@@ -187,9 +184,7 @@ public class PirService {
             return map;
         }).collect(Collectors.toList());
         // 生成数据源
-        String resourceName = "PIR处理资源" +
-                SysConstant.HYPHEN_DELIMITER +
-                req.getTaskName();
+        String resourceName = "PIR处理资源" + SysConstant.HYPHEN_DELIMITER + req.getTaskName();
         DataResource dataResource = examService.generateTargetResource(mapList, resourceName);
         req.setOriginResourceId(dataResource.getResourceFusionId());
 
@@ -247,6 +242,8 @@ public class PirService {
             log.info("查询机构ID: [{}] 失败，未查询到结果", targetOrganId);
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "organ");
         }
+
+        taskPrimaryRedisRepository.setCopyPirReq(req);
         for (SysOrgan organ : sysOrgans) {
             otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/submitPirRecord", organ.getPublicKey());
             return otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/processPirPhase1", organ.getPublicKey());
@@ -283,6 +280,62 @@ public class PirService {
         Map<String, Object> map = new HashMap<>();
         map.put("taskId", dataTask.getTaskId());
      */
+
+    /**
+     * 发起方
+     */
+    public BaseResultEntity submitPirPhase2(Long pirTaskId) {
+        DataPirCopyReq req = taskPrimaryRedisRepository.getCopyPirReq(pirTaskId);
+        if (req == null) {
+            log.error("{}: {}", BaseResultEnum.DATA_QUERY_NULL.getMessage(), "任务已超时");
+            // todo 超时任务直接失败
+            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "任务已超时");
+        }
+
+        String pirRecordId = req.getPirRecordId();
+        PirRecord pirRecord = recordRepository.selectPirRecordByRecordId(pirRecordId);
+        BaseResultEntity dataResource = otherBusinessesService.getDataResource(req.getTargetResourceId());
+        if (dataResource.getCode() != 0) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "资源查询失败");
+        }
+        Map<String, Object> pirDataResource = (LinkedHashMap) dataResource.getResult();
+        int available = Integer.parseInt(pirDataResource.getOrDefault("available", "1").toString());
+        if (available == 1) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "资源不可用");
+        }
+        // dataResource columnName list
+        String resourceColumnNames = pirDataResource.getOrDefault("resourceColumnNameList", "").toString();
+        if (StringUtils.isBlank(resourceColumnNames)) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表失败");
+        }
+        String[] resourceColumnNameArray = Arrays.stream(resourceColumnNames.split(",")).map(String::trim).toArray(String[]::new);
+        ;
+        log.info("pir 提交数据特征: {}", Arrays.toString(resourceColumnNameArray));
+        if (resourceColumnNameArray.length == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表为空");
+        }
+        boolean containedTargetFieldFlag = Arrays.asList(resourceColumnNameArray).contains(pirRecord.getTargetField());
+        if (!containedTargetFieldFlag) {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表不包含目标字段");
+        }
+
+        List<DataPirKeyQuery> dataPirKeyQueries = req.getDataPirKeyQueries();
+        DataTask dataTask = dataTaskRepository.selectDataTaskByTaskId(req.getDataTaskId());
+        dataTask.setTaskStartTime(System.currentTimeMillis());
+
+        DataPirTask dataPirTask = dataTaskRepository.selectPirTaskById(req.getDataPirTaskId());
+        // retrievalId will rent in web ,need to be readable
+
+        String originResourceId = req.getOriginResourceId();
+        DataResource resource = dataResourceRepository.queryDataResourceByResourceFusionId(originResourceId);
+        dataAsyncService.pirGrpcTask(dataTask, dataPirTask, resourceColumnNames, dataPirKeyQueries, req, resource);
+
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("taskId", dataTask.getTaskId());
+        return BaseResultEntity.success(map);
+
+    }
 
     /**
      * pir phase2 #3
@@ -374,9 +427,26 @@ public class PirService {
         return BaseResultEntity.success();
     }
 
-    private void updatePirTaskAfterSelect(DataPirCopyReq req) {
+    @Transactional
+    public void updatePirTaskAfterSelect(DataPirCopyReq req) {
         DataTask dataTask = dataTaskRepository.selectDataTaskByTaskId(req.getDataTaskId());
         dataTask.setTaskState(req.getTaskState());
         dataTaskPrRepository.updateDataTask(dataTask);
+        if (Objects.equals(req.getTaskState(), TaskStateEnum.READY.getStateType())) {
+            Long dataPirTaskId = req.getDataPirTaskId();
+            DataPirTask task = dataTaskRepository.selectPirTaskById(dataPirTaskId);
+            if (task == null) {
+                log.error("{}: {}", BaseResultEnum.DATA_QUERY_NULL, "pirTask");
+                return;
+            }
+            task.setResourceId(req.getTargetResourceId());
+            dataTaskPrRepository.updateDataPirTask(task);
+
+            taskPrimaryRedisRepository.setCopyPirReq(req);
+        }
+
+        if (Objects.equals(req.getTaskState(), TaskStateEnum.FAIL.getStateType())) {
+            taskPrimaryRedisRepository.deleteCopyPirReq(req.getDataPirTaskId());
+        }
     }
 }

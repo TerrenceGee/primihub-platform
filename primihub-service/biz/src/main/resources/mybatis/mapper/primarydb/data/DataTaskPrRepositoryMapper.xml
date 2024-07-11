@@ -29,6 +29,28 @@
         </set>
         where task_id = #{taskId}
     </update>
+<!--    SELECT id,
+               task_id             as taskId,
+               provider_organ_name as providerOrganName,
+               resource_id         as resourceId,
+               resource_name       as resourceName,
+               retrieval_id        as retrievalId,
+               create_date         as createDate
+        FROM data_pir_task
+        WHERE task_id = #{id}
+        -->
+    <update id="updateDataPirTask" parameterType="com.primihub.biz.entity.data.po.DataPirTask">
+        update data_pir_task
+        <set>
+            <if test="providerOrganName!=null and providerOrganName != ''">provider_organ_name = #{providerOrganName},</if>
+            <if test="resourceId!=null and providerOrganName != ''">resource_id = #{resourceId},</if>
+            <if test="resourceName!=null and resourceName != ''">resource_name = #{resourceName},</if>
+            <if test="retrievalId !=null and retrievalId != ''">retrieval_id = #{retrievalId},</if>
+            <if test="isDel!=null">is_del = #{isDel},</if>
+            update_date = now()
+        </set>
+        where task_id = #{taskId}
+    </update>
     <delete id="deleteDataTask">
         delete from data_task where task_id = #{taskId}
     </delete>

@@ -1,11 +1,9 @@
 package com.primihub.application.controller.data;
 
-import com.alibaba.fastjson.JSON;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
-import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.req.ScoreModelReq;
@@ -20,7 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -28,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.util.Objects;
 
 @Api(value = "匿踪查询接口", tags = "匿踪查询接口")
 @RequestMapping("pir")
@@ -57,6 +59,18 @@ public class PirController {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "psiRecordId");
         }
         return pirService.submitPirPhase1(req);
+    }
+
+    /**
+     * @return
+     */
+    @PostMapping("submitPirPhase2")
+    public BaseResultEntity submitPirPhase2(DataPirCopyReq req) {
+        if (Objects.isNull(req.getDataPirTaskId())) {
+            log.error("{}: {}", BaseResultEnum.LACK_OF_PARAM.getMessage(), "pirTaskId");
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "pirTaskId");
+        }
+        return pirService.submitPirPhase2(req.getDataPirTaskId());
     }
 
 
