@@ -1,6 +1,7 @@
 package com.primihub.biz.service.data;
 
 
+import com.alibaba.fastjson.JSON;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.constant.SysConstant;
@@ -262,6 +263,9 @@ public class PirService {
             // todo 超时任务直接失败
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "任务已经超时或者失败");
         }
+        req.setTargetValueSet(null);
+        req.setDataPirKeyQueries(null);
+        log.info("redis pirCopyReq: {}", JSON.toJSONString(req));
 
         String pirRecordId = req.getPirRecordId();
         PirRecord pirRecord = recordRepository.selectPirRecordByRecordId(pirRecordId);
@@ -269,6 +273,7 @@ public class PirService {
         if (dataResource.getCode() != 0) {
             return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "资源查询失败");
         }
+        log.info("meta fusionResourceVo: {}", JSON.toJSONString(dataResource.getResult()));
         Map<String, Object> pirDataResource = (LinkedHashMap) dataResource.getResult();
         int available = Integer.parseInt(pirDataResource.getOrDefault("available", "1").toString());
         if (available == 1) {
