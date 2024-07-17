@@ -263,9 +263,6 @@ public class PirService {
             // todo 超时任务直接失败
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "任务已经超时或者失败");
         }
-        req.setTargetValueSet(null);
-        req.setDataPirKeyQueries(null);
-        log.info("redis pirCopyReq: {}", JSON.toJSONString(req));
 
         String pirRecordId = req.getPirRecordId();
         PirRecord pirRecord = recordRepository.selectPirRecordByRecordId(pirRecordId);
@@ -418,6 +415,9 @@ public class PirService {
             task.setResourceId(req.getTargetResourceId());
             dataTaskPrRepository.updateDataPirTask(task);
 
+            DataPirCopyReq reqValue = taskPrimaryRedisRepository.getCopyPirReq(req.getDataPirTaskId());
+            reqValue.setTaskState(req.getTaskState());
+            reqValue.setTargetResourceId(req.getTargetResourceId());
             taskPrimaryRedisRepository.setCopyPirReq(req);
         }
 

@@ -66,6 +66,7 @@ public class PirController {
      */
     @PostMapping("submitPirPhase2")
     public BaseResultEntity submitPirPhase2(DataPirCopyReq req) {
+        log.info("submit pir phase2");
         if (Objects.isNull(req.getDataPirTaskId())) {
             log.error("{}: {}", BaseResultEnum.LACK_OF_PARAM.getMessage(), "pirTaskId");
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "pirTaskId");

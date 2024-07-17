@@ -136,23 +136,6 @@ public class ShareDataController {
         return sysOrganService.verifyGatewayConnection(uniqueIdentification);
     }
 
-    /**
-     * #3 提交phase2
-     */
-    @PostMapping(value = "submitPirPhase2")
-    public BaseResultEntity submitPirPhase2(@RequestBody DataPirCopyReq req) {
-        // 查询条件
-        DataPirReq param = new DataPirReq();
-        if (org.apache.commons.lang.StringUtils.isBlank(req.getTargetResourceId())) {
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "resourceId");
-        }
-        if (org.apache.commons.lang.StringUtils.isBlank(req.getTaskName())) {
-            req.setTaskName("PIR任务-" + req.getPsiRecordId());
-        }
-        param.setResourceId(req.getTargetResourceId());
-        param.setTaskName(req.getTaskName());
-        return pirService.submitPirPhase2(param, req);
-    }
 
     /**
      * 发起方
