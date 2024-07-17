@@ -310,71 +310,6 @@ public class PirService {
 
     }
 
-    /**
-     * pir phase2 #3
-     * 发起方
-     *
-     * @param req
-     * @return
-     */
-    public BaseResultEntity submitPirPhase2(DataPirReq param, DataPirCopyReq req) {
-        String pirRecordId = req.getPirRecordId();
-        PirRecord pirRecord = recordRepository.selectPirRecordByRecordId(pirRecordId);
-        BaseResultEntity dataResource = otherBusinessesService.getDataResource(param.getResourceId());
-        if (dataResource.getCode() != 0) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "资源查询失败");
-        }
-        Map<String, Object> pirDataResource = (LinkedHashMap) dataResource.getResult();
-        int available = Integer.parseInt(pirDataResource.getOrDefault("available", "1").toString());
-        if (available == 1) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "资源不可用");
-        }
-        // dataResource columnName list
-        String resourceColumnNames = pirDataResource.getOrDefault("resourceColumnNameList", "").toString();
-        if (StringUtils.isBlank(resourceColumnNames)) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表失败");
-        }
-        String[] resourceColumnNameArray = Arrays.stream(resourceColumnNames.split(",")).map(String::trim).toArray(String[]::new);
-        ;
-        log.info("pir 提交数据特征: {}", Arrays.toString(resourceColumnNameArray));
-        if (resourceColumnNameArray.length == 0) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表为空");
-        }
-        boolean containedTargetFieldFlag = Arrays.asList(resourceColumnNameArray).contains(pirRecord.getTargetField());
-        if (!containedTargetFieldFlag) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL, "获取资源字段列表不包含目标字段");
-        }
-
-        String originResourceId = req.getOriginResourceId();
-        DataResource resource = dataResourceRepository.queryDataResourceByResourceFusionId(originResourceId);
-
-        String[] targetValueArray = req.getTargetValueSet().toArray(new String[0]);
-        String[] queryColumnNames = {pirRecord.getTargetField()};
-        List<DataPirKeyQuery> dataPirKeyQueries = convertPirParamToQueryArray(targetValueArray, queryColumnNames);
-
-        DataTask dataTask = new DataTask();
-        dataTask.setTaskIdName(Long.toString(SnowflakeId.getInstance().nextId()));
-        dataTask.setTaskName(req.getTaskName());
-        dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
-        dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
-        dataTask.setTaskStartTime(System.currentTimeMillis());
-        dataTaskPrRepository.saveDataTask(dataTask);
-        DataPirTask dataPirTask = new DataPirTask();
-        dataPirTask.setTaskId(dataTask.getTaskId());
-        // retrievalId will rent in web ,need to be readable
-        dataPirTask.setRetrievalId(String.valueOf(req.getTargetValueSet().size()));
-        dataPirTask.setProviderOrganName(pirDataResource.get("organName").toString());
-        dataPirTask.setResourceName(pirDataResource.get("resourceName").toString());
-        dataPirTask.setResourceId(param.getResourceId());
-        dataTaskPrRepository.saveDataPirTask(dataPirTask);
-        dataAsyncService.pirGrpcTask(dataTask, dataPirTask, resourceColumnNames, dataPirKeyQueries, req, resource);
-
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("taskId", dataTask.getTaskId());
-        return BaseResultEntity.success(map);
-    }
-
     public BaseResultEntity getScoreModelList() {
         return BaseResultEntity.success(scoreModelRepository.selectAll());
     }
@@ -418,7 +353,7 @@ public class PirService {
             DataPirCopyReq reqValue = taskPrimaryRedisRepository.getCopyPirReq(req.getDataPirTaskId());
             reqValue.setTaskState(req.getTaskState());
             reqValue.setTargetResourceId(req.getTargetResourceId());
-            taskPrimaryRedisRepository.setCopyPirReq(req);
+            taskPrimaryRedisRepository.setCopyPirReq(reqValue);
         }
 
         if (Objects.equals(req.getTaskState(), TaskStateEnum.FAIL.getStateType())) {
