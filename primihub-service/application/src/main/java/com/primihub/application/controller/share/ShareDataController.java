@@ -200,7 +200,6 @@ public class ShareDataController {
     @PostMapping(value = "finishPirTask")
     public BaseResultEntity finishPirTask(@RequestBody DataPirCopyReq req) {
         log.info("finishPirTask:");
-        log.info(JSON.toJSONString(req));
         return pirService.finishPirTask(req);
     }
 }
