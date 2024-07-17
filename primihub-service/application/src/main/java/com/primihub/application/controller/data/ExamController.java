@@ -98,7 +98,8 @@ public class ExamController {
      */
     @PostMapping(value = "/shareData/processExamTask")
     public BaseResultEntity processExamTask(@RequestBody DataExamReq dataExamReq) {
-        log.info(JSON.toJSONString(dataExamReq));
+        log.info("process exam task");
+        log.info("targetValueSize: {}", dataExamReq.getFieldValueSet().size());
         return examService.processExamTask(dataExamReq);
     }
 
@@ -107,7 +108,8 @@ public class ExamController {
      */
     @PostMapping(value = "/shareData/finishExamTask")
     public BaseResultEntity finishExamTask(@RequestBody DataExamReq dataExamReq) {
-        log.info(JSON.toJSONString(dataExamReq));
+        log.info("finish exam task");
+        log.info("targetValueSize: {}", dataExamReq.getFieldValueSet().size());
         return examService.finishExamTask(dataExamReq);
     }
 

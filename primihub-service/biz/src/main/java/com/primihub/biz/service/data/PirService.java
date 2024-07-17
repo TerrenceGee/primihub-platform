@@ -245,6 +245,7 @@ public class PirService {
 
         taskPrimaryRedisRepository.setCopyPirReq(req);
         for (SysOrgan organ : sysOrgans) {
+            req.setDataPirKeyQueries(null);
             otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/submitPirRecord", organ.getPublicKey());
             return otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/processPirPhase1", organ.getPublicKey());
         }
@@ -287,9 +288,9 @@ public class PirService {
     public BaseResultEntity submitPirPhase2(Long pirTaskId) {
         DataPirCopyReq req = taskPrimaryRedisRepository.getCopyPirReq(pirTaskId);
         if (req == null) {
-            log.error("{}: {}", BaseResultEnum.DATA_QUERY_NULL.getMessage(), "任务已超时");
+            log.error("{}: {}", BaseResultEnum.DATA_QUERY_NULL.getMessage(), "任务已经超时或者失败");
             // todo 超时任务直接失败
-            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "任务已超时");
+            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "任务已经超时或者失败");
         }
 
         String pirRecordId = req.getPirRecordId();
