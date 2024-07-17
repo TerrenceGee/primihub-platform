@@ -230,7 +230,7 @@ public class PirService {
 
         req.setTargetField(psiRecord.getTargetField());
         req.setDataTaskId(dataTask.getTaskId());
-        req.setDataPirTaskId(dataPirTask.getId());
+        req.setDataPirTaskId(dataPirTask.getTaskId());
         req.setResourceColumnNames("wait");
         req.setDataPirKeyQueries(dataPirKeyQueries);
 
@@ -251,36 +251,6 @@ public class PirService {
         }
         return null;
     }
-
-    /*
-        String originResourceId = req.getOriginResourceId();
-        DataResource resource = dataResourceRepository.queryDataResourceByResourceFusionId(originResourceId);
-
-        String[] targetValueArray = req.getTargetValueSet().toArray(new String[0]);
-        String[] queryColumnNames = {pirRecord.getTargetField()};
-        List<DataPirKeyQuery> dataPirKeyQueries = convertPirParamToQueryArray(targetValueArray, queryColumnNames);
-
-        DataTask dataTask = new DataTask();
-        dataTask.setTaskIdName(Long.toString(SnowflakeId.getInstance().nextId()));
-        dataTask.setTaskName(req.getTaskName());
-        dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
-        dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
-        dataTask.setTaskStartTime(System.currentTimeMillis());
-        dataTaskPrRepository.saveDataTask(dataTask);
-        DataPirTask dataPirTask = new DataPirTask();
-        dataPirTask.setTaskId(dataTask.getTaskId());
-        // retrievalId will rent in web ,need to be readable
-        dataPirTask.setRetrievalId(String.valueOf(req.getTargetValueSet().size()));
-        dataPirTask.setProviderOrganName(pirDataResource.get("organName").toString());
-        dataPirTask.setResourceName(pirDataResource.get("resourceName").toString());
-        dataPirTask.setResourceId(param.getResourceId());
-        dataTaskPrRepository.saveDataPirTask(dataPirTask);
-        dataAsyncService.pirGrpcTask(dataTask, dataPirTask, resourceColumnNames, dataPirKeyQueries, req, resource);
-
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("taskId", dataTask.getTaskId());
-     */
 
     /**
      * 发起方
