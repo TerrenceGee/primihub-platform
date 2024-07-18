@@ -473,7 +473,7 @@ public class DataAsyncService implements ApplicationContextAware {
                 for (int i = 0; i < dataPirKeyQuery.getQuery().size(); i++) {
                     querys[i] = String.join(",", dataPirKeyQuery.getQuery().get(i));
                 }*/
-                taskParam.getTaskContentParam().setQueryParam(new String[0]);
+//                taskParam.getTaskContentParam().setQueryParam(new String[0]);
                 taskParam.getTaskContentParam().setServerData(dataPirTask.getResourceId());
                 taskParam.getTaskContentParam().setClientData(dataResource.getResourceFusionId());
                 taskParam.getTaskContentParam().setOutputFullFilename(sb.toString());

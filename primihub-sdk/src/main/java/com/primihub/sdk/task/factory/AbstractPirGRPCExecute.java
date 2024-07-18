@@ -12,10 +12,11 @@ import org.slf4j.LoggerFactory;
 import primihub.rpc.Common;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class AbstractPirGRPCExecute extends AbstractGRPCExecuteFactory {
 
-    private final static String QUERY_CONFIG_JSON = "{ \"SERVER\": {\"key_columns\": <key_columns>} }";
+    private final static String QUERY_CONFIG_JSON = "{ \"SERVER\": {\"key_columns\": <server_key_columns>} , \"CLIENT\": {\"key_columns\": <client_key_columns>}}";
 
     private final static Logger log = LoggerFactory.getLogger(AbstractPirGRPCExecute.class);
 
@@ -39,11 +40,11 @@ public class AbstractPirGRPCExecute extends AbstractGRPCExecuteFactory {
     private void runPir(Channel channel, TaskParam<TaskPIRParam> param){
         try {
             log.info("grpc run {} - time:{}", param.toString(), System.currentTimeMillis());
-            Common.string_array.Builder builder = Common.string_array.newBuilder();
-            for (String str : param.getTaskContentParam().getQueryParam()) {
-                builder.addValueStringArray(ByteString.copyFrom(str.getBytes(StandardCharsets.UTF_8)));
-            }
-            Common.ParamValue clientDataParamValue = Common.ParamValue.newBuilder().setIsArray(true).setValueStringArray(builder).build();
+//            Common.string_array.Builder builder = Common.string_array.newBuilder();
+//            for (String str : param.getTaskContentParam().getQueryParam()) {
+//                builder.addValueStringArray(ByteString.copyFrom(str.getBytes(StandardCharsets.UTF_8)));
+//            }
+//            Common.ParamValue clientDataParamValue = Common.ParamValue.newBuilder().setIsArray(true).setValueStringArray(builder).build();
             Common.ParamValue serverDataParamValue = Common.ParamValue.newBuilder().setValueString(ByteString.copyFrom(param.getTaskContentParam().getServerData().getBytes(StandardCharsets.UTF_8))).build();
             Common.ParamValue pirTagParamValue = Common.ParamValue.newBuilder().setValueInt32(1).build();
             Common.ParamValue outputFullFilenameParamValue = Common.ParamValue.newBuilder().setValueString(ByteString.copyFrom(param.getTaskContentParam().getOutputFullFilename().getBytes(StandardCharsets.UTF_8))).build();
@@ -55,10 +56,13 @@ public class AbstractPirGRPCExecute extends AbstractGRPCExecuteFactory {
                 log.info("grpc end {} - time:{}", param.toString(), System.currentTimeMillis());
                 return;
             }
-            queryConfig = QUERY_CONFIG_JSON.replace("<key_columns>",param.getTaskContentParam().getKeyColumnsString());
-            Common.ParamValue aueryConfigParamValue = Common.ParamValue.newBuilder().setValueString(ByteString.copyFrom(queryConfig.getBytes(StandardCharsets.UTF_8))).build();
+            queryConfig = QUERY_CONFIG_JSON.replace("<server_key_columns>",param.getTaskContentParam().getKeyColumnsString());
+            queryConfig = queryConfig.replace("<client_key_columns>", Arrays.toString(new int[]{0}));
+            Common.ParamValue aueryConfigParamValue = Common.ParamValue.newBuilder().setValueString(
+                    ByteString.copyFrom(queryConfig.getBytes(StandardCharsets.UTF_8))
+            ).build();
             Common.Params params = Common.Params.newBuilder()
-                    .putParamMap("clientData", clientDataParamValue)
+//                    .putParamMap("clientData", clientDataParamValue)
                     .putParamMap("serverData", serverDataParamValue)
                     .putParamMap("pirType", pirTagParamValue)
                     .putParamMap("outputFullFilename", outputFullFilenameParamValue)
