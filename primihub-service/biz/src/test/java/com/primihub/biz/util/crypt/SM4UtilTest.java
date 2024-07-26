@@ -2,6 +2,7 @@ package com.primihub.biz.util.crypt;
 
 
 import com.alibaba.fastjson.JSONObject;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class SM4UtilTest {
 
         /* 864936051812485 of terrence */
         /* 869134049810812 of feng */
-        String sm3PhoneNum = SM3Util.encrypt("869167065392075");
+        String sm3PhoneNum = SM3Util.encrypt("861173050113292");
         System.out.println("SM3参数加密后: " + sm3PhoneNum);
         map.put("param", new HashMap<String, String>() {{
             put("mobile", sm3PhoneNum);
@@ -72,5 +73,10 @@ public class SM4UtilTest {
     /*
     {"truth_score":"0.9857"}
      */
+    @Test
+    public void test() {
+        String encrypt = SM3Util.encrypt("123456789");
+        System.out.println("encrypt: " + encrypt);
+    }
 
 }

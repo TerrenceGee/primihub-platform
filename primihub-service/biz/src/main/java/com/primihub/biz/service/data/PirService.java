@@ -224,14 +224,14 @@ public class PirService {
         SysOrgan sysOrgan = organSecondaryDbRepository.selectSysOrganByOrganId(psiRecord.getTargetOrganId());
         // 协作方机构名称
         dataPirTask.setProviderOrganName(sysOrgan.getOrganName());
-        dataPirTask.setResourceName("wait");
-        dataPirTask.setResourceId("wait");
+        dataPirTask.setResourceName("pir");
+        dataPirTask.setResourceId("pir");
         dataTaskPrRepository.saveDataPirTask(dataPirTask);
 
         req.setTargetField(psiRecord.getTargetField());
         req.setDataTaskId(dataTask.getTaskId());
         req.setDataPirTaskId(dataPirTask.getTaskId());
-        req.setResourceColumnNames("wait");
+        req.setResourceColumnNames("pir");
         req.setDataPirKeyQueries(dataPirKeyQueries);
 
         Map<String, Object> map = new HashMap<>();
