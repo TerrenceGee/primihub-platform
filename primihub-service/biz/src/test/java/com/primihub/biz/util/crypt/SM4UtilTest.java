@@ -15,21 +15,23 @@ public class SM4UtilTest {
     // requestRefId=SJSREQ_201601010809108632A&secretId=KFZQpn74WFkmLPx3gnP
 
     public static void main(String[] args) {
-        String s = test1("SJSREQ_201601010809108632A", secretId);
-        System.out.println("sign 加密后: " + s);
+        String s = test1("123456", secretId);
+        System.out.println("请求签名: " + s);
 
         Map<String, Object> map = new HashMap<String, Object>();
 
-        String sm3PhoneNum = SM3Util.encrypt("15871801048");
-        System.out.println("sm3phonenum : " + sm3PhoneNum);
+        /* 864936051812485 of terrence */
+        /* 869134049810812 of feng */
+        String sm3PhoneNum = SM3Util.encrypt("869167065392075");
+        System.out.println("SM3参数加密后: " + sm3PhoneNum);
         map.put("param", new HashMap<String, String>() {{
             put("mobile", sm3PhoneNum);
             put("empowerNo", String.valueOf(System.currentTimeMillis()));
         }});
         String s1 = test2(map);
-        System.out.println("参数加密后: " + s1);
+        System.out.println("请求整体加密后: " + s1);
         try {
-            test3("a684c92f509bafed25b28785b61793b35dcc0e25f567d3d58b1420619cb6427d");
+//            test3("a684c92f509bafed25b28785b61793b35dcc0e25f567d3d58b1420619cb6427d");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -14,7 +14,6 @@ import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.dataenum.TaskTypeEnum;
 import com.primihub.biz.entity.data.po.*;
 import com.primihub.biz.entity.data.req.DataPirCopyReq;
-import com.primihub.biz.entity.data.req.DataPirReq;
 import com.primihub.biz.entity.data.req.DataPirTaskReq;
 import com.primihub.biz.entity.data.req.ScoreModelReq;
 import com.primihub.biz.entity.data.vo.DataPirTaskDetailVo;
@@ -248,7 +247,9 @@ public class PirService {
         for (SysOrgan organ : sysOrgans) {
             req.setDataPirKeyQueries(null);
             otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/submitPirRecord", organ.getPublicKey());
-            return otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/processPirPhase1", organ.getPublicKey());
+            return otherBusinessesService.syncGatewayApiData(
+                    req, organ.getOrganGateway() + "/share/shareData/processPirPhase1", organ.getPublicKey()
+            );
         }
         return null;
     }

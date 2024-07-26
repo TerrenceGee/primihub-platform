@@ -930,7 +930,7 @@ public class DataResourceService {
 
     public BaseResultEntity saveFusionResource(DataFusionCopyDto dto) {
         try {
-            log.info(dto.getCopyPart());
+//            log.info(dto.getCopyPart());
             List<DataResourceCopyVo> dataResourceCopyVos = JSONArray.parseArray(dto.getCopyPart(), DataResourceCopyVo.class);
             // 这里需要入代理
             if (BaseUtil.nodeHasGRPCInProxy(baseConfiguration)) {

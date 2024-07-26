@@ -94,7 +94,6 @@ public class ExamController {
 
     /**
      * 三：处理任务
-     * 这里要 mock 两个数据源
      */
     @PostMapping(value = "/shareData/processExamTask")
     public BaseResultEntity processExamTask(@RequestBody DataExamReq dataExamReq) {
