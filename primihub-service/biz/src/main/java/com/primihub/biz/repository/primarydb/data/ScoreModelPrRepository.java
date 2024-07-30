@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ScoreModelPrRepository {
     void saveScoreModel(ScoreModel scoreModel);
+
+    void deleteScoreModel(Long id);
 }

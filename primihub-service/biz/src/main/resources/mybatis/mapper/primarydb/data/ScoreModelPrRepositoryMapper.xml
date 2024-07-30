@@ -10,5 +10,8 @@
         (#{scoreKey},#{scoreModelCode},#{scoreModelName},#{scoreModelType},0,now(),now())
     </insert>
 
+    <delete id="deleteScoreModel">
+        delete from score_model where id = #{id}
+    </delete>
 
 </mapper>

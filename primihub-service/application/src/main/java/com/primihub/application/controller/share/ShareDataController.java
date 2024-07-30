@@ -24,15 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
-@Api(value = "数据同步接口 - 多节点可用,单节点不可用",tags = "数据同步接口")
+@Api(value = "数据同步接口 - 多节点可用,单节点不可用", tags = "数据同步接口")
 @RequestMapping("shareData")
 @RestController
 @Slf4j
@@ -57,81 +54,83 @@ public class ShareDataController {
     @Autowired
     private RecordService recordService;
 
-    @ApiOperation(value = "通信检测",httpMethod = "POST",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "通信检测", httpMethod = "POST", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PostMapping("/healthConnection")
-    public BaseResultEntity healthConnection(@RequestBody Object time){
-        log.info("healthConnection - {}",time);
+    public BaseResultEntity healthConnection(@RequestBody Object time) {
+        log.info("healthConnection - {}", time);
         return BaseResultEntity.success(shareService.getServiceState());
     }
 
     /**
      * 创建编辑项目接口
+     *
      * @return
      */
     @PostMapping("syncProject")
-    public BaseResultEntity syncProject(@RequestBody ShareProjectVo vo){
+    public BaseResultEntity syncProject(@RequestBody ShareProjectVo vo) {
         return dataProjectService.syncProject(vo);
     }
 
     /**
      * 创建编辑项目接口
+     *
      * @return
      */
     @PostMapping("syncModel")
-    public BaseResultEntity syncModel(@RequestBody ShareModelVo vo){
+    public BaseResultEntity syncModel(@RequestBody ShareModelVo vo) {
         return dataModelService.syncModel(vo);
     }
 
     @PostMapping("apply")
-    public BaseResultEntity applyForJoinNode(@RequestBody Map<String,Object> info){
-        if (info==null){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"info");
+    public BaseResultEntity applyForJoinNode(@RequestBody Map<String, Object> info) {
+        if (info == null) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "info");
         }
-        if (!info.containsKey("applyId")){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"applyId");
+        if (!info.containsKey("applyId")) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "applyId");
         }
-        if (!info.containsKey("organId")){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"organId");
+        if (!info.containsKey("organId")) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organId");
         }
-        if (!info.containsKey("organName")){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"organName");
+        if (!info.containsKey("organName")) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organName");
         }
-        if (!info.containsKey("gateway")){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"gateway");
+        if (!info.containsKey("gateway")) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "gateway");
         }
-        if (!info.containsKey("publicKey")){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"publicKey");
+        if (!info.containsKey("publicKey")) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "publicKey");
         }
         return sysOrganService.applyForJoinNode(info);
     }
 
     @PostMapping("saveFusionResource")
-    public BaseResultEntity saveFusionResource(@RequestBody DataFusionCopyDto dto){
-        if (dto==null){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"dto null");
+    public BaseResultEntity saveFusionResource(@RequestBody DataFusionCopyDto dto) {
+        if (dto == null) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "dto null");
         }
-        if (StringUtils.isEmpty(dto.getOrganId())){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"organId");
+        if (StringUtils.isEmpty(dto.getOrganId())) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "organId");
         }
-        if (StringUtils.isEmpty(dto.getCopyPart())){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"CopyPart");
+        if (StringUtils.isEmpty(dto.getCopyPart())) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "CopyPart");
         }
         return dataResourceService.saveFusionResource(dto);
     }
 
     @PostMapping("batchSaveTestDataSet")
-    public BaseResultEntity batchSaveTestDataSet(@RequestBody List<DataSet> dataSets){
-        if (dataSets == null || dataSets.size()==0) {
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"shareData - dataSets");
+    public BaseResultEntity batchSaveTestDataSet(@RequestBody List<DataSet> dataSets) {
+        if (dataSets == null || dataSets.size() == 0) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "shareData - dataSets");
         }
         return testService.batchSaveTestDataSet(dataSets);
     }
 
-    @ApiOperation(value = "网关通信检测",httpMethod = "POST",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "网关通信检测", httpMethod = "POST", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PostMapping("verifyGateway")
-    public BaseResultEntity verifyGatewayConnection(@RequestBody String uniqueIdentification){
-        if (org.apache.commons.lang3.StringUtils.isBlank(uniqueIdentification)){
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"uniqueIdentification");
+    public BaseResultEntity verifyGatewayConnection(@RequestBody String uniqueIdentification) {
+        if (org.apache.commons.lang3.StringUtils.isBlank(uniqueIdentification)) {
+            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "uniqueIdentification");
         }
         return sysOrganService.verifyGatewayConnection(uniqueIdentification);
     }
@@ -139,6 +138,7 @@ public class ShareDataController {
 
     /**
      * 发起方
+     *
      * @param req
      * @return
      */
@@ -157,6 +157,11 @@ public class ShareDataController {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "ScoreKey");
         }
         return remoteClient.submitScoreModelType(req);
+    }
+
+    @GetMapping(value = "deleteScoreModelType")
+    public BaseResultEntity deleteScoreModelType(@RequestParam("id") Long id) {
+        return remoteClient.deleteScoreModelType(id);
     }
 
     /**

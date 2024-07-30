@@ -38,7 +38,7 @@ public class RemoteClient {
     @Autowired
     private ScoreModelRepository scoreModelRepository;
 
-    public RemoteRespVo queryFromRemote(String phoneNum,ScoreModel scoreModel) {
+    public RemoteRespVo queryFromRemote(String phoneNum, ScoreModel scoreModel) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
@@ -98,7 +98,6 @@ public class RemoteClient {
     }
 
     /**
-     *
      * @param req
      * @return
      */
@@ -110,5 +109,10 @@ public class RemoteClient {
         }
         Set<ScoreModel> scoreModelSet = scoreModelRepository.selectAll();
         return BaseResultEntity.success(scoreModelSet);
+    }
+
+    public BaseResultEntity deleteScoreModelType(Long id) {
+        scoreModelPrRepository.deleteScoreModel(id);
+        return BaseResultEntity.success();
     }
 }
