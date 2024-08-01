@@ -48,6 +48,7 @@
                 target_field targetField
         from pir_record
         where record_id = #{recordId}
+        ORDER BY id desc
     </select>
 
     <select id="selectPsiRecordList" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="com.primihub.biz.entity.data.po.PsiRecord">
@@ -57,6 +58,7 @@
         <if test="taskName != null and taskName != ''">
             where psi_name like CONCAT('%',#{taskName,jdbcType=VARCHAR},'%')
         </if>
+        ORDER BY id desc
     </select>
 
     <select id="selectPsiRecordPage" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="com.primihub.biz.entity.data.po.PsiRecord">
