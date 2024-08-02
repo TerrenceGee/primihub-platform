@@ -7,7 +7,7 @@
     <div class="step-wrap">
       <div v-if="step===1" class="tmp-list">
         <div v-for="item in modelTmp" :key="item.id" class="tmp-item" :class="['tmp-item', item.id === formData.modelType ? 'current' : '']" @click="selectTmp(item.id)">
-          <img src="/images/tmp.png">
+          <img :src="`${publicPath}images/tmp.png`">
           <div class="context">
             <span>{{ item.name }}</span>
           </div>
@@ -73,6 +73,7 @@ export default {
   components: { DagComponent },
   data() {
     return {
+      publicPath: process.env.BASE_URL,
       hasMounted: false,
       dagWidth: null,
       dagHeight: null,

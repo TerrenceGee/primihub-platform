@@ -1,13 +1,18 @@
 <template>
   <div class="poster-inner">
-    <img src="/images/logo-text.png" alt="">
+    <img :src="`${publicPath}images/logo-text.png`" alt="">
     <p class="slogan">致力于以隐私计算技术构建数据信任与安全</p>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Poster'
+  name: 'Poster',
+  data() {
+    return {
+      publicPath: process.env.BASE_URL
+    }
+  }
 }
 </script>
 

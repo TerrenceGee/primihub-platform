@@ -10,7 +10,7 @@
           </header>
           <div class="session__auth-info">
             <div class="auth-logos">
-              <img class="primihub-logo" alt="primihub logo" src="/images/logo1.png">
+              <img class="primihub-logo" alt="primihub logo" src="`${publicPath}images/logo1.png`">
               <i class="icon iconfont icon-exchange" />
               <div class="git-other-login-icon">
                 <i class="github icon-github iconfont" />
@@ -88,6 +88,7 @@ export default {
       }
     }
     return {
+      publicPath: process.env.BASE_URL,
       redirect: undefined,
       isUser: false, // 用户是否已绑定过
       formData: {

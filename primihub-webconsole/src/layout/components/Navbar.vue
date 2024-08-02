@@ -15,7 +15,7 @@
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <!-- <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar"> -->
-          <img src="/images/avatar.png" class="user-avatar">
+          <img :src="`${publicPath}images/avatar.png`" class="user-avatar">
           <div class="user-info">
             <p>{{ userOrganName }}</p>
             <p>{{ userName }}</p>
@@ -60,6 +60,7 @@ export default {
   },
   data() {
     return {
+      publicPath: process.env.BASE_URL,
       userInfo: {},
       organName: '',
       dialogVisible: false,
