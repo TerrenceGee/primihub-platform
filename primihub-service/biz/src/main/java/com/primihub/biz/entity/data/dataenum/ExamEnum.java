@@ -9,6 +9,7 @@ public enum ExamEnum {
     ID_NUM(RemoteConstant.INPUT_FIELD_ID_NUM, "examExecuteIdNum"),
     IMEI(RemoteConstant.INPUT_FIELD_IMEI, "examExecuteImei"),
     PHONE_NUM(RemoteConstant.INPUT_FIELD_PHONE, "examExecutePhoneNum"),
+    CTCC(RemoteConstant.INPUT_FIELD_CTCC, "examExecuteCTCC"),
     ;
     private String targetValue;
     private String executeService;

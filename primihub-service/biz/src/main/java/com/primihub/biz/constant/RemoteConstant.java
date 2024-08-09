@@ -7,6 +7,7 @@ public class RemoteConstant {
     public static final String INPUT_FIELD_ID_NUM = "idNum";
     public static final String INPUT_FIELD_IMEI = "imei";
     public static final String INPUT_FIELD_PHONE = "phoneNum";
+    public static final String INPUT_FIELD_CTCC = "ctcc";
     public static final String[] INPUT_FIELD_ARRAY = {INPUT_FIELD_ID_NUM, INPUT_FIELD_IMEI, INPUT_FIELD_PHONE};
     public static final String UNDEFINED = "undefined";
 
