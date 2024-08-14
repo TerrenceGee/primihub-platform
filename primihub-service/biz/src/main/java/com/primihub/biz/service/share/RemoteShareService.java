@@ -38,7 +38,7 @@ public class RemoteShareService {
      *          1).公开->私有或者授权
      *          2).私有或者授权 -> 公开
      */
-    @org.springframework.context.event.EventListener(RemoteDataResourceEvent.class)
+//    @org.springframework.context.event.EventListener(RemoteDataResourceEvent.class)
     public void transDataResource(RemoteDataResourceEvent event) {
         log.info("spring event 接受的数据: {}", JSON.toJSONString(event));
         Long resourceId = event.getResourceId();
