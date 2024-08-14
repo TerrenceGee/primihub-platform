@@ -2,9 +2,12 @@ package com.primihub.biz.convert;
 
 import com.primihub.biz.entity.data.po.DataExamTask;
 import com.primihub.biz.entity.data.po.DataResource;
+import com.primihub.biz.entity.data.po.lpy.CTCCExamTask;
 import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.entity.data.vo.DataExamTaskVo;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
+
+import java.util.Collections;
 
 public class DataExamConvert {
 
@@ -21,7 +24,6 @@ public class DataExamConvert {
 
     public static DataExamTaskVo convertPoToVo(DataExamTask task) {
         DataExamTaskVo vo = new DataExamTaskVo();
-        // todo
         return vo;
     }
 
@@ -34,6 +36,20 @@ public class DataExamConvert {
         req.setTargetResourceId(po.getTargetResourceId());
         req.setOriginOrganId(po.getOriginOrganId());
         req.setTargetOrganId(po.getTargetOrganId());
+        return req;
+    }
+
+    public static DataExamReq convertCtccToReq(CTCCExamTask task) {
+        DataExamReq req = new DataExamReq();
+        req.setTargetResourceId(task.getTargetResourceId());
+        req.setTargetField(task.getTargetField());
+        req.setTaskName(task.getTaskName());
+        req.setResourceId(task.getOriginResourceId());
+        req.setOriginOrganId(task.getOriginOrganId());
+        req.setTaskState(task.getTaskState());
+        req.setTargetOrganId(task.getTargetOrganId());
+        req.setTaskId(task.getTaskId());
+        req.setFieldValueSet(Collections.emptySet());
         return req;
     }
 }

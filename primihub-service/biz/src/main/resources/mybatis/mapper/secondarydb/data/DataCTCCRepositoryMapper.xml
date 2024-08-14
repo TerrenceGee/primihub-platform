@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.primihub.biz.repository.secondarydb.data.DataCTCCRepository">
+
+    <sql id="ctccExamTaskColumn">
+        id,
+        task_id taskId,
+        task_name taskName,
+        origin_organ_id originOrganId,
+        target_organ_id targetOrganId,
+        origin_resource_id originResourceId,
+        target_resource_id targetResourceId,
+        task_state taskState,
+        target_field targetField,
+        file_url fileUrl,
+        file_name fileName,
+        is_del isDel,
+        create_date createDate,
+        update_date updateDate
+    </sql>
+
+    <select id="selectCtccExamTaskPage" resultType="com.primihub.biz.entity.data.vo.lpy.CtccExamTaskVo"
+            parameterType="com.primihub.biz.entity.data.req.PageReq">
+        select
+        <include refid="ctccExamTaskColumn"/>
+        from
+        ctcc_exam_task
+        ORDER BY id desc
+        LIMIT #{offset},#{pageSize}
+    </select>
+
+    <select id="selectCtccExamTaskCount" resultType="java.lang.Integer"
+            parameterType="com.primihub.biz.entity.data.req.PageReq">
+        select
+        count(id)
+        from
+        ctcc_exam_task
+    </select>
+
+    <select id="selectCtccExamTaskById" resultType="com.primihub.biz.entity.data.po.lpy.CTCCExamTask">
+        select
+        <include refid="ctccExamTaskColumn"/>
+        FROM ctcc_exam_task
+        WHERE id = #{id}
+    </select>
+
+</mapper>

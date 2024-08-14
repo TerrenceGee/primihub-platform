@@ -1,13 +1,14 @@
-package com.primihub.biz.entity.data.po.lpy;
+package com.primihub.biz.entity.data.vo.lpy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
-@Data
-public class CTCCExamTask {
-
+@Getter
+@Setter
+public class CtccExamTaskVo {
     private Long id;
     /** 对应对方的任务id */
     private String taskId;
@@ -33,5 +34,4 @@ public class CTCCExamTask {
     private Date createDate;
     @JsonIgnore
     private Date updateDate;
-
 }

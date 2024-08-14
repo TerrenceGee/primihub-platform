@@ -3,9 +3,12 @@ package com.primihub.biz.service.data.pirphase1;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.BaseConfiguration;
+import com.primihub.biz.constant.RemoteConstant;
 import com.primihub.biz.constant.SysConstant;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
+import com.primihub.biz.entity.data.po.DataPsi;
 import com.primihub.biz.entity.data.po.DataResource;
+import com.primihub.biz.entity.data.po.PsiRecord;
 import com.primihub.biz.entity.data.po.ScoreModel;
 import com.primihub.biz.entity.data.po.lpy.DataImei;
 import com.primihub.biz.entity.data.req.DataPirCopyReq;
@@ -14,12 +17,15 @@ import com.primihub.biz.entity.data.vo.lpy.ImeiPirVo;
 import com.primihub.biz.repository.primarydb.data.DataImeiPrimarydbRepository;
 import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.DataImeiRepository;
+import com.primihub.biz.repository.secondarydb.data.DataPsiRepository;
+import com.primihub.biz.repository.secondarydb.data.RecordRepository;
 import com.primihub.biz.repository.secondarydb.data.ScoreModelRepository;
 import com.primihub.biz.service.data.ExamService;
 import com.primihub.biz.service.data.PirService;
 import com.primihub.biz.service.data.RemoteClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,15 +54,29 @@ public class PirPhase1ExecuteImei implements PirPhase1Execute {
     @Autowired
     private BaseConfiguration baseConfiguration;
     @Autowired
+    private RecordRepository recordRepository;
+    @Autowired
+    private DataPsiRepository dataPsiRepository;
+    @Autowired
     private SysCommonPrimaryRedisRepository redisRepository;
 
     @Override
     public void processPirPhase1(DataPirCopyReq req) {
-        log.info("process pir phase1 future task : imei");
-        log.info(JSON.toJSONString(req));
+        log.info("process pir phase1 future task : imei, taskName: {}", StringUtils.isNotBlank(req.getTaskName()) ? req.getTaskName() : "null");
 
         redisRepository.setKeyWithExpire(req.getPirRecordId(), req.getScoreModelType(), 3L, TimeUnit.DAYS);
+        // 从taskName区分是cmcc还是ctcc
+        String taskName = req.getTaskName();
+        if (StringUtils.isNotBlank(taskName) && taskName.endsWith(RemoteConstant.CTCC_FLAG)) {
+            // ctcc
+            imeiCtccPirPhase1Process(req);
+        } else {
+            // cmcc
+            imeiCmccPirPhase1Process(req);
+        }
+    }
 
+    private void imeiCmccPirPhase1Process(DataPirCopyReq req) {
         String scoreModelType = req.getScoreModelType();
 
         Set<DataImei> dataImeiSet = null;
@@ -150,5 +170,18 @@ public class PirPhase1ExecuteImei implements PirPhase1Execute {
             pirService.sendFinishPirTask(req);
             log.info("==================== SUCCESS ====================");
         }
+    }
+
+    private void imeiCtccPirPhase1Process(DataPirCopyReq req) {
+        String psiRecordId = req.getPsiRecordId();
+        PsiRecord psiRecord = recordRepository.selectPsiRecordByRecordId(psiRecordId);
+        Long psiId = psiRecord.getPsiId();
+        DataPsi dataPsi = dataPsiRepository.selectPsiById(psiId);
+        String targetResourceId = dataPsi.getOtherResourceId();
+
+        req.setTargetResourceId(targetResourceId);
+        req.setTaskState(TaskStateEnum.READY.getStateType());
+        pirService.sendFinishPirTask(req);
+        log.info("==================== SUCCESS ====================");
     }
 }

@@ -11,22 +11,23 @@ import com.primihub.biz.entity.base.*;
 import com.primihub.biz.entity.data.dataenum.ExamEnum;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.po.*;
+import com.primihub.biz.entity.data.po.lpy.CTCCExamTask;
 import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.entity.data.req.DataExamTaskReq;
+import com.primihub.biz.entity.data.req.lpy.CtccExamReq;
 import com.primihub.biz.entity.data.vo.*;
+import com.primihub.biz.entity.data.vo.lpy.CtccExamTaskVo;
 import com.primihub.biz.entity.sys.po.SysFile;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
-import com.primihub.biz.repository.primarydb.data.DataCorePrimarydbRepository;
+import com.primihub.biz.repository.primarydb.data.DataCTCCPrimarydbRepository;
 import com.primihub.biz.repository.primarydb.data.DataResourcePrRepository;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.primarydb.sys.SysFilePrimarydbRepository;
-import com.primihub.biz.repository.secondarydb.data.DataCoreRepository;
-import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
+import com.primihub.biz.repository.secondarydb.data.DataCTCCRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysFileSecondarydbRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
-import com.primihub.biz.service.PhoneClientService;
 import com.primihub.biz.service.data.exam.ExamExecute;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.util.FileUtil;
@@ -35,14 +36,18 @@ import com.primihub.sdk.task.param.TaskParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.Lock;
@@ -71,10 +76,6 @@ public class ExamService {
     @Autowired
     private ThreadPoolTaskExecutor primaryThreadPool;
     @Autowired
-    private DataResourceRepository dataResourceRepository;
-    @Autowired
-    private SysFileSecondarydbRepository fileRepository;
-    @Autowired
     private BaseConfiguration baseConfiguration;
     @Autowired
     private SysFilePrimarydbRepository sysFilePrimarydbRepository;
@@ -85,15 +86,13 @@ public class ExamService {
     @Autowired
     private SingleTaskChannel singleTaskChannel;
     @Autowired
-    private DataSourceService dataSourceService;
+    private DataCTCCRepository ctccRepository;
     @Autowired
-    private PhoneClientService phoneClientService;
+    private DataCTCCPrimarydbRepository ctccPrimaryDbRepository;
     @Autowired
-    private DataCorePrimarydbRepository dataCorePrimarydbRepository;
+    private SysFileSecondarydbRepository sysFileSecondarydbRepository;
     @Autowired
-    private DataCoreRepository dataCoreRepository;
-    @Autowired
-    private ApplicationContext applicationContext;
+    private ExamService examService;
 
     public BaseResultEntity<PageDataEntity<DataPirTaskVo>> getExamTaskList(DataExamTaskReq req) {
         List<DataExamTaskVo> dataExamTaskVos = dataTaskRepository.selectDataExamTaskPage(req);
@@ -251,8 +250,7 @@ public class ExamService {
             }
             log.info("存入数据库成功======================");
             fusionResourceService.saveResource(organConfiguration.getSysLocalOrganId(), dataResourceService.findCopyResourceList(po.getResourceId(), po.getResourceId()));
-            singleTaskChannel.input().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), po))).build());
-
+            singleTaskChannel.output().send(MessageBuilder.withPayload(JSON.toJSONString(new BaseFunctionHandleEntity(BaseFunctionHandleEnum.SINGLE_DATA_FUSION_RESOURCE_TASK.getHandleType(), po))).build());
             return po;
         } catch (Exception e) {
             log.info("save DataResource Exception：{}", e.getMessage());
@@ -336,4 +334,113 @@ public class ExamService {
         }
         return null;
     }
+
+    /**
+     * 获取电信列表
+     */
+    public BaseResultEntity<PageDataEntity<CtccExamTaskVo>> getCtccExamTaskList(DataExamTaskReq req) {
+        List<CtccExamTaskVo> ctccExamTaskVoList = ctccRepository.selectCtccExamTaskPage(req);
+        if (ctccExamTaskVoList.isEmpty()) {
+            return BaseResultEntity.success(new PageDataEntity(0, req.getPageSize(), req.getPageNo(), Collections.emptyList()));
+        }
+        Integer total = ctccRepository.selectCtccExamTaskCount(req);
+        return BaseResultEntity.success(new PageDataEntity(total, req.getPageSize(), req.getPageNo(), ctccExamTaskVoList));
+    }
+
+    /**
+     * 下载电信上传的csv文件
+     */
+    public BaseResultEntity downloadCtccExamFile(Long taskId, HttpServletResponse response) throws Exception {
+        CTCCExamTask ctccExamTask = ctccRepository.selectCtccExamTaskById(taskId);
+        // 下载电信csv文件到本地
+        download(response, ctccExamTask);
+        // 修改记录的状态
+        /**
+         * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
+         */
+        ctccExamTask.setTaskState(2);
+        ctccPrimaryDbRepository.updateCtccExamTask(ctccExamTask);
+        return null;
+    }
+
+    // 等待串一下
+    private void download(HttpServletResponse response, CTCCExamTask ctccExamTask) throws Exception {
+        File file = new File(ctccExamTask.getFileUrl());
+        if (file != null && file.exists()) {
+            String fileName = ctccExamTask.getFileName() + ".csv";
+            FileInputStream inputStream = new FileInputStream(file);
+            response.setHeader("content-Type", "application/vnd.ms-excel");
+            response.setHeader("content-disposition", "attachment; fileName=" + new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1));
+            ServletOutputStream outputStream = response.getOutputStream();
+            int len = 0;
+            byte[] data = new byte[1024];
+            while ((len = inputStream.read(data)) != -1) {
+                outputStream.write(data, 0, len);
+            }
+            outputStream.close();
+            inputStream.close();
+        } else {
+            String content = "no data";
+            String fileName = null;
+            if (ctccExamTask != null) {
+                fileName = ctccExamTask.getFileName() + ".csv";
+            } else {
+                fileName = UUID.randomUUID().toString() + ".csv";
+            }
+            OutputStream outputStream = null;
+            //将字符串转化为文件
+            byte[] currentLogByte = content.getBytes();
+            try {
+                // 告诉浏览器用什么软件可以打开此文件
+                response.setHeader("content-Type", "application/vnd.ms-excel");
+                // 下载文件的默认名称
+                response.setHeader("Content-disposition", "attachment;filename=" + new String(fileName.getBytes("UTF-8"), "iso-8859-1"));
+                response.setCharacterEncoding("UTF-8");
+                outputStream = response.getOutputStream();
+                outputStream.write(currentLogByte);
+                outputStream.close();
+                outputStream.flush();
+            } catch (Exception e) {
+                log.info("downloadPsiTask -- fileName:{} -- fileContent:{} -- e:{}", fileName, content, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 上传电信返回的csv文件
+     */
+    public BaseResultEntity uploadCtccExamFile(CtccExamReq req) {
+        CTCCExamTask ctccExamTask = ctccRepository.selectCtccExamTaskById(req.getTaskId());
+        // 修改记录的状态
+        /**
+         * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
+         */
+        ctccExamTask.setTaskState(1);
+        ctccExamTask.setTargetResourceId(req.getResourceId());
+        ctccPrimaryDbRepository.updateCtccExamTask(ctccExamTask);
+        // 返回给对方
+        DataExamReq examReq = DataExamConvert.convertCtccToReq(ctccExamTask);
+        examReq.setTaskState(TaskStateEnum.SUCCESS.getStateType());
+        examReq.setTargetResourceId(req.getResourceId());
+        examService.sendEndExamTask(examReq);
+        log.info("====================== SUCCESS ======================");
+        return BaseResultEntity.success();
+    }
+
+    public BaseResultEntity endCtccExamFile(CtccExamReq req) {
+        CTCCExamTask ctccExamTask = ctccRepository.selectCtccExamTaskById(req.getTaskId());
+        /**
+         * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
+         */
+        ctccExamTask.setTaskState(3);
+        ctccPrimaryDbRepository.updateCtccExamTask(ctccExamTask);
+        // 返回给对方
+        DataExamReq examReq = DataExamConvert.convertCtccToReq(ctccExamTask);
+        examReq.setTaskState(TaskStateEnum.FAIL.getStateType());
+        examService.sendEndExamTask(examReq);
+        log.info("====================== FAIL ======================");
+        log.error("generate target resource failed!");
+        return BaseResultEntity.success();
+    }
+
 }

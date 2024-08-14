@@ -3,13 +3,17 @@ package com.primihub.biz.service.data.exam;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.BaseConfiguration;
+import com.primihub.biz.constant.RemoteConstant;
 import com.primihub.biz.constant.SysConstant;
 import com.primihub.biz.entity.data.dataenum.TaskStateEnum;
 import com.primihub.biz.entity.data.po.DataResource;
+import com.primihub.biz.entity.data.po.lpy.CTCCExamTask;
 import com.primihub.biz.entity.data.po.lpy.DataImei;
 import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.entity.data.vo.RemoteRespVo;
+import com.primihub.biz.entity.data.vo.lpy.CTCCPsiVo;
 import com.primihub.biz.entity.data.vo.lpy.ImeiPsiVo;
+import com.primihub.biz.repository.primarydb.data.DataCTCCPrimarydbRepository;
 import com.primihub.biz.repository.primarydb.data.DataImeiPrimarydbRepository;
 import com.primihub.biz.repository.secondarydb.data.DataImeiRepository;
 import com.primihub.biz.service.data.ExamService;
@@ -17,6 +21,7 @@ import com.primihub.biz.service.data.RemoteClient;
 import com.primihub.biz.util.crypt.SM3Util;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,12 +43,25 @@ public class ExamExecuteImei implements ExamExecute {
     private RemoteClient remoteClient;
     @Autowired
     private BaseConfiguration baseConfiguration;
+    @Autowired
+    private DataCTCCPrimarydbRepository ctccPrimaryDbRepository;
 
     @Override
     public void processExam(DataExamReq req) {
-        log.info("process exam future task : imei");
+        log.info("process exam future task : imei, taskName: {}", StringUtils.isNotBlank(req.getTaskName()) ? req.getTaskName() : "null");
+        // 从taskName区分是cmcc还是ctcc
+        String taskName = req.getTaskName();
+        if (StringUtils.isNotBlank(taskName) && taskName.endsWith(RemoteConstant.CTCC_FLAG)) {
+            // ctcc
+            imeiCtccProcess(req);
+        } else {
+            // cmcc
+            imeiCmccProcess(req);
+        }
 
-        // rawSet
+    }
+
+    private void imeiCmccProcess(DataExamReq req) {
         Set<String> rawSet = req.getFieldValueSet();
 
         /*
@@ -112,9 +130,6 @@ public class ExamExecuteImei implements ExamExecute {
         Set<ImeiPsiVo> existResult = oldSet.stream().map(ImeiPsiVo::new).collect(Collectors.toSet());
 
         if (CollectionUtils.isEmpty(existResult)) {
-//            req.setTaskState(TaskStateEnum.FAIL.getStateType());
-//            examService.sendEndExamTask(req);
-//            log.info("====================== FAIL ======================");
             log.error("samples size after exam is zero!");
             existResult.add(new ImeiPsiVo(SM3Util.encrypt(UUID.randomUUID().toString().replace("-", ""))));
         }
@@ -134,6 +149,49 @@ public class ExamExecuteImei implements ExamExecute {
             examService.sendEndExamTask(req);
             log.info("====================== SUCCESS ======================");
         }
+    }
 
+    private void imeiCtccProcess(DataExamReq req) {
+        // rawSet
+        Set<String> rawSet = req.getFieldValueSet();
+
+        Set<CTCCPsiVo> psiResult = rawSet.stream().map(CTCCPsiVo::new).collect(Collectors.toSet());
+
+        if (CollectionUtils.isEmpty(psiResult)) {
+//            req.setTaskState(TaskStateEnum.FAIL.getStateType());
+//            examService.sendEndExamTask(req);
+//            log.info("====================== FAIL ======================");
+            log.error("samples size after exam is zero!");
+            psiResult.add(new CTCCPsiVo(SM3Util.encrypt(UUID.randomUUID().toString().replace("-", ""))));
+        }
+        String jsonArrayStr = JSON.toJSONString(psiResult);
+        List<Map> maps = JSONObject.parseArray(jsonArrayStr, Map.class);
+        String resourceName = "预处理中间资源" + SysConstant.HYPHEN_DELIMITER + req.getTaskId();
+        DataResource dataResource = examService.generateTargetResource(maps, resourceName);
+
+
+        if (CollectionUtils.isEmpty(psiResult)) {
+            req.setTaskState(TaskStateEnum.FAIL.getStateType());
+            examService.sendEndExamTask(req);
+            log.info("====================== FAIL ======================");
+            log.error("samples size after exam is zero!");
+        } else {
+            CTCCExamTask ctccTask = new CTCCExamTask();
+            ctccTask.setOriginResourceId(req.getResourceId());
+            ctccTask.setTaskName(req.getTaskName());
+            ctccTask.setTargetOrganId(req.getTargetOrganId());
+            ctccTask.setOriginOrganId(req.getOriginOrganId());
+            ctccTask.setTaskId(req.getTaskId());
+            /**
+             * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
+             */
+            ctccTask.setTaskState(0);
+            ctccTask.setOriginResourceId(req.getResourceId());
+//            ctccTask.setTargetResourceId(req.getTargetResourceId());
+            ctccTask.setTargetField(req.getTargetField());
+            ctccTask.setFileUrl(dataResource.getUrl());
+            ctccTask.setFileName(UUID.randomUUID().toString());
+            ctccPrimaryDbRepository.saveCtccExamTask(ctccTask);
+        }
     }
 }

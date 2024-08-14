@@ -2,7 +2,6 @@ package com.primihub.biz.service.data;
 
 import com.alibaba.fastjson.JSONObject;
 import com.primihub.biz.config.base.OrganConfiguration;
-import com.primihub.biz.constant.RemoteConstant;
 import com.primihub.biz.convert.DataPsiConvert;
 import com.primihub.biz.convert.DataResourceConvert;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -190,7 +189,7 @@ public class DataPsiService {
         dataTask.setTaskIdName(task.getTaskId());
         if (StringUtils.isBlank(req.getTaskName())) {
             dataTask.setTaskName(dataPsi.getResultName());
-        }else {
+        } else {
             dataTask.setTaskName(req.getTaskName());
         }
         dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());

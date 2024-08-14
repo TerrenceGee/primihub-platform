@@ -1,16 +1,18 @@
 package com.primihub.biz.repository.secondarydb.data;
 
-import com.primihub.biz.entity.data.po.lpy.DataImei;
+import com.primihub.biz.entity.data.po.lpy.CTCCExamTask;
+import com.primihub.biz.entity.data.req.PageReq;
+import com.primihub.biz.entity.data.vo.lpy.CtccExamTaskVo;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Set;
+import java.util.List;
 
 @Repository
 public interface DataCTCCRepository {
-    Set<DataImei> selectImei(@Param("list") Set<String> set);
+    List<CtccExamTaskVo> selectCtccExamTaskPage(PageReq req);
 
-    Set<DataImei> selectImeiWithScore(@Param("list") Set<String> liDongSet, @Param("scoreType") String scoreType);
+    Integer selectCtccExamTaskCount(PageReq req);
 
-    Set<DataImei> selectImeiPirResultVo(Set<String> targetValueSet, String scoreModelType);
+    CTCCExamTask selectCtccExamTaskById(@Param("id") Long taskId);
 }

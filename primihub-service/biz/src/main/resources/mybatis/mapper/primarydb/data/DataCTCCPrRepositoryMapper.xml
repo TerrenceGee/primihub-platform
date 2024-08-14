@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.primihub.biz.repository.primarydb.data.DataCTCCPrimarydbRepository">
+
+    <insert id="saveCtccExamTask" keyProperty="id" useGeneratedKeys="true"
+            parameterType="com.primihub.biz.entity.data.po.lpy.CTCCExamTask">
+        insert into ctcc_exam_task
+        (task_id,
+        task_name ,
+        origin_organ_id ,
+        target_organ_id ,
+        origin_resource_id ,
+        target_resource_id ,
+        task_state ,
+        target_field ,
+        file_url ,
+        file_name ,
+        is_del,
+        create_date,
+        update_date)
+        values
+        (#{taskId}, #{taskName}, #{originOrganId}, #{targetOrganId}, #{originResourceId}, #{targetResourceId},
+        #{taskState}, #{targetField},
+        #{fileUrl}, #{fileName}, 0, now(), now())
+    </insert>
+
+    <update id="updateCtccExamTask" parameterType="com.primihub.biz.entity.data.po.lpy.CTCCExamTask">
+        update ctcc_exam_task
+        <set>
+            <if test="taskId!=null and taskId != ''">task_id= #{taskId},</if>
+            <if test="taskName!=null and taskName != ''">task_name = #{taskName},</if>
+            <if test="taskState!=null">task_state = #{taskState},</if>
+            <if test="isDel!=null">is_del = #{isDel},</if>
+            <if test="originOrganId!=null and originOrganId != ''">origin_organ_id = #{originOrganId},</if>
+            <if test="originResourceId!=null and originResourceId != ''">origin_resource_id = #{originResourceId},</if>
+            <if test="targetOrganId!=null and targetOrganId != ''">target_organ_id = #{targetOrganId},</if>
+            <if test="targetResourceId!=null and targetResourceId != ''">target_resource_id = #{targetResourceId},</if>
+            <if test="fileUrl!=null and fileUrl != ''">file_url = #{fileUrl},</if>
+            <if test="fileName!=null and fileName != ''">file_name = #{fileName},</if>
+            update_date = now()
+        </set>
+        where id = #{id}
+    </update>
+
+</mapper>

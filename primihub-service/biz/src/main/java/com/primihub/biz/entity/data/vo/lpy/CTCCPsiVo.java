@@ -6,12 +6,12 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CTCCPsiVo {
-    private String ctcc;
+    private String imei;
 
     public CTCCPsiVo() {
     }
 
-    public CTCCPsiVo(String ctcc) {
-        this.ctcc = ctcc;
+    public CTCCPsiVo(String imei) {
+        this.imei = imei;
     }
 }
