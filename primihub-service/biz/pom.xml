@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.alibaba.boot</groupId>
+            <artifactId>nacos-config-spring-boot-starter</artifactId>
+            <version>0.2.8</version>
+        </dependency>
+        <dependency>
             <groupId>com.primihub</groupId>
             <artifactId>primihub-sdk</artifactId>
             <version>1.0.1</version>
