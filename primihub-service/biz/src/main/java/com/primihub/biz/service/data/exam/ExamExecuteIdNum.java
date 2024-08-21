@@ -146,7 +146,7 @@ public class ExamExecuteIdNum implements ExamExecute {
 //            return;
             ExamResultVo vo = new ExamResultVo();
             vo.setIdNum(SM3Util.encrypt(UUID.randomUUID().toString().replace("-", "")));
-            allDataCoreSet.add(new ExamResultVo());
+            allDataCoreSet.add(vo);
         }
 
         String jsonArrayStr = JSON.toJSONString(allDataCoreSet);
