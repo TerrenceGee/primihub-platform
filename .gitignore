@@ -13,6 +13,8 @@ tests/**/coverage/
 *.njsproj
 *.sln
 
+*.jar
+
 .project
 .settings/*
 */.classpath
