@@ -26,6 +26,7 @@ public class RecordService {
         if (psiRecord == null) {
             recordPrRepository.savePsiRecord(record);
         } else {
+            record.setId(psiRecord.getId());
             recordPrRepository.updatePsiRecord(record);
         }
         return BaseResultEntity.success();
@@ -36,6 +37,7 @@ public class RecordService {
         if (psiRecord == null) {
             recordPrRepository.savePirRecord(psiRecord);
         } else {
+            record.setId(psiRecord.getId());
             recordPrRepository.updatePirRecord(psiRecord);
         }
         return BaseResultEntity.success();
