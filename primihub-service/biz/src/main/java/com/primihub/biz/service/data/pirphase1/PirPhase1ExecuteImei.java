@@ -12,6 +12,7 @@ import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.vo.RemoteRespVo;
 import com.primihub.biz.entity.data.vo.lpy.ImeiPirVo;
 import com.primihub.biz.repository.primarydb.data.DataImeiPrimarydbRepository;
+import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.DataImeiRepository;
 import com.primihub.biz.repository.secondarydb.data.ScoreModelRepository;
 import com.primihub.biz.service.data.ExamService;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.primihub.biz.constant.RemoteConstant.UNDEFINED;
@@ -45,11 +47,15 @@ public class PirPhase1ExecuteImei implements PirPhase1Execute {
     private RemoteClient remoteClient;
     @Autowired
     private BaseConfiguration baseConfiguration;
+    @Autowired
+    private SysCommonPrimaryRedisRepository redisRepository;
 
     @Override
     public void processPirPhase1(DataPirCopyReq req) {
         log.info("process pir phase1 future task : imei");
         log.info(JSON.toJSONString(req));
+
+        redisRepository.setKeyWithExpire(req.getPirRecordId(), req.getScoreModelType(), 3L, TimeUnit.DAYS);
 
         String scoreModelType = req.getScoreModelType();
 

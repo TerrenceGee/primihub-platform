@@ -11,6 +11,7 @@ import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.vo.RemoteRespVo;
 import com.primihub.biz.entity.data.vo.lpy.MobilePirVo;
 import com.primihub.biz.repository.primarydb.data.DataMobilePrimarydbRepository;
+import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.DataMobileRepository;
 import com.primihub.biz.repository.secondarydb.data.ScoreModelRepository;
 import com.primihub.biz.service.data.ExamService;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +41,8 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
     private ScoreModelRepository scoreModelRepository;
     @Autowired
     private RemoteClient remoteClient;
+    @Autowired
+    private SysCommonPrimaryRedisRepository redisRepository;
 
     /**
      * @param req
@@ -46,6 +50,8 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
     @Override
     public void processPirPhase1(DataPirCopyReq req) {
         log.info("process pir phase1 future task : phoneNum");
+
+        redisRepository.setKeyWithExpire(req.getPirRecordId(), req.getScoreModelType(), 3L, TimeUnit.DAYS);
 
         String scoreModelType = req.getScoreModelType();
         Set<DataMobile> dataMobileSet = null;

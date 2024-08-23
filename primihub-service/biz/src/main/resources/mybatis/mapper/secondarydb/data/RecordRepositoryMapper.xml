@@ -95,7 +95,8 @@
         is_del isDel,
         create_date createDate,
         update_date updateDate,
-        target_field targetField
+        target_field targetField,
+        score_model_type scoreModelType
         from pir_record
         <if test="taskName != null and taskName != ''">
             where pir_name like CONCAT('%',#{taskName,jdbcType=VARCHAR},'%')

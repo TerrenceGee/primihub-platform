@@ -14,6 +14,7 @@ import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.vo.RemoteRespVo;
 import com.primihub.biz.entity.data.vo.lpy.DataCoreVo;
 import com.primihub.biz.repository.primarydb.data.DataCorePrimarydbRepository;
+import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.DataCoreRepository;
 import com.primihub.biz.repository.secondarydb.data.DataMapRepository;
 import com.primihub.biz.repository.secondarydb.data.ScoreModelRepository;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,18 +49,21 @@ public class PirPhase1ExecuteIdNum implements PirPhase1Execute {
     private DataMapRepository dataMapRepository;
     @Autowired
     private BaseConfiguration baseConfiguration;
+    @Autowired
+    private SysCommonPrimaryRedisRepository redisRepository;
 
     @Override
     public void processPirPhase1(DataPirCopyReq req) {
         log.info("processPirPhase1: {}", req.getTargetField());
         log.info(JSON.toJSONString(req));
 
+        redisRepository.setKeyWithExpire(req.getPirRecordId(), req.getScoreModelType(), 3L, TimeUnit.DAYS);
+
         /*
         rawSet: PSI的结果
         oldScore, noScore
         oldScore, newScore, fail
          */
-
         Set<String> targetValueSet = req.getTargetValueSet();
         String scoreModelType = req.getScoreModelType();
 

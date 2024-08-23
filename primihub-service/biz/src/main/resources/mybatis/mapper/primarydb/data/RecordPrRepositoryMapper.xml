@@ -78,7 +78,8 @@
                                 is_del,
                                 create_date,
                                 update_date,
-                                target_field
+                                target_field,
+                                score_model_type
         )
 
         values (#{recordId},
@@ -94,7 +95,8 @@
                 0,
                 now(),
                 now(),
-                #{targetField}
+                #{targetField},
+                #{scoreModelType}
         )
     </insert>
 
@@ -122,6 +124,12 @@
             <if test="commitRowsNum!=null">commit_rows_num = #{commitRowsNum},</if>
             <if test="endTime!=null">end_time = #{endTime},</if>
             <if test="resultRowsNum!=null">result_rows_num = #{resultRowsNum},</if>
+            <if test="targetField!=null and targetField != ''">
+                target_field = #{targetField},
+            </if>
+            <if test="scoreModelType!=null and scoreModelType != ''">
+                score_model_type = #{scoreModelType},
+            </if>
             update_date = now()
         </set>
         where id = #{id}
