@@ -11,6 +11,7 @@ import com.primihub.biz.entity.data.req.DataPirCopyReq;
 import com.primihub.biz.entity.data.vo.RemoteRespVo;
 import com.primihub.biz.entity.data.vo.lpy.MobilePirVo;
 import com.primihub.biz.repository.primarydb.data.DataMobilePrimarydbRepository;
+import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.DataMobileRepository;
 import com.primihub.biz.repository.secondarydb.data.ScoreModelRepository;
 import com.primihub.biz.service.data.ExamService;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,45 +41,56 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
     private ScoreModelRepository scoreModelRepository;
     @Autowired
     private RemoteClient remoteClient;
+    @Autowired
+    private SysCommonPrimaryRedisRepository redisRepository;
 
+    /**
+     * @param req
+     */
     @Override
     public void processPirPhase1(DataPirCopyReq req) {
-        log.info("process exam future task : phoneNum");
+        log.info("process pir phase1 future task : phoneNum");
 
-        Set<String> rawSet = req.getTargetValueSet();
+        redisRepository.setKeyWithExpire(req.getPirRecordId(), req.getScoreModelType(), 3L, TimeUnit.DAYS);
+
+        String scoreModelType = req.getScoreModelType();
         Set<DataMobile> dataMobileSet = null;
+        if ("yhhhwd_score".equals(req.getScoreModelType())) {
+            dataMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), scoreModelType);
+        } else {
             /*
-            rawSet
-            old new
-            old newExist newNonExist
+            liDong non
+            liDongOld liDongNew non
              */
-        Set<DataMobile> oldDataMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), req.getScoreModelType());
-        Set<String> oldSet = oldDataMobileSet.stream().map(DataMobile::getPhoneNum).collect(Collectors.toSet());
-        Set<String> newSet = new HashSet<String>(CollectionUtils.subtract(rawSet, oldSet));
+            Set<DataMobile> liDongMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), "yhhhwd_score");
+            Set<String> liDongSet = liDongMobileSet.stream().map(DataMobile::getPhoneNum).collect(Collectors.toSet());
+            Set<DataMobile> liDongOldMobileSet = dataMobileRepository.selectMobileWithScore(liDongSet, req.getScoreModelType());
+            Collection<DataMobile> loDongNewDataMobileSet = CollectionUtils.subtract(liDongMobileSet, liDongOldMobileSet);
+            ScoreModel scoreModel = scoreModelRepository.selectScoreModelByScoreTypeValue(scoreModelType);
+            List<DataMobile> liDongNewMobileList = new ArrayList<>();
 
-        ScoreModel scoreModel = scoreModelRepository.selectScoreModelByScoreTypeValue(req.getScoreModelType());
-        List<DataMobile> newMobileSet = new ArrayList<>();
-        for (String mobile : newSet) {
-            RemoteRespVo respVo = remoteClient.queryFromRemote(mobile, scoreModel.getScoreModelCode());
-            if (respVo != null && ("Y").equals(respVo.getHead().getResult())) {
-                DataMobile dataMobile = new DataMobile();
-                dataMobile.setPhoneNum(mobile);
-                dataMobile.setScore(Double.valueOf((String) (respVo.getRespBody().get(scoreModel.getScoreKey()))));
-                dataMobile.setScoreModelType(scoreModel.getScoreModelType());
-                newMobileSet.add(dataMobile);
+
+            for (DataMobile mobile : loDongNewDataMobileSet) {
+                // query
+                RemoteRespVo respVo = remoteClient.queryFromRemote(mobile.getPhoneNum(), scoreModel.getScoreModelCode());
+                if (respVo != null && ("Y").equals(respVo.getHead().getResult())) {
+                    DataMobile dataMobile = new DataMobile();
+                    dataMobile.setPhoneNum(mobile.getPhoneNum());
+                    dataMobile.setScore(Double.valueOf((String) (respVo.getRespBody().get(scoreModel.getScoreKey()))));
+                    dataMobile.setScoreModelType(scoreModelType);
+                    liDongNewMobileList.add(dataMobile);
+                }
             }
+            if (CollectionUtils.isNotEmpty(liDongNewMobileList)) {
+                dataMobilePrimarydbRepository.saveMobileList(liDongNewMobileList);
+            }
+            dataMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), req.getScoreModelType());
         }
-        if (CollectionUtils.isNotEmpty(newMobileSet)) {
-            dataMobilePrimarydbRepository.saveMobileList(newMobileSet);
-        }
-
-        dataMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), req.getScoreModelType());
 
         if (CollectionUtils.isEmpty(dataMobileSet)) {
             log.info("==================== FAIL ====================");
-            log.info("样本适配度太低，无法执行PIR任务");
+            log.error("样本适配度太低，无法执行PIR任务");
             req.setTaskState(TaskStateEnum.FAIL.getStateType());
-
             pirService.sendFinishPirTask(req);
             return;
         }
@@ -94,9 +107,16 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
                 .toString();
         DataResource dataResource = examService.generateTargetResource(maps, resourceName);
 
-        log.info("==================== SUCCESS ====================");
-        req.setTargetResourceId(dataResource.getResourceFusionId());
-        req.setTaskState(TaskStateEnum.READY.getStateType());
-        pirService.sendFinishPirTask(req);
+        if (dataResource == null) {
+            req.setTaskState(TaskStateEnum.FAIL.getStateType());
+            pirService.sendFinishPirTask(req);
+            log.info("====================== FAIL ======================");
+            log.error("generate target resource failed!");
+        } else {
+            req.setTargetResourceId(dataResource.getResourceFusionId());
+            req.setTaskState(TaskStateEnum.READY.getStateType());
+            pirService.sendFinishPirTask(req);
+            log.info("==================== SUCCESS ====================");
+        }
     }
 }

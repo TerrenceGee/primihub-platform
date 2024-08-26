@@ -56,4 +56,8 @@ public class SysCommonPrimaryRedisRepository {
         primaryStringRedisTemplate.opsForValue().set(key,value);
     }
 
+    public void deleteKey(String key) {
+        primaryStringRedisTemplate.delete(key);
+    }
+
 }

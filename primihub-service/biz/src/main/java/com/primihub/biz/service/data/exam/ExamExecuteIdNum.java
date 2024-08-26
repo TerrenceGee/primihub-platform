@@ -36,6 +36,7 @@ import com.primihub.biz.service.data.OtherBusinessesService;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.crypt.DateUtil;
+import com.primihub.biz.util.crypt.SM3Util;
 import com.primihub.sdk.task.param.TaskParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -111,29 +112,42 @@ public class ExamExecuteIdNum implements ExamExecute {
         if (CollectionUtils.isNotEmpty(newMapDataSet)) {
             dataMapPrimarydbRepository.saveDataMapList(newMapDataSet);
         }
-        Set<String> newMapMapSet = newMapDataSet.stream().map(DataMap::getIdNum).collect(Collectors.toSet());
 
-        // noMap过滤
-        Collection<String> stillNoMapSet = CollectionUtils.subtract(noMapSet, newMapMapSet);
 
-        List<String> noPhoneList = new ArrayList<>(stillNoMapSet);
-        int halfSize = (int) (noPhoneList.size() * 0.7);
-        Set<String> waterSet = new HashSet<>();
-
-        // water
-        Random random = new Random();
-        for (int i = 0; i < halfSize; i++) {
-            int randomIndex = random.nextInt(noPhoneList.size());
-            String s = noPhoneList.get(randomIndex);
-            waterSet.add(s);
-            noPhoneList.remove(randomIndex);
+        // water1
+        if (baseConfiguration.getWaterSwitch()) {
+            Set<String> newMapMapSet = newMapDataSet.stream().map(DataMap::getIdNum).collect(Collectors.toSet());
+            // noMap过滤
+            Collection<String> stillNoMapSet = CollectionUtils.subtract(noMapSet, newMapMapSet);
+            List<String> noPhoneList = new ArrayList<>(stillNoMapSet);
+            int halfSize = (int) Math.ceil(noPhoneList.size() * 0.7);
+            Set<String> waterSet = new HashSet<>();
+            // water
+            Random random = new Random();
+            for (int i = 0; i < halfSize; i++) {
+                int randomIndex = random.nextInt(noPhoneList.size());
+                String s = noPhoneList.get(randomIndex);
+                waterSet.add(s);
+                noPhoneList.remove(randomIndex);
+            }
+            // save
+            if (CollectionUtils.isNotEmpty(waterSet)) {
+                List<DataMap> waterMapSet = waterSet.stream().map(idNum -> new DataMap(idNum, RemoteConstant.UNDEFINED)).collect(Collectors.toList());
+                dataMapPrimarydbRepository.saveDataMapList(waterMapSet);
+            }
         }
 
-        List<DataMap> waterMapSet = waterSet.stream().map(idNum -> new DataMap(idNum, RemoteConstant.UNDEFILED))
-                .collect(Collectors.toList());
-        dataMapPrimarydbRepository.saveDataMapList(waterMapSet);
-
         Set<ExamResultVo> allDataCoreSet = dataMapRepository.selectIdNumExamResultVo(rawSet);
+        if (CollectionUtils.isEmpty(allDataCoreSet)) {
+//            req.setTaskState(TaskStateEnum.FAIL.getStateType());
+//            sendEndExamTask(req);
+//            log.info("====================== FAIL ======================");
+            log.error("samples size after exam is zero!");
+//            return;
+            ExamResultVo vo = new ExamResultVo();
+            vo.setIdNum(SM3Util.encrypt(UUID.randomUUID().toString().replace("-", "")));
+            allDataCoreSet.add(vo);
+        }
 
         String jsonArrayStr = JSON.toJSONString(allDataCoreSet);
         List<Map> maps = JSONObject.parseArray(jsonArrayStr, Map.class);
@@ -143,12 +157,13 @@ public class ExamExecuteIdNum implements ExamExecute {
         if (dataResource == null) {
             req.setTaskState(TaskStateEnum.FAIL.getStateType());
             sendEndExamTask(req);
-            log.info("====================== FAIL");
+            log.info("====================== FAIL ======================");
+            log.error("generate target resource failed!");
         } else {
             req.setTaskState(TaskStateEnum.SUCCESS.getStateType());
             req.setTargetResourceId(dataResource.getResourceFusionId());
             sendEndExamTask(req);
-            log.info("====================== SUCCESS");
+            log.info("====================== SUCCESS ======================");
         }
     }
 

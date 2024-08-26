@@ -48,4 +48,6 @@ public class PirRecord {
     private Date updateDate;
 
     private String targetField;
+
+    private String scoreModelType;
 }

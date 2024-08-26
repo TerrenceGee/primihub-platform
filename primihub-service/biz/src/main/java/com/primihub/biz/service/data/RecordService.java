@@ -1,12 +1,14 @@
 package com.primihub.biz.service.data;
 
 
+import com.anji.captcha.util.StringUtils;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.po.PirRecord;
 import com.primihub.biz.entity.data.po.PsiRecord;
 import com.primihub.biz.entity.data.req.RecordReq;
 import com.primihub.biz.repository.primarydb.data.RecordPrRepository;
+import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.RecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,23 +22,32 @@ public class RecordService {
     private RecordRepository recordRepository;
     @Autowired
     private RecordPrRepository recordPrRepository;
+    @Autowired
+    private SysCommonPrimaryRedisRepository redisRepository;
 
     public BaseResultEntity savePsiRecord(PsiRecord record) {
         PsiRecord psiRecord = recordRepository.selectPsiRecordByRecordId(record.getRecordId());
         if (psiRecord == null) {
             recordPrRepository.savePsiRecord(record);
         } else {
+            record.setId(psiRecord.getId());
             recordPrRepository.updatePsiRecord(record);
         }
         return BaseResultEntity.success();
     }
 
     public BaseResultEntity savePirRecord(PirRecord record) {
-        PirRecord psiRecord = recordRepository.selectPirRecordByRecordId(record.getRecordId());
-        if (psiRecord == null) {
-            recordPrRepository.savePirRecord(psiRecord);
+        PirRecord pirRecord = recordRepository.selectPirRecordByRecordId(record.getRecordId());
+        if (pirRecord == null) {
+            String scoreModelType = redisRepository.getKey(record.getRecordId());
+            if (StringUtils.isNotBlank(scoreModelType)) {
+                record.setScoreModelType(scoreModelType);
+                redisRepository.deleteKey(record.getRecordId());
+            }
+            recordPrRepository.savePirRecord(record);
         } else {
-            recordPrRepository.updatePirRecord(psiRecord);
+            record.setId(pirRecord.getId());
+            recordPrRepository.updatePirRecord(record);
         }
         return BaseResultEntity.success();
     }
