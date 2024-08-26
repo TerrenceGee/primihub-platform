@@ -32,7 +32,7 @@ import java.util.Set;
 @Slf4j
 @Component
 public class RemoteClient {
-    @Resource(name = "proxyRestTemplate")
+    @Resource(name = "soaRestTemplate")
     private RestTemplate restTemplate;
     @Autowired
     private ClientConfiguration clientConfiguration;
