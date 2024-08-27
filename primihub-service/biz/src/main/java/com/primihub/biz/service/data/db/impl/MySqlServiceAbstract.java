@@ -1,6 +1,7 @@
 package com.primihub.biz.service.data.db.impl;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.convert.DataResourceConvert;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
@@ -25,22 +26,24 @@ import java.util.stream.Collectors;
 public class MySqlServiceAbstract extends AbstractDataDBService {
 
 
-
     protected static final String QUERY_TABLES_SQL = "select table_name as tableName from information_schema.tables where table_schema = ? order by table_name asc";
     protected static final String QUERY_TABLES_COLUMNS_SQL = "select column_name as columnName from information_schema.columns where table_name = ? and table_schema = ? order by column_name asc";
     protected static final String QUERY_DETAILS_SQL = "select * from <tableName> limit 0,50";
+    protected static final String QUERY_ALL_SQL = "select * from <tableName> limit 0,<limit>";
     protected static final String QUERY_COUNT_SQL = "select count(*) total from <tableName>";
     protected static final String QUERY_COUNT_Y_SQL = "select count(*) ytotal from <tableName>";
 
 
     @Autowired
     private DataResourceService dataResourceService;
+    @Autowired
+    private BaseConfiguration baseConfiguration;
 
     @Override
     public BaseResultEntity healthConnection(DataSource dbSource) {
         String dataBaseName = (String) DataUtil.getJDBCData(dbSource.getDbUrl()).get("database");
         if (StringUtils.isBlank(dataBaseName)) {
-            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL,"解析数据库名称失败");
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "解析数据库名称失败");
         }
         dbSource.setDbName(dataBaseName);
         return dataSourceTables(dbSource);
@@ -48,22 +51,22 @@ public class MySqlServiceAbstract extends AbstractDataDBService {
 
     @Override
     public BaseResultEntity dataSourceTables(DataSource dbSource) {
-        DruidDataSource jdbcDataSource =null;
+        DruidDataSource jdbcDataSource = null;
         try {
             jdbcDataSource = getJdbcDataSource(dbSource);
             JdbcTemplate jdbcTemplate = getJdbcTemplate(jdbcDataSource);
-            List<Map<String, Object>> tableNames = jdbcTemplate.queryForList(QUERY_TABLES_SQL,dbSource.getDbName());
+            List<Map<String, Object>> tableNames = jdbcTemplate.queryForList(QUERY_TABLES_SQL, dbSource.getDbName());
             List<Object> tableNameList = tableNames.stream().map(m -> m.get("tableName")).collect(Collectors.toList());
-            Map<String,Object> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             dbSource.setDbPassword(null);
-            map.put("dbSource",dbSource);
-            map.put("tableNames",tableNameList);
+            map.put("dbSource", dbSource);
+            map.put("tableNames", tableNameList);
             return BaseResultEntity.success(map);
-        }catch (Exception e){
-            log.info("url:{}-------e:{}",dbSource.getDbUrl(),e.getMessage());
-            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL,"连接失败,请检查数据源地址是否正确");
-        }finally {
-            if (jdbcDataSource != null && jdbcDataSource.isEnable()){
+        } catch (Exception e) {
+            log.info("url:{}-------e:{}", dbSource.getDbUrl(), e.getMessage());
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "连接失败,请检查数据源地址是否正确");
+        } finally {
+            if (jdbcDataSource != null && jdbcDataSource.isEnable()) {
                 jdbcDataSource.close();
             }
         }
@@ -71,50 +74,50 @@ public class MySqlServiceAbstract extends AbstractDataDBService {
 
     @Override
     public BaseResultEntity dataSourceTableDetails(DataSource dbSource) {
-        DruidDataSource jdbcDataSource =null;
+        DruidDataSource jdbcDataSource = null;
         try {
             jdbcDataSource = getJdbcDataSource(dbSource);
             JdbcTemplate jdbcTemplate = getJdbcTemplate(jdbcDataSource);
-            List<Map<String, Object>> details = jdbcTemplate.queryForList(QUERY_DETAILS_SQL.replace("<tableName>",dbSource.getDbTableName()));
+            List<Map<String, Object>> details = jdbcTemplate.queryForList(QUERY_ALL_SQL.replace("<tableName>", dbSource.getDbTableName()).replace("<limit>", String.valueOf(baseConfiguration.getTableRowsLimit())));
             if (details.isEmpty()) {
-                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"没有查询到数据信息");
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "没有查询到数据信息");
             }
-            List<Map<String, Object>> columnsNames = jdbcTemplate.queryForList(QUERY_TABLES_COLUMNS_SQL,dbSource.getDbTableName(),dbSource.getDbName());
+            List<Map<String, Object>> columnsNames = jdbcTemplate.queryForList(QUERY_TABLES_COLUMNS_SQL, dbSource.getDbTableName(), dbSource.getDbName());
             List<String> columnName = columnsNames.stream().map(m -> m.get("columnName").toString()).collect(Collectors.toList());
             List<DataFileField> dataFileFields = dataResourceService.batchInsertDataDataSourceField(columnName, details.get(0));
-            Map<String,Object> map = new HashMap<>();
-            map.put("fieldList",dataFileFields.stream().map(DataResourceConvert::DataFileFieldPoConvertVo).collect(Collectors.toList()));
-            map.put("dataList",details);
+            Map<String, Object> map = new HashMap<>();
+            map.put("fieldList", dataFileFields.stream().map(DataResourceConvert::DataFileFieldPoConvertVo).collect(Collectors.toList()));
+            map.put("dataList", details);
             return BaseResultEntity.success(map);
-        }catch (Exception e){
-            log.info("url:{}-------e:{}",dbSource.getDbUrl(),e.getMessage());
-            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL,"连接失败,请检查数据源地址是否正确");
-        }finally {
-            if (jdbcDataSource != null && jdbcDataSource.isEnable()){
+        } catch (Exception e) {
+            log.info("url:{}-------e:{}", dbSource.getDbUrl(), e.getMessage());
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "连接失败,请检查数据源地址是否正确");
+        } finally {
+            if (jdbcDataSource != null && jdbcDataSource.isEnable()) {
                 jdbcDataSource.close();
             }
         }
     }
 
     @Override
-    public BaseResultEntity tableDataStatistics(DataSource dataSource, boolean isY){
-        Map<String,Object> map = new HashMap<>();
-        DruidDataSource jdbcDataSource =null;
+    public BaseResultEntity tableDataStatistics(DataSource dataSource, boolean isY) {
+        Map<String, Object> map = new HashMap<>();
+        DruidDataSource jdbcDataSource = null;
         try {
             jdbcDataSource = getJdbcDataSource(dataSource);
             JdbcTemplate jdbcTemplate = getJdbcTemplate(jdbcDataSource);
             Map<String, Object> countMap = jdbcTemplate.queryForMap(QUERY_COUNT_SQL.replace("<tableName>", dataSource.getDbTableName()));
             map.putAll(countMap);
-            if (isY){
+            if (isY) {
                 Map<String, Object> countYMap = jdbcTemplate.queryForMap(QUERY_COUNT_Y_SQL.replace("<tableName>", dataSource.getDbTableName()));
                 map.putAll(countYMap);
             }
             return BaseResultEntity.success(map);
-        }catch (Exception e){
-            log.info("url:{}-------e:{}",dataSource.getDbUrl(),e.getMessage());
-            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL,"连接失败,请检查数据源地址是否正确");
-        }finally {
-            if (jdbcDataSource != null && jdbcDataSource.isEnable()){
+        } catch (Exception e) {
+            log.info("url:{}-------e:{}", dataSource.getDbUrl(), e.getMessage());
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "连接失败,请检查数据源地址是否正确");
+        } finally {
+            if (jdbcDataSource != null && jdbcDataSource.isEnable()) {
                 jdbcDataSource.close();
             }
         }

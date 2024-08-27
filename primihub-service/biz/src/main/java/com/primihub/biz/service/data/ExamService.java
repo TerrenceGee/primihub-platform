@@ -3,7 +3,6 @@ package com.primihub.biz.service.data;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.config.mq.SingleTaskChannel;
@@ -89,11 +88,7 @@ public class ExamService {
     @Autowired
     private SingleTaskChannel singleTaskChannel;
     @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
     private DataSourceService dataSourceService;
-    @Autowired
-    private DataCoreService dataCoreService;
     @Autowired
     private PhoneClientService phoneClientService;
     @Autowired
