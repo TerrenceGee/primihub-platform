@@ -26,6 +26,11 @@ public class SqliteServiceAbstract extends AbstractDataDBService {
     protected static final String QUERY_COUNT_SQL = "select count(*) total from <tableName>";
     protected static final String QUERY_COUNT_Y_SQL = "select count(*) ytotal from <tableName>";
 
+    @Override
+    public BaseResultEntity dataSourceTableAll(DataSource dbSource) {
+        return null;
+    }
+
     @Autowired
     private DataResourceService dataResourceService;
     @Override

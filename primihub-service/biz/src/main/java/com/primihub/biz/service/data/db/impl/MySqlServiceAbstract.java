@@ -78,6 +78,33 @@ public class MySqlServiceAbstract extends AbstractDataDBService {
         try {
             jdbcDataSource = getJdbcDataSource(dbSource);
             JdbcTemplate jdbcTemplate = getJdbcTemplate(jdbcDataSource);
+            List<Map<String, Object>> details = jdbcTemplate.queryForList(QUERY_DETAILS_SQL.replace("<tableName>", dbSource.getDbTableName()));
+            if (details.isEmpty()) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "没有查询到数据信息");
+            }
+            List<Map<String, Object>> columnsNames = jdbcTemplate.queryForList(QUERY_TABLES_COLUMNS_SQL, dbSource.getDbTableName(), dbSource.getDbName());
+            List<String> columnName = columnsNames.stream().map(m -> m.get("columnName").toString()).collect(Collectors.toList());
+            List<DataFileField> dataFileFields = dataResourceService.batchInsertDataDataSourceField(columnName, details.get(0));
+            Map<String, Object> map = new HashMap<>();
+            map.put("fieldList", dataFileFields.stream().map(DataResourceConvert::DataFileFieldPoConvertVo).collect(Collectors.toList()));
+            map.put("dataList", details);
+            return BaseResultEntity.success(map);
+        } catch (Exception e) {
+            log.info("url:{}-------e:{}", dbSource.getDbUrl(), e.getMessage());
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "连接失败,请检查数据源地址是否正确");
+        } finally {
+            if (jdbcDataSource != null && jdbcDataSource.isEnable()) {
+                jdbcDataSource.close();
+            }
+        }
+    }
+
+    @Override
+    public BaseResultEntity dataSourceTableAll(DataSource dbSource) {
+        DruidDataSource jdbcDataSource = null;
+        try {
+            jdbcDataSource = getJdbcDataSource(dbSource);
+            JdbcTemplate jdbcTemplate = getJdbcTemplate(jdbcDataSource);
             List<Map<String, Object>> details = jdbcTemplate.queryForList(QUERY_ALL_SQL.replace("<tableName>", dbSource.getDbTableName()).replace("<limit>", String.valueOf(baseConfiguration.getTableRowsLimit())));
             if (details.isEmpty()) {
                 return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "没有查询到数据信息");

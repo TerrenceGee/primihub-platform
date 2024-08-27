@@ -102,6 +102,11 @@ public class HiveServiceAbstract extends AbstractDataDBService {
     }
 
     @Override
+    public BaseResultEntity dataSourceTableAll(DataSource dbSource) {
+        return null;
+    }
+
+    @Override
     public BaseResultEntity tableDataStatistics(DataSource dataSource, boolean isY) {
         HiveHelper hiveHelper = null;
         ResultSet resultSet = null;

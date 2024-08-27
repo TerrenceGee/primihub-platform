@@ -108,6 +108,11 @@ public class OtherServiceAbstract extends AbstractDataDBService {
     }
 
     @Override
+    public BaseResultEntity dataSourceTableAll(DataSource dbSource) {
+        return null;
+    }
+
+    @Override
     public BaseResultEntity tableDataStatistics(DataSource dataSource, boolean isY) {
         if (!OtherEunm.DB_DRIVER_MAP.containsKey(dataSource.getDbDriver())){
             return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, dataSource.getDbDriver()+"当前驱动器还未开发,请持续关注我们的发布信息");

@@ -30,6 +30,8 @@ public abstract class AbstractDataDBService {
      */
     public abstract BaseResultEntity dataSourceTableDetails(DataSource dbSource);
 
+    public abstract BaseResultEntity dataSourceTableAll(DataSource dbSource);
+
     public abstract BaseResultEntity tableDataStatistics(DataSource dataSource, boolean isY);
 
     protected DruidDataSource getJdbcDataSource(DataSource dbSource) {

@@ -152,7 +152,7 @@ public class ExamService {
         AbstractDataDBService abstractDataDBService = dataSourceService.getDBServiceImpl(dataSource.getDbType());
 
         if (abstractDataDBService != null) {
-            BaseResultEntity result = abstractDataDBService.dataSourceTableDetails(dataSource);
+            BaseResultEntity result = abstractDataDBService.dataSourceTableAll(dataSource);
             if (result == null || result.getCode() != 0) {
                 return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "解析数据库表失败");
             }
@@ -205,7 +205,7 @@ public class ExamService {
         AbstractDataDBService abstractDataDBService = dataSourceService.getDBServiceImpl(dataSource.getDbType());
 
         if (abstractDataDBService != null) {
-            BaseResultEntity result = abstractDataDBService.dataSourceTableDetails(dataSource);
+            BaseResultEntity result = abstractDataDBService.dataSourceTableAll(dataSource);
             if (result == null || result.getCode() != 0) {
                 return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "解析数据库表失败");
             }
