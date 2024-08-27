@@ -11,7 +11,7 @@ public class RemoteConstant {
     public static final String UNDEFINED = "undefined";
 
     public static final String FIRST_URL = "FIRST_URL";
-    public static final String REMOTE_SCORE_URL = "http://117.132.181.254:9000/";
+    public static final String REMOTE_SCORE_URL = "http://118.190.39.100:30900/";
     public static final String REQUEST_REF_ID = "requestRefId";
     public static final String SECRET_ID = "secretId";
     public static final String SIGNATURE = "signature";
