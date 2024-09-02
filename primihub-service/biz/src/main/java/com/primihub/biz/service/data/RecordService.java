@@ -7,14 +7,19 @@ import com.primihub.biz.entity.base.PageDataEntity;
 import com.primihub.biz.entity.data.po.PirRecord;
 import com.primihub.biz.entity.data.po.PsiRecord;
 import com.primihub.biz.entity.data.req.RecordReq;
+import com.primihub.biz.entity.data.vo.lpy.PirRecordPoiVo;
+import com.primihub.biz.entity.data.vo.lpy.PsiRecordPoiVo;
 import com.primihub.biz.repository.primarydb.data.RecordPrRepository;
 import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.data.RecordRepository;
+import com.primihub.biz.util.crypt.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RecordService {
@@ -72,5 +77,19 @@ public class RecordService {
         }
         Integer total = recordRepository.selectPirRecordCount(req);
         return BaseResultEntity.success(new PageDataEntity(total, req.getPageSize(), req.getPageNo(), pirRecordList));
+    }
+
+    public List<PsiRecordPoiVo> getPsiRecordWeekly() {
+        Date startDate = DateUtil.getStartDateForLastWeek();
+        Date endDate = DateUtil.getEndDateForLastWeek();
+        List<PsiRecord> psiRecordList = recordRepository.selectPsiRecordWeekly(startDate, endDate);
+        return psiRecordList.stream().map(PsiRecordPoiVo::new).collect(Collectors.toList());
+    }
+
+    public List<PirRecordPoiVo> getPirRecordWeekly() {
+        Date startDate = DateUtil.getStartDateForLastWeek();
+        Date endDate = DateUtil.getEndDateForLastWeek();
+        List<PirRecord> pirRecordList = recordRepository.selectPirRecordWeekly(startDate, endDate);
+        return pirRecordList.stream().map(PirRecordPoiVo::new).collect(Collectors.toList());
     }
 }

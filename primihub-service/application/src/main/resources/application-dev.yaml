@@ -6,12 +6,12 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
-        namespace: dev
+        server-addr: 192.168.99.33:8848
+        namespace: node
 nacos:
   config:
-    server-addr: localhost:8848
-    namespace: dev
+    server-addr: 192.168.99.33:8848
+    namespace: node
     max-retry: 3
     config-long-poll-timeout: 1000
     config-retry-time: 1000

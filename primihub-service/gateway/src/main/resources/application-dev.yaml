@@ -2,8 +2,8 @@ server:
   port: 8080
 nacos:
   config:
-    server-addr: localhost:8848
-    namespace:
+    server-addr: 192.168.99.33:8848
+    namespace: node
     max-retry: 3
     config-long-poll-timeout: 1000
     config-retry-time: 1000
@@ -17,8 +17,8 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
-        namespace:
+        server-addr: 192.168.99.33:8848
+        namespace: node
 logging:
   level:
     root: info

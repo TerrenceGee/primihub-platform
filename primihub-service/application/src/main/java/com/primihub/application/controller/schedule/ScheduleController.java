@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-@Api(value = "调度接口",tags = "调度接口")
+@Api(value = "调度接口", tags = "调度接口")
 @EnableScheduling
 @RequestMapping("schedule")
 @RestController
@@ -22,8 +22,17 @@ public class ScheduleController {
 
     @Scheduled(cron = "0 */10 * * * ?")
     @GetMapping("recallNotFinishedTask")
-    public BaseResultEntity recallNotFinishedTask(){
+    public BaseResultEntity recallNotFinishedTask() {
         return scheduleService.recallNotFinishedTask();
+    }
+
+    /**
+     * 每周五执行一次
+     */
+    @Scheduled(cron = "0 0 18 ? * FRI")
+    @GetMapping("sendRecordMain")
+    public BaseResultEntity sendRecordMain() {
+        return scheduleService.sendRecordMain();
     }
 
 }

@@ -3,6 +3,7 @@ package com.primihub.biz.config.base;
 import com.alibaba.nacos.api.config.annotation.NacosConfigurationProperties;
 import com.primihub.biz.entity.sys.config.BaseAuthConfig;
 import com.primihub.biz.entity.sys.config.LokiConfig;
+import com.primihub.biz.entity.sys.config.LpyProperties;
 import com.primihub.sdk.config.GrpcClientConfig;
 import com.primihub.sdk.config.GrpcProxyConfig;
 import com.primihub.sdk.config.LpyGrpcConfig;
@@ -64,4 +65,8 @@ public class BaseConfiguration {
      * 注水开关
      */
     private Boolean waterSwitch = true;
+    /**
+     * 令牌云配置项
+     */
+    private LpyProperties lpyProperties;
 }

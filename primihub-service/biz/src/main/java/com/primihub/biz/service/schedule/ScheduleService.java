@@ -1,22 +1,33 @@
 package com.primihub.biz.service.schedule;
 
+import cn.afterturn.easypoi.excel.ExcelExportUtil;
+import cn.afterturn.easypoi.excel.entity.ExportParams;
+import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
+import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.constant.RedisKeyConstant;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.po.DataFusionCopyTask;
+import com.primihub.biz.entity.data.vo.lpy.PirRecordPoiVo;
+import com.primihub.biz.entity.data.vo.lpy.PsiRecordPoiVo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
 import com.primihub.biz.repository.primarydb.sys.SysOrganPrimarydbRepository;
 import com.primihub.biz.repository.primaryredis.sys.SysCommonPrimaryRedisRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
 import com.primihub.biz.service.data.DataCopyService;
 import com.primihub.biz.service.data.OtherBusinessesService;
+import com.primihub.biz.service.data.RecordService;
 import com.primihub.biz.service.sys.SysAsyncService;
+import com.primihub.biz.service.sys.SysEmailService;
 import com.primihub.biz.util.crypt.DateUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -36,25 +47,31 @@ public class ScheduleService {
     private SysAsyncService sysAsyncService;
     @Autowired
     private OtherBusinessesService otherBusinessesService;
+    @Autowired
+    private RecordService recordService;
+    @Autowired
+    private SysEmailService sysEmailService;
+    @Autowired
+    private BaseConfiguration baseConfiguration;
 
 
-    public BaseResultEntity recallNotFinishedTask(){
-        Date date=new Date();
-        String key=RedisKeyConstant.SCHEDULE_FUSION_COPY_KEY
-                .replace("<date>", DateUtil.formatDate(date,DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat()))
-                .replace("<piece>",String.valueOf(Integer.valueOf(DateUtil.formatDate(date,"mm"))/10));
-        Long currentAtom=sysCommonPrimaryRedisRepository.atomIncrement(key,11, TimeUnit.MINUTES);
-        Map result=new HashMap<>();
-        result.put("fusionMsg","已有节点处理");
-        if(true||currentAtom.equals(1L)){
-            Date threeDayAgo= DateUtil.changeDate(date, Calendar.DAY_OF_WEEK,-3);
-            Date tenMinuteAgo= DateUtil.changeDate(date, Calendar.MINUTE,-3);
-            List<DataFusionCopyTask> notFinishedTask=dataCopyService.selectNotFinishedTask(threeDayAgo,tenMinuteAgo);
-            for(DataFusionCopyTask task:notFinishedTask){
+    public BaseResultEntity recallNotFinishedTask() {
+        Date date = new Date();
+        String key = RedisKeyConstant.SCHEDULE_FUSION_COPY_KEY
+                .replace("<date>", DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat()))
+                .replace("<piece>", String.valueOf(Integer.valueOf(DateUtil.formatDate(date, "mm")) / 10));
+        Long currentAtom = sysCommonPrimaryRedisRepository.atomIncrement(key, 11, TimeUnit.MINUTES);
+        Map result = new HashMap<>();
+        result.put("fusionMsg", "已有节点处理");
+        if (true || currentAtom.equals(1L)) {
+            Date threeDayAgo = DateUtil.changeDate(date, Calendar.DAY_OF_WEEK, -3);
+            Date tenMinuteAgo = DateUtil.changeDate(date, Calendar.MINUTE, -3);
+            List<DataFusionCopyTask> notFinishedTask = dataCopyService.selectNotFinishedTask(threeDayAgo, tenMinuteAgo);
+            for (DataFusionCopyTask task : notFinishedTask) {
                 log.info("本次recall的任务id: {}", task.getId());
                 dataCopyService.handleFusionCopyTask(task);
             }
-            result.put("fusionMsg","本节点处理");
+            result.put("fusionMsg", "本节点处理");
         }
         return BaseResultEntity.success(result);
     }
@@ -62,8 +79,8 @@ public class ScheduleService {
     /**
      * 定时处理节点业务 10分钟一次
      */
-    @Scheduled(cron="0 0/10 * * * ? ")
-    private void nodeOperations(){
+    @Scheduled(cron = "0 0/10 * * * ? ")
+    private void nodeOperations() {
         log.info("定时处理节点业务");
         // 上报节点状态
         sysAsyncService.collectBaseData();
@@ -73,24 +90,68 @@ public class ScheduleService {
         for (SysOrgan sysOrgan : sysOrgans) {
             try {
                 BaseResultEntity baseResultEntity = otherBusinessesService.syncGatewayApiData(data, sysOrgan.getOrganGateway() + "/share/shareData/healthConnection", sysOrgan.getPublicKey());
-                if (baseResultEntity==null || !baseResultEntity.getCode().equals(BaseResultEnum.SUCCESS.getReturnCode())){
+                if (baseResultEntity == null || !baseResultEntity.getCode().equals(BaseResultEnum.SUCCESS.getReturnCode())) {
                     Set<String> services = (Set<String>) baseResultEntity.getResult();
-                    sysOrgan.setPlatformState(services.contains("platform")?1:0);
-                    sysOrgan.setNodeState(services.contains("node")?1:0);
-                    sysOrgan.setFusionState(services.contains("fusion")?1:0);
-                }else {
+                    sysOrgan.setPlatformState(services.contains("platform") ? 1 : 0);
+                    sysOrgan.setNodeState(services.contains("node") ? 1 : 0);
+                    sysOrgan.setFusionState(services.contains("fusion") ? 1 : 0);
+                } else {
                     sysOrgan.setPlatformState(0);
                     sysOrgan.setNodeState(0);
                     sysOrgan.setFusionState(0);
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 sysOrgan.setPlatformState(0);
                 sysOrgan.setNodeState(0);
                 sysOrgan.setFusionState(0);
-                log.info("机构ID:{} - 机构名称:{} - 机构网关地址:{} - 状态获取失败",sysOrgan.getOrganId(),sysOrgan.getOrganName(),sysOrgan.getOrganGateway());
+                log.info("机构ID:{} - 机构名称:{} - 机构网关地址:{} - 状态获取失败", sysOrgan.getOrganId(), sysOrgan.getOrganName(), sysOrgan.getOrganGateway());
                 e.printStackTrace();
             }
             sysOrganPrimarydbRepository.updateSysOrgan(sysOrgan);
         }
+    }
+
+    public BaseResultEntity sendRecordMain() {
+        // poi
+        List<PsiRecordPoiVo> psiRecordWeekly = recordService.getPsiRecordWeekly();
+        List<PirRecordPoiVo> pirRecordWeekly = recordService.getPirRecordWeekly();
+
+        List<Map<String, Object>> sheetsList = new ArrayList<>();
+
+        ExportParams params = new ExportParams();
+        params.setSheetName("一周执行记录表");
+        params.setTitle("一周执行记录表");
+        Map<String, Object> map1 = new HashMap<>();
+        map1.put("title", params);
+        map1.put("entity", PsiRecordPoiVo.class);
+        map1.put("data", psiRecordWeekly);
+
+        ExportParams params2 = new ExportParams();
+        params2.setSheetName("一周执行记录表");
+        params2.setTitle("一周执行记录表");
+        Map<String, Object> map2 = new HashMap<>();
+        map2.put("title", params2);
+        map2.put("entity", PirRecordPoiVo.class);
+        map2.put("data", pirRecordWeekly);
+
+        sheetsList.add(map1);
+        sheetsList.add(map2);
+
+        Workbook workbook = ExcelExportUtil.exportExcel(sheetsList, ExcelType.HSSF);
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            workbook.write(os);
+            workbook.close();
+
+            // mail
+            sysEmailService.sendEmailWithAttachment(
+                    baseConfiguration.getLpyProperties().getMailAccount(),
+                    baseConfiguration.getLpyProperties().getMailSubject(),
+                    baseConfiguration.getLpyProperties().getMailText(),
+                    os.toByteArray()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return BaseResultEntity.success();
     }
 }
