@@ -22,6 +22,25 @@
                 target_field targetField
     </sql>
 
+    <sql id="pirRecordColumns">
+        id,
+               record_id       recordId,
+               pir_name        pirName,
+               pir_task_id     pirTaskId,
+               task_state      taskState,
+               origin_organ_id originOrganId,
+               target_organ_id targetOrganId,
+               start_time      startTime,
+               commit_rows_num commitRowsNum,
+               end_time        endTime,
+               result_rows_num resultRowsNum,
+               is_del          isDel,
+               create_date     createDate,
+               update_date     updateDate,
+               target_field    targetField,
+               score_model_type scoreModelType
+    </sql>
+
 
     <select id="selectPsiRecordByRecordId" resultType="com.primihub.biz.entity.data.po.PsiRecord">
         select
@@ -32,25 +51,26 @@
 
     <select id="selectPirRecordByRecordId" resultType="com.primihub.biz.entity.data.po.PirRecord">
         select id,
-               record_id recordId,
-               pir_name pirName,
-               pir_task_id pirTaskId,
-               task_state taskState,
+               record_id       recordId,
+               pir_name        pirName,
+               pir_task_id     pirTaskId,
+               task_state      taskState,
                origin_organ_id originOrganId,
                target_organ_id targetOrganId,
-               start_time startTime,
+               start_time      startTime,
                commit_rows_num commitRowsNum,
-               end_time endTime,
+               end_time        endTime,
                result_rows_num resultRowsNum,
-               is_del isDel,
-               create_date createDate,
-               update_date updateDate,
-                target_field targetField
+               is_del          isDel,
+               create_date     createDate,
+               update_date     updateDate,
+               target_field    targetField
         from pir_record
         where record_id = #{recordId}
     </select>
 
-    <select id="selectPsiRecordList" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="com.primihub.biz.entity.data.po.PsiRecord">
+    <select id="selectPsiRecordList" parameterType="com.primihub.biz.entity.data.req.RecordReq"
+            resultType="com.primihub.biz.entity.data.po.PsiRecord">
         select
         <include refid="psiRecordColumns"/>
         from psi_record
@@ -59,8 +79,10 @@
         </if>
     </select>
 
-    <select id="selectPsiRecordPage" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="com.primihub.biz.entity.data.po.PsiRecord">
-        select <include refid="psiRecordColumns"/>
+    <select id="selectPsiRecordPage" parameterType="com.primihub.biz.entity.data.req.RecordReq"
+            resultType="com.primihub.biz.entity.data.po.PsiRecord">
+        select
+        <include refid="psiRecordColumns"/>
         from psi_record
         <if test="taskName != null and taskName != ''">
             where psi_name like CONCAT('%',#{taskName,jdbcType=VARCHAR},'%')
@@ -69,7 +91,8 @@
         LIMIT #{offset},#{pageSize}
     </select>
 
-    <select id="selectPsiRecordCount" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="java.lang.Integer">
+    <select id="selectPsiRecordCount" parameterType="com.primihub.biz.entity.data.req.RecordReq"
+            resultType="java.lang.Integer">
         select
         count(id)
         from
@@ -79,7 +102,8 @@
         </if>
     </select>
 
-    <select id="selectPirRecordPage" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="com.primihub.biz.entity.data.po.PirRecord">
+    <select id="selectPirRecordPage" parameterType="com.primihub.biz.entity.data.req.RecordReq"
+            resultType="com.primihub.biz.entity.data.po.PirRecord">
         select
         id,
         record_id recordId,
@@ -105,7 +129,8 @@
         LIMIT #{offset},#{pageSize}
     </select>
 
-    <select id="selectPirRecordCount" parameterType="com.primihub.biz.entity.data.req.RecordReq" resultType="java.lang.Integer">
+    <select id="selectPirRecordCount" parameterType="com.primihub.biz.entity.data.req.RecordReq"
+            resultType="java.lang.Integer">
         select
         count(id)
         from
@@ -113,6 +138,23 @@
         <if test="taskName != null and taskName != ''">
             where pir_name like CONCAT('%',#{taskName,jdbcType=VARCHAR},'%')
         </if>
+    </select>
+
+    <select id="selectPsiRecordWeekly" resultType="com.primihub.biz.entity.data.po.PsiRecord">
+        select
+        <include refid="psiRecordColumns"/>
+        from
+        psi_record
+        where start_time BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <select id="selectPirRecordWeekly"
+            resultType="com.primihub.biz.entity.data.po.PirRecord">
+        select
+        <include refid="pirRecordColumns"/>
+        from
+        pir_record
+        where start_time BETWEEN #{startDate} AND #{endDate}
     </select>
 
 </mapper>

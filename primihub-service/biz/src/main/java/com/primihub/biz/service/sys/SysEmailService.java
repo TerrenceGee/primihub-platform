@@ -10,14 +10,16 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -27,23 +29,22 @@ public class SysEmailService {
 
     private JavaMailSender javaMailSender;
 
-
     @PostConstruct
-    public void init(){
+    public void init() {
         javaMailSender = initMailSender(baseConfiguration);
     }
-    private JavaMailSender initMailSender(BaseConfiguration baseConfiguration){
+
+    private JavaMailSender initMailSender(BaseConfiguration baseConfiguration) {
         MailProperties mail = baseConfiguration.getMailProperties();
-        if (mail!=null && StringUtils.isNotBlank(mail.getHost())
-                && StringUtils.isNotBlank(mail.getUsername()) && StringUtils.isNotBlank(mail.getPassword())){
+        if (mail != null && StringUtils.isNotBlank(mail.getHost())
+                && StringUtils.isNotBlank(mail.getUsername()) && StringUtils.isNotBlank(mail.getPassword())) {
             log.info(JSONObject.toJSONString(mail));
             JavaMailSenderImpl javaMailSender = mailSender(mail);
             try {
-                log.info("Start trying to connect to mailbox : {}",System.currentTimeMillis());
+                log.info("Start trying to connect to mailbox : {}", System.currentTimeMillis());
                 javaMailSender.testConnection();
-                log.info("End attempting to connect to mailbox : {}",System.currentTimeMillis());
-            }
-            catch (MessagingException ex) {
+                log.info("End attempting to connect to mailbox : {}", System.currentTimeMillis());
+            } catch (MessagingException ex) {
                 log.error("Mail server is not available");
 //                log.error("Mail server is not available", ex);
                 return null;
@@ -82,13 +83,12 @@ public class SysEmailService {
     }
 
     /**
-     *
-     * @param userAccount   a@a.com,b@b.com,......
-     * @param subject       email subject
-     * @param text          email Text content
+     * @param userAccount a@a.com,b@b.com,......
+     * @param subject     email subject
+     * @param text        email Text content
      */
-    public void send(String userAccount,String subject,String text){
-        if (javaMailSender == null){
+    public void send(String userAccount, String subject, String text) {
+        if (javaMailSender == null) {
             log.info("The system does not configure mail");
             return;
         }
@@ -105,9 +105,28 @@ public class SysEmailService {
             //邮件发送时间
             message.setSentDate(new Date());
             javaMailSender.send(message);
-            log.info("账号:{} 发送成功",userAccount);
+            log.info("账号:{} 发送成功", userAccount);
         } catch (MailException e) {
-            log.info("账号:{} 发送失败 e:{}",userAccount,e.getMessage());
+            log.info("账号:{} 发送失败 e:{}", userAccount, e.getMessage());
+        }
+    }
+
+    public void sendEmailWithAttachment(String to, String subject, String text, byte[] byteArray) {
+        if (javaMailSender == null) {
+            log.info("The system does not configure mail");
+            return;
+        }
+        MimeMessage message = javaMailSender.createMimeMessage();
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(text);
+            helper.addAttachment("Attachment", () -> new ByteArrayInputStream(byteArray));
+            javaMailSender.send(message);
+            log.info("账号:{} 发送成功", to);
+        } catch (MessagingException e) {
+            log.info("账号:{} 发送失败 e:{}", to, e.getMessage());
         }
     }
 

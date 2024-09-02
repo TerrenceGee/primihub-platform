@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>cn.afterturn</groupId>
+            <artifactId>easypoi-spring-boot-starter</artifactId>
+            <version>4.5.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.primihub</groupId>
             <artifactId>primihub-sdk</artifactId>
             <version>1.0.1</version>
