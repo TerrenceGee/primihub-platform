@@ -1,6 +1,7 @@
 package com.primihub.biz.entity.data.vo.lpy;
 
 import cn.afterturn.easypoi.excel.annotation.Excel;
+import cn.afterturn.easypoi.excel.annotation.ExcelTarget;
 import com.primihub.biz.entity.data.po.PirRecord;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import java.util.Date;
 
 @Getter
 @Setter
+@ExcelTarget("隐匿查询执行记录表行")
 public class PirRecordPoiVo {
     private Long id;
     @Excel(name = "记录id", orderNum = "1", width = 25, needMerge = true)
@@ -21,9 +23,9 @@ public class PirRecordPoiVo {
     private String originOrganId;
     @Excel(name = "协作方机构id")
     private String targetOrganId;
-    @Excel(name = "开始时间")
+    @Excel(name = "开始时间", format = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;
-    @Excel(name = "结束时间")
+    @Excel(name = "结束时间", format = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
     @Excel(name = "隐匿查询任务提交样本数")
     private Integer commitRowsNum;
@@ -49,6 +51,6 @@ public class PirRecordPoiVo {
         this.commitRowsNum = po.getCommitRowsNum();
         this.resultRowsNum = po.getResultRowsNum();
         this.targetField = po.getTargetField();
-        this.targetField = po.getTargetField();
+        this.scoreModelType = po.getScoreModelType();
     }
 }

@@ -10,7 +10,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-@ExcelTarget("隐私求交执行记录表 ")
+@ExcelTarget("隐私求交执行记录表行")
 public class PsiRecordPoiVo implements java.io.Serializable {
     private Long id;
     @Excel(name = "记录id", orderNum = "1", width = 25, needMerge = true)
@@ -23,9 +23,9 @@ public class PsiRecordPoiVo implements java.io.Serializable {
     private String originOrganId;
     @Excel(name = "协作方机构id")
     private String targetOrganId;
-    @Excel(name = "开始时间")
+    @Excel(name = "开始时间", format = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;
-    @Excel(name = "结束时间")
+    @Excel(name = "结束时间", format = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
     @Excel(name = "隐私求交任务提交样本数")
     private Integer commitRowsNum;

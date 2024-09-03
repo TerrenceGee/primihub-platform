@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.ByteArrayDataSource;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class SysEmailService {
                 log.info("End attempting to connect to mailbox : {}", System.currentTimeMillis());
             } catch (MessagingException ex) {
                 log.error("Mail server is not available");
-//                log.error("Mail server is not available", ex);
+                log.error("Mail server is not available", ex);
                 return null;
             }
             return javaMailSender;
@@ -111,7 +112,7 @@ public class SysEmailService {
         }
     }
 
-    public void sendEmailWithAttachment(String to, String subject, String text, byte[] byteArray) {
+    public void sendEmailWithAttachment(String to, String subject, String text, String attachmentFilename, byte[] byteArray) {
         if (javaMailSender == null) {
             log.info("The system does not configure mail");
             return;
@@ -119,10 +120,12 @@ public class SysEmailService {
         MimeMessage message = javaMailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(baseConfiguration.getMailProperties().getUsername());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text);
-            helper.addAttachment("Attachment", () -> new ByteArrayInputStream(byteArray));
+            helper.addAttachment(attachmentFilename, new ByteArrayDataSource(byteArray, "application/vnd.ms-excel"));
+//            message.setHeader("Content-Type", "text/plain; charset=UTF-8");
             javaMailSender.send(message);
             log.info("账号:{} 发送成功", to);
         } catch (MessagingException e) {
