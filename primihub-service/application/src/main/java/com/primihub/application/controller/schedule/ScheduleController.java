@@ -29,10 +29,15 @@ public class ScheduleController {
     /**
      * 每周五执行一次
      */
-    @Scheduled(cron = "0 0 18 ? * FRI")
+    @Scheduled(cron = "0 0 8 ? * MON")
     @GetMapping("sendRecordMain")
     public BaseResultEntity sendRecordMain() {
         return scheduleService.sendRecordMain();
+    }
+
+    @GetMapping("sendTest")
+    public BaseResultEntity sendTest() {
+        return scheduleService.sendTest();
     }
 
 }
