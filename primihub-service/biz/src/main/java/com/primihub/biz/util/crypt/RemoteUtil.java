@@ -31,10 +31,10 @@ public class RemoteUtil {
         return sb.toString();
     }
 
-    public static String generateSignature(String requestId) {
+    public static String generateSignature(String requestId, String secretId, String secretKey) {
         String plainSignature = RemoteConstant.SIGN_TEMPLATE.replace("<requestRefId>", requestId)
-                .replace("<secretId>", RemoteConstant.SECRET_ID_VALUE);
-        return SM3Util.encrypt(plainSignature, RemoteConstant.SECRET_KEY_VALUE);
+                .replace("<secretId>", secretId);
+        return SM3Util.encrypt(plainSignature, secretKey);
     }
 
 
