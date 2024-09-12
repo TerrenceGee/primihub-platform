@@ -60,7 +60,7 @@ public class RemoteClient {
         map.put(RemoteConstant.REQUEST, requestEncString);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(map, headers);
-        String url = RemoteConstant.REMOTE_SCORE_URL + scoreModelCode;
+        String url = clientConfiguration.getCmccScoreUrl() + scoreModelCode;
 //        log.info("remote request body: {}", JSONObject.toJSONString(map));
         RemoteRespVo respVo = restTemplate.postForObject(url, request, RemoteRespVo.class);
 //        log.info("remote result: {}", JSONObject.toJSONString(respVo));
@@ -86,8 +86,8 @@ public class RemoteClient {
 
         String requestId = RemoteUtil.generateRandomString();
         headMap.put(RemoteConstant.REQUEST_REF_ID, requestId);
-        headMap.put(RemoteConstant.SECRET_ID, RemoteConstant.SECRET_ID_VALUE);
-        headMap.put(RemoteConstant.SIGNATURE, RemoteUtil.generateSignature(requestId));
+        headMap.put(RemoteConstant.SECRET_ID, clientConfiguration.getSecretId());
+        headMap.put(RemoteConstant.SIGNATURE, RemoteUtil.generateSignature(requestId, clientConfiguration.getSecretId(), clientConfiguration.getSecretKey()));
 
         return headMap;
     }

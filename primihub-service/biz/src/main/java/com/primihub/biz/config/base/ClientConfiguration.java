@@ -12,4 +12,5 @@ import org.springframework.stereotype.Component;
 public class ClientConfiguration {
     public String secretId = "58644534";
     public String secretKey = "cDVMxEGRC9sMPZP1xtKnGWShi2YqwWW9yoEBoqo5PS0=";
+    public String cmccScoreUrl = "http://118.190.39.100:30900/";
 }
