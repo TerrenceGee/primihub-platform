@@ -105,8 +105,13 @@ public class ExamService {
         return BaseResultEntity.success(new PageDataEntity(total, req.getPageSize(), req.getPageNo(), dataExamTaskVos));
     }
 
+    /**
+     * 9月 25日修改，预处理任务需要将原始样本中所有字段提交给协作方，且保持相对顺序
+     *
+     * @param param 提交预处理任务参数
+     * @return 提交预处理任务返回结果
+     */
     public BaseResultEntity submitExamTask(DataExamReq param) {
-        // getTargetData
         DataExamTask po = dataTaskRepository.selectDataExamByTaskId(param.getTaskId());
         String resourceId = po.getOriginResourceId();
         DataResource dataResource = dataResourceRepository.queryDataResourceByResourceFusionId(resourceId);
@@ -114,7 +119,7 @@ public class ExamService {
             log.info("预处理的资源查询为空 resourceId: [{}]", resourceId);
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "dataResource");
         }
-        BaseResultEntity<Set<String>> result;
+        BaseResultEntity<Map<String, List<String>>> result;
         // 文件类型
         if (dataResource.getResourceSource() == 1) {
             SysFile sysFile = fileRepository.selectSysFileByFileId(Optional.ofNullable(dataResource.getFileId()).orElse(0L));
@@ -122,7 +127,7 @@ public class ExamService {
                 log.info("预处理的资源查询为空 sysFileId: [{}]", dataResource.getFileId());
                 return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "sysFile");
             }
-            result = getTargetFieldValueListFromSysFile(sysFile, po.getTargetField());
+            result = getSampleFieldListFromSysFile(sysFile, po.getTargetField());
             if (!BaseResultEntity.isSuccess(result)) {
                 log.info("文件解析失败 sysFileId: [{}]", dataResource.getFileId());
                 return result;
@@ -131,7 +136,7 @@ public class ExamService {
         // db类型
         else if (dataResource.getResourceSource() == 2) {
             DataSource dataSource = dataResourceRepository.queryDataSourceById(dataResource.getDbId());
-            result = getTargetFieldValueListFromDb(dataSource, po.getTargetField());
+            result = getSampleFieldListFromDb(dataSource, po.getTargetField());
             if (!BaseResultEntity.isSuccess(result)) {
                 log.info("数据库表解析失败 dbId: [{}]", dataResource.getDbId());
                 return result;
@@ -141,11 +146,32 @@ public class ExamService {
             return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "dataResource");
         }
 
-        Set<String> targetFieldValueSet = result.getResult();
+        Map<String, List<String>> dataMap = result.getResult();
         DataExamReq req = DataExamConvert.convertPoToReq(po);
-        req.setFieldValueSet(targetFieldValueSet);
+        req.setFieldValueMap(dataMap);
         // 发送给对方机构
         return sendExamTask(req);
+    }
+
+    private BaseResultEntity<Map<String, List<String>>> getSampleFieldListFromDb(DataSource dataSource, String targetField) {
+        AbstractDataDBService abstractDataDBService = dataSourceService.getDBServiceImpl(dataSource.getDbType());
+
+        if (abstractDataDBService != null) {
+            BaseResultEntity result = abstractDataDBService.dataSourceTableAll(dataSource);
+            if (result == null || result.getCode() != 0) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "解析数据库表失败");
+            }
+            Map<String, Object> resultMap = (Map<String, Object>) result.getResult();
+            List<Map<String, Object>> rowMap = (List<Map<String, Object>>) resultMap.getOrDefault("dataList", Collections.emptyList());
+            if (CollectionUtils.isEmpty(rowMap)) {
+                return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "数据库表中没有记录");
+            }
+
+            Map<String, List<Object>> dataMap = rowMap.stream().flatMap(map -> map.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
+            return BaseResultEntity.success(dataMap);
+        } else {
+            return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "您选择的数据库暂不支持");
+        }
     }
 
     private BaseResultEntity<Set<String>> getTargetFieldValueListFromDb(DataSource dataSource) {
@@ -161,17 +187,14 @@ public class ExamService {
             if (CollectionUtils.isEmpty(rowMap)) {
                 return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "数据库表中没有记录");
             }
-            Set<String> targetFieldValueSet = rowMap.stream()
-                    .map(map -> (String) map.getOrDefault(RemoteConstant.INPUT_FIELD_NAME, StringUtils.EMPTY))
-                    .filter(StringUtils::isNotEmpty)
-                    .collect(Collectors.toSet());
+            Set<String> targetFieldValueSet = rowMap.stream().map(map -> (String) map.getOrDefault(RemoteConstant.INPUT_FIELD_NAME, StringUtils.EMPTY)).filter(StringUtils::isNotEmpty).collect(Collectors.toSet());
             return BaseResultEntity.success(targetFieldValueSet);
         } else {
             return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "您选择的数据库暂不支持");
         }
     }
 
-    private BaseResultEntity<Set<String>> getTargetFieldValueListFromSysFile(SysFile sysFile, String targetField) {
+    private BaseResultEntity<Map<String, List<String>>> getSampleFieldListFromSysFile(SysFile sysFile, String targetField) {
         try {
             List<String> fileContent = FileUtil.getFileContent(sysFile.getFileUrl(), 1);
             if (fileContent == null || fileContent.isEmpty()) {
@@ -191,10 +214,8 @@ public class ExamService {
                 log.info("该资源字段不包括目的字段: [{}]", targetField);
                 return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_FILE_CHECK_FAIL, targetField);
             }
-            List<LinkedHashMap<String, Object>> csvData = FileUtil.getCsvData(sysFile.getFileUrl(), Math.toIntExact(sysFile.getFileSize()));
-            // stream.filter 结果为ture的元素留下
-            Set<String> targetFieldValueSet = csvData.stream().map(stringObjectLinkedHashMap -> stringObjectLinkedHashMap.getOrDefault(targetField, StringUtils.EMPTY)).map(String::valueOf).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
-            return BaseResultEntity.success(targetFieldValueSet);
+            Map<String, List<String>> csvDataMap = FileUtil.getCsvDataMap(sysFile.getFileUrl(), Math.toIntExact(sysFile.getFileSize()));
+            return BaseResultEntity.success(csvDataMap);
         } catch (Exception e) {
             log.info("fileUrl:[{}] Exception Message : {}", sysFile.getFileUrl(), e);
             return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_FILE_CHECK_FAIL, "请检查文件编码格式");
@@ -214,10 +235,7 @@ public class ExamService {
             if (CollectionUtils.isEmpty(rowMap)) {
                 return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "数据库表中没有记录");
             }
-            Set<String> targetFieldValueSet = rowMap.stream()
-                    .map(map -> (String) map.getOrDefault(targetField, StringUtils.EMPTY))
-                    .filter(StringUtils::isNotEmpty)
-                    .collect(Collectors.toSet());
+            Set<String> targetFieldValueSet = rowMap.stream().map(map -> (String) map.getOrDefault(targetField, StringUtils.EMPTY)).filter(StringUtils::isNotEmpty).collect(Collectors.toSet());
             return BaseResultEntity.success(targetFieldValueSet);
         } else {
             return BaseResultEntity.failure(BaseResultEnum.DATA_DB_FAIL, "您选择的数据库暂不支持");
@@ -267,20 +285,6 @@ public class ExamService {
         return null;
     }
 
-    public BaseResultEntity processExamTask(DataExamReq req) {
-        if (CollectionUtils.isEmpty(req.getFieldValueSet())) {
-            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "fieldValue");
-        }
-
-        req.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
-        sendEndExamTask(req);
-
-        // futureTask
-        startFutureExamTask(req);
-
-        return BaseResultEntity.success();
-    }
-
     //    private DataResource generateTargetResource(Map returnMap) {
     public DataResource generateTargetResource(List<Map> metaData, String resourceName) {
         log.info("开始生成数据源===========================");
@@ -290,8 +294,7 @@ public class ExamService {
         sysFile.setFileSuffix("csv");
         sysFile.setFileName(UUID.randomUUID().toString());
         Date date = new Date();
-        StringBuilder sb = new StringBuilder().append(baseConfiguration.getUploadUrlDirPrefix()).append(1)
-                .append("/").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("/");
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getUploadUrlDirPrefix()).append(1).append("/").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("/");
         sysFile.setFileArea("local");
         sysFile.setFileSize(0L);
         sysFile.setFileCurrentSize(0L);
@@ -410,76 +413,6 @@ public class ExamService {
 //            return BaseResultEntity.failure(BaseResultEnum.FAILURE);
             return null;
         }
-    }
-
-    /**
-     * HttpHeaders headers = new HttpHeaders();
-     * //        headers.setContentType(MediaType.APPLICATION_JSON);
-     * //        HttpEntity<HashMap<String, Object>> request = new HttpEntity(new Object(), headers);
-     * //        ResponseEntity<Map> exchange = restTemplate.exchange(firstUrl, HttpMethod.POST, request, Map.class);
-     * //        return exchange.getBody();
-     */
-    private void startFutureExamTask(DataExamReq req) {
-        // 进行预处理，使用异步
-        FutureTask<Object> task = new FutureTask<>(() -> {
-            try {
-                log.info("====================== 预处理开始");
-                Set<String> fieldValueSet = req.getFieldValueSet();
-                log.info("================ {}", fieldValueSet.size());
-
-                // 已经存在的数据
-                Set<DataCore> existentDataCoreSet = dataCoreRepository.selectExistentDataCore(fieldValueSet);
-                log.info("================ {}", existentDataCoreSet.size());
-                Set<String> existentTargetValueSet = existentDataCoreSet.stream().map(DataCore::getIdNum).collect(Collectors.toSet());
-                log.info("================ {}", existentTargetValueSet.size());
-                // 不存在的数据
-                Set<String> nonexistentTargetValueSet = fieldValueSet.stream().filter(s -> !existentTargetValueSet.contains(s)).collect(Collectors.toSet());
-                log.info("================ {}", nonexistentTargetValueSet.size());
-
-                // 先过滤出存在手机号的数据
-                Map<String, String> phoneMap = phoneClientService.findSM3PhoneForSM3IdNum(nonexistentTargetValueSet);
-                List<DataCore> nonexistentDataCoreSet = phoneMap.entrySet().stream().map(entry -> {
-                    DataCore dataCore = new DataCore();
-                    dataCore.setIdNum(entry.getKey());
-                    dataCore.setPhoneNum(entry.getValue());
-                    return dataCore;
-                }).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(nonexistentDataCoreSet)) {
-                    dataCorePrimarydbRepository.saveDataCoreSet(nonexistentDataCoreSet);
-                }
-
-                Set<ExamResultVo> allDataCoreSet = dataCoreRepository.selectExamResultVo(fieldValueSet);
-                String jsonArrayStr = JSON.toJSONString(allDataCoreSet);
-                List<Map> maps = JSONObject.parseArray(jsonArrayStr, Map.class);
-                // 生成数据源
-                String resourceName = new StringBuffer()
-                        .append("预处理生成资源")
-                        .append(SysConstant.HYPHEN_DELIMITER)
-                        .append(req.getTaskId())
-                        .toString();
-                DataResource dataResource = generateTargetResource(maps, resourceName);
-                if (dataResource == null) {
-                    req.setTaskState(TaskStateEnum.FAIL.getStateType());
-                    sendEndExamTask(req);
-                    log.info("====================== FAIL");
-                }
-                log.info("====================== dataResource");
-
-                req.setTaskState(TaskStateEnum.SUCCESS.getStateType());
-                req.setTargetResourceId(dataResource.getResourceFusionId());
-                sendEndExamTask(req);
-                log.info("====================== SUCCESS");
-                return null;
-            } catch (Exception e) {
-                log.error("异步执行异常: {}", e.toString());
-                e.printStackTrace();
-                req.setTaskState(TaskStateEnum.FAIL.getStateType());
-                sendEndExamTask(req);
-                log.info("====================== FAIL");
-                return null;
-            }
-        });
-        primaryThreadPool.submit(task);
     }
 
     private BaseResultEntity sendEndExamTask(DataExamReq req) {

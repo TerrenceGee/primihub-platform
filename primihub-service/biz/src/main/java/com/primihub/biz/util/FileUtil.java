@@ -194,6 +194,33 @@ public class FileUtil {
         return dataList;
     }
 
+    /**
+     * @param filePath 文件路径
+     * @param pageSize 读取的页尺寸
+     * @return 返回Map<String, List>
+     */
+    public static Map<String, List<String>> getCsvDataMap(String filePath, Integer pageSize) {
+        Map<String, List<String>> dataMap = new LinkedHashMap<>();
+        try {
+            List<String[]> list = CsvUtil.csvReader(filePath, pageSize + 1);
+            // csv头
+            String[] fields = list.get(0);
+            if (fields[0].startsWith(DataConstant.UTF8_BOM)) {
+                fields[0] = fields[0].substring(1);
+            }
+            log.info("read csv headers field :{}", Arrays.toString(fields));
+            for (int i = 1; i < list.size(); i++) {
+                String[] data = list.get(i);
+                for (int j = 0; j < data.length; j++) {
+                    dataMap.computeIfAbsent(fields[j], s -> new ArrayList<>()).add(data[j]);
+                }
+            }
+        } catch (Exception e) {
+            log.info("getCsvDataMap", e);
+        }
+        return dataMap;
+    }
+
 
     public static LinkedHashMap<String, Object> readValues(String[] values, String[] headers) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>();
