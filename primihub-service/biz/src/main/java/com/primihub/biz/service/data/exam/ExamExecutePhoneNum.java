@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class ExamExecutePhoneNum implements ExamExecute {
+public class ExamExecutePhoneNum extends ExamExecute {
     @Autowired
     private ExamService examService;
     @Autowired
@@ -35,10 +35,11 @@ public class ExamExecutePhoneNum implements ExamExecute {
     private DataMobilePrimarydbRepository mobilePrimaryDbRepository;
 
     @Override
-    public void processExam(DataExamReq req) {
+    public void execute(DataExamReq req) {
         log.info("process exam future task : phoneNum");
 
-        Set<String> rawSet = req.getFieldValueSet();
+        Map<String, List<String>> fieldValueMap = req.getFieldValueMap();
+        Set<String> rawSet = new HashSet<>(fieldValueMap.get(req.getTargetField()));
         /*
         rawSet
         oldSet, newSet

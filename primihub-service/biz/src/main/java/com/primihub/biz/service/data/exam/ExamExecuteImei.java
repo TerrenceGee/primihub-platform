@@ -27,7 +27,7 @@ import static com.primihub.biz.constant.RemoteConstant.UNDEFINED;
 
 @Service
 @Slf4j
-public class ExamExecuteImei implements ExamExecute {
+public class ExamExecuteImei extends ExamExecute {
     @Autowired
     private DataImeiRepository imeiRepository;
     @Autowired
@@ -40,12 +40,12 @@ public class ExamExecuteImei implements ExamExecute {
     private BaseConfiguration baseConfiguration;
 
     @Override
-    public void processExam(DataExamReq req) {
+    public void execute(DataExamReq req) {
         log.info("process exam future task : imei");
 
         // rawSet
-        Set<String> rawSet = req.getFieldValueSet();
-
+        Map<String, List<String>> fieldValueMap = req.getFieldValueMap();
+        Set<String> rawSet = new HashSet<>(fieldValueMap.get(req.getTargetField()));
         /*
         rawSet
         oldSet, newSet => query

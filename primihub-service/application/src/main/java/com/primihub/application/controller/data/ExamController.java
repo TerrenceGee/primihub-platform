@@ -1,7 +1,5 @@
 package com.primihub.application.controller.data;
 
-import com.alibaba.fastjson.JSON;
-import com.primihub.biz.constant.SysConstant;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.base.PageDataEntity;
@@ -13,7 +11,6 @@ import com.primihub.biz.service.data.ExamService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -58,18 +55,17 @@ public class ExamController {
     @PostMapping(value = "/shareData/processExamTask")
     public BaseResultEntity processExamTask(@RequestBody DataExamReq dataExamReq) {
         log.info("process exam task");
-        log.info("targetValueSize: {}", dataExamReq.getFieldValueSet().size());
         return examService.processExamTask(dataExamReq);
     }
 
     /**
      * 第四步：结束任务
      */
-    @PostMapping(value = "/shareData/finishExamTask")
+    /*@PostMapping(value = "/shareData/finishExamTask")
     public BaseResultEntity finishExamTask(@RequestBody DataExamReq dataExamReq) {
         log.info("finish exam task");
         log.info("targetValueSize: {}", dataExamReq.getFieldValueSet().size());
         return examService.finishExamTask(dataExamReq);
-    }
+    }*/
 
 }

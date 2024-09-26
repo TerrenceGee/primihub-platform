@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 @Component
 @Service
 @Slf4j
-public class ExamExecuteIdNum implements ExamExecute {
+public class ExamExecuteIdNum extends ExamExecute {
     @Autowired
     private PhoneClientService phoneClientService;
     @Autowired
@@ -84,13 +84,14 @@ public class ExamExecuteIdNum implements ExamExecute {
     oldSet, noOldSet
     oldSet, phoneSet, noPhoneSet
     oldSet, phoneSet, waterSet, noSet
-     */
+    */
     @Override
-    public void processExam(DataExamReq req) {
+    public void execute(DataExamReq req) {
         log.info("process exam future task : idNum");
 
         // rawSet
-        Set<String> rawSet = req.getFieldValueSet();
+        Map<String, List<String>> fieldValueMap = req.getFieldValueMap();
+        Set<String> rawSet = new HashSet<>(fieldValueMap.get(req.getTargetField()));
 
         // 已经存在的数据，这个时候还没有模型分，所以用DataMap查询
         /*

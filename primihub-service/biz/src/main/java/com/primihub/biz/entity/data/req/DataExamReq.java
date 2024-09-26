@@ -3,7 +3,8 @@ package com.primihub.biz.entity.data.req;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -22,8 +23,8 @@ public class DataExamReq {
     private Integer taskState;
     /** 生成资源Id */
     private String targetResourceId;
-    /** 字段列表 */
-    private Set<String> fieldValueSet;
+    /** 字段及其值列表 */
+    private Map<String, List<String>> fieldValueMap;
     /** 目标值各类 */
     private String targetField;
 }

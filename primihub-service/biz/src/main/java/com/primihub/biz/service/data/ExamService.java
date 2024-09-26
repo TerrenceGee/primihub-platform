@@ -121,7 +121,7 @@ public class ExamService {
         if (Arrays.stream(INPUT_FIELD_ARRAY).noneMatch(str -> Objects.equals(str, req.getTargetField()))) {
             return BaseResultEntity.failure(BaseResultEnum.PARAM_INVALIDATION, Arrays.toString(INPUT_FIELD_ARRAY));
         }
-        if (CollectionUtils.isEmpty(req.getFieldValueSet())) {
+        if (req.getFieldValueMap() == null || CollectionUtils.isEmpty(req.getFieldValueMap().get(req.getTargetField()))) {
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "fieldValue");
         }
 
