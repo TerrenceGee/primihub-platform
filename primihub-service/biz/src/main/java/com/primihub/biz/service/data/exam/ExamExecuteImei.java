@@ -167,10 +167,11 @@ public class ExamExecuteImei implements ExamExecute {
         String jsonArrayStr = JSON.toJSONString(psiResult);
         List<Map> maps = JSONObject.parseArray(jsonArrayStr, Map.class);
         String resourceName = "预处理中间资源" + SysConstant.HYPHEN_DELIMITER + req.getTaskId();
-        DataResource dataResource = examService.generateTargetResource(maps, resourceName);
+        examService.generateCtccFile(maps, resourceName);
 
 
-        if (CollectionUtils.isEmpty(psiResult)) {
+
+        /*if (CollectionUtils.isEmpty(psiResult)) {
             req.setTaskState(TaskStateEnum.FAIL.getStateType());
             examService.sendEndExamTask(req);
             log.info("====================== FAIL ======================");
@@ -182,9 +183,9 @@ public class ExamExecuteImei implements ExamExecute {
             ctccTask.setTargetOrganId(req.getTargetOrganId());
             ctccTask.setOriginOrganId(req.getOriginOrganId());
             ctccTask.setTaskId(req.getTaskId());
-            /**
+            *//**
              * 运行状态 0未运行 1完成 2运行中 3失败 4取消 默认0
-             */
+             *//*
             ctccTask.setTaskState(0);
             ctccTask.setOriginResourceId(req.getResourceId());
 //            ctccTask.setTargetResourceId(req.getTargetResourceId());
@@ -192,6 +193,6 @@ public class ExamExecuteImei implements ExamExecute {
             ctccTask.setFileUrl(dataResource.getUrl());
             ctccTask.setFileName(UUID.randomUUID().toString());
             ctccPrimaryDbRepository.saveCtccExamTask(ctccTask);
-        }
+        }*/
     }
 }

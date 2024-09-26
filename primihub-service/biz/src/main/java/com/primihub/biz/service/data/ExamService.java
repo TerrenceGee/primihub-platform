@@ -443,4 +443,34 @@ public class ExamService {
         return BaseResultEntity.success();
     }
 
+    public void generateCtccFile(List<Map> metaData, String resourceName) {
+        log.info("开始生成 ctcc file ===========================");
+
+        SysFile sysFile = new SysFile();
+        sysFile.setFileSource(1);
+        sysFile.setFileSuffix("csv");
+        sysFile.setFileName(UUID.randomUUID().toString());
+        Date date = new Date();
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getUploadUrlDirPrefix()).append(1)
+                .append("/").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("/");
+        sysFile.setFileArea("local");
+        sysFile.setFileSize(0L);
+        sysFile.setFileCurrentSize(0L);
+        sysFile.setIsDel(0);
+
+        try {
+            File tempFile = new File(sb.toString());
+            if (!tempFile.exists()) {
+                tempFile.mkdirs();
+            }
+            String filePath = sb.append(sysFile.getFileName()).append(".").append(sysFile.getFileSuffix()).toString();
+            FileUtil.convertToCsv(metaData, filePath);
+            log.info("写入csv文件成功=========================== {}", filePath);
+            sysFile.setFileUrl(sb.toString());
+        } catch (IOException e) {
+            log.error("upload", e);
+        }
+        BaseResultEntity resultEntity = dataResourceService.getDataResourceCsvVo(sysFile);
+        log.info("resultEntity: {}", JSON.toJSONString(resultEntity));
+    }
 }
