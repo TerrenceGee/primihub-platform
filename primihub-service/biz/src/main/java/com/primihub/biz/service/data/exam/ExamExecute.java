@@ -3,10 +3,13 @@ package com.primihub.biz.service.data.exam;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.entity.data.req.DataExamReq;
 import com.primihub.biz.util.FileUtil;
+import com.primihub.biz.util.crypt.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,16 +25,14 @@ public abstract class ExamExecute {
             this.downloadRawExamFile(req);
         } catch (IOException e) {
             log.error("write raw exam file error", e);
-            return;
+            throw new RuntimeException(e);
         }
         this.execute(req);
     }
 
     public void downloadRawExamFile(DataExamReq req) throws IOException {
-        String sb = baseConfiguration.getUploadUrlDirPrefix() +
-                "raw-exam-file" + "/" +
-                req.getTaskName() + "-" + req.getResourceId() +
-                "." + "csv";
+        String dirFileName = baseConfiguration.getUploadUrlDirPrefix() +
+                "raw-exam-file" + "/";
 
         Map<String, List<String>> fieldValueMap = req.getFieldValueMap();
         List<Map> metaData = fieldValueMap.entrySet().stream()
@@ -43,8 +44,13 @@ public abstract class ExamExecute {
                         })
                 )
                 .collect(Collectors.toList());
-        FileUtil.convertToCsv(metaData, sb);
-        log.info("write raw exam file success, path: {}", sb);
+        File dirFile = new File(dirFileName);
+        if (!dirFile.exists()) {
+            dirFile.mkdirs();
+        }
+        String fileName = dirFileName + req.getTaskName() + "-" + req.getResourceId() + DateUtil.formatDate(new Date(), DateUtil.DateStyle.TIME_FORMAT_SHORT.getFormat()) + "." + "csv";
+        FileUtil.convertToCsv(metaData, fileName);
+        log.info("write raw exam file success, path: {}", fileName);
     }
 
     public abstract void execute(DataExamReq req);
