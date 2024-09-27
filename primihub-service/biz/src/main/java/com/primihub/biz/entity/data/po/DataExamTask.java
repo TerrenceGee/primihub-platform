@@ -43,4 +43,6 @@ public class DataExamTask {
 
     private String targetField;
 
+    private String rawFilePath;
+
 }

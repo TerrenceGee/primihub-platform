@@ -46,9 +46,10 @@
                                     contains_y,
                                     is_del,
                                     create_date,
-                                    update_date)
+                                    update_date,
+                                    raw_file_path)
         values (#{taskId}, #{taskName}, #{taskState}, #{originOrganId}, #{originResourceId}, #{targetOrganId},
-                #{targetResourceId}, #{containsY}, 0, now(), now())
+                #{targetResourceId}, #{containsY}, 0, now(), now(), #{rawFilePath})
     </insert>
 
     <update id="updateDataExamTask" parameterType="com.primihub.biz.entity.data.po.DataExamTask">

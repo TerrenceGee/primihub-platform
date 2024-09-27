@@ -2,6 +2,7 @@ package com.primihub.biz.service.data.exam;
 
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.entity.data.req.DataExamReq;
+import com.primihub.biz.service.data.ExamService;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.crypt.DateUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -10,12 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class ExamExecute {
     @Autowired
     private BaseConfiguration baseConfiguration;
+    @Autowired
+    private ExamService examService;
 
     public void processExam(DataExamReq req) {
         try {
@@ -29,8 +31,7 @@ public abstract class ExamExecute {
     }
 
     public void downloadRawExamFile(DataExamReq req) throws IOException {
-        String dirFileName = baseConfiguration.getUploadUrlDirPrefix() +
-                "raw-exam-file" + "/";
+        String dirFileName = baseConfiguration.getUploadUrlDirPrefix() + "raw-exam-file" + "/";
 
         Map<String, List<String>> fieldValueMap = req.getFieldValueMap();
         // keySet
@@ -53,6 +54,9 @@ public abstract class ExamExecute {
         String fileName = dirFileName + req.getTaskName() + "-" + req.getResourceId() + DateUtil.formatDate(new Date(), DateUtil.DateStyle.TIME_FORMAT_SHORT.getFormat()) + "." + "csv";
         FileUtil.convertToCsv(metaData, fileName);
         log.info("write raw exam file success, path: {}", fileName);
+
+
+        examService.saveRawSample(req, fileName);
     }
 
     public abstract void execute(DataExamReq req);

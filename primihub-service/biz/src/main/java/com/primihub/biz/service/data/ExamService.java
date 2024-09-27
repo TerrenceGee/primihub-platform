@@ -17,16 +17,11 @@ import com.primihub.biz.entity.data.vo.*;
 import com.primihub.biz.entity.sys.po.SysFile;
 import com.primihub.biz.entity.sys.po.SysLocalOrganInfo;
 import com.primihub.biz.entity.sys.po.SysOrgan;
-import com.primihub.biz.repository.primarydb.data.DataCorePrimarydbRepository;
 import com.primihub.biz.repository.primarydb.data.DataResourcePrRepository;
 import com.primihub.biz.repository.primarydb.data.DataTaskPrRepository;
 import com.primihub.biz.repository.primarydb.sys.SysFilePrimarydbRepository;
-import com.primihub.biz.repository.secondarydb.data.DataCoreRepository;
-import com.primihub.biz.repository.secondarydb.data.DataResourceRepository;
 import com.primihub.biz.repository.secondarydb.data.DataTaskRepository;
-import com.primihub.biz.repository.secondarydb.sys.SysFileSecondarydbRepository;
 import com.primihub.biz.repository.secondarydb.sys.SysOrganSecondarydbRepository;
-import com.primihub.biz.service.PhoneClientService;
 import com.primihub.biz.service.data.exam.ExamExecute;
 import com.primihub.biz.service.feign.FusionResourceService;
 import com.primihub.biz.util.FileUtil;
@@ -35,7 +30,6 @@ import com.primihub.sdk.task.param.TaskParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -71,10 +65,6 @@ public class ExamService {
     @Autowired
     private ThreadPoolTaskExecutor primaryThreadPool;
     @Autowired
-    private DataResourceRepository dataResourceRepository;
-    @Autowired
-    private SysFileSecondarydbRepository fileRepository;
-    @Autowired
     private BaseConfiguration baseConfiguration;
     @Autowired
     private SysFilePrimarydbRepository sysFilePrimarydbRepository;
@@ -84,16 +74,6 @@ public class ExamService {
     private DataResourcePrRepository dataResourcePrRepository;
     @Autowired
     private SingleTaskChannel singleTaskChannel;
-    @Autowired
-    private DataSourceService dataSourceService;
-    @Autowired
-    private PhoneClientService phoneClientService;
-    @Autowired
-    private DataCorePrimarydbRepository dataCorePrimarydbRepository;
-    @Autowired
-    private DataCoreRepository dataCoreRepository;
-    @Autowired
-    private ApplicationContext applicationContext;
 
     public BaseResultEntity<PageDataEntity<DataPirTaskVo>> getExamTaskList(DataExamTaskReq req) {
         List<DataExamTaskVo> dataExamTaskVos = dataTaskRepository.selectDataExamTaskPage(req);
@@ -102,19 +82,6 @@ public class ExamService {
         }
         Integer total = dataTaskRepository.selectDataExamTaskCount(req);
         return BaseResultEntity.success(new PageDataEntity(total, req.getPageSize(), req.getPageNo(), dataExamTaskVos));
-    }
-
-    private BaseResultEntity sendExamTask(DataExamReq param) {
-        List<SysOrgan> sysOrgans = organSecondaryDbRepository.selectOrganByOrganId(param.getTargetOrganId());
-        if (CollectionUtils.isEmpty(sysOrgans)) {
-            log.info("查询机构ID: [{}] 失败，未查询到结果", param.getTargetOrganId());
-            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL, "organ");
-        }
-
-        for (SysOrgan organ : sysOrgans) {
-            return otherBusinessesService.syncGatewayApiData(param, organ.getOrganGateway() + "/share/shareData/processExamTask", organ.getPublicKey());
-        }
-        return null;
     }
 
     public BaseResultEntity processExamTask(DataExamReq req) {
@@ -335,5 +302,18 @@ public class ExamService {
             return otherBusinessesService.syncGatewayApiData(req, organ.getOrganGateway() + "/share/shareData/finishExamTask", organ.getPublicKey());
         }
         return null;
+    }
+
+    public void saveRawSample(DataExamReq req, String fileName) {
+        DataExamTask po = new DataExamTask();
+        po.setTaskId(req.getTaskId());
+        po.setTaskName(req.getTaskName());
+        po.setOriginResourceId(req.getResourceId());
+        po.setOriginOrganId(req.getOriginOrganId());
+        po.setTargetOrganId(req.getTargetOrganId());
+        // 下载的文件地址
+        po.setRawFilePath(fileName);
+
+        dataTaskPrRepository.saveDataExamTask(po);
     }
 }
