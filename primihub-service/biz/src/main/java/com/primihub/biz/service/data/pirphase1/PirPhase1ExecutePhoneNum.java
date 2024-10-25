@@ -64,18 +64,21 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
              */
             Set<DataMobile> liDongMobileSet = dataMobileRepository.selectMobileWithScore(req.getTargetValueSet(), "yhhhwd_score");
             Set<String> liDongSet = liDongMobileSet.stream().map(DataMobile::getPhoneNum).collect(Collectors.toSet());
+
             Set<DataMobile> liDongOldMobileSet = dataMobileRepository.selectMobileWithScore(liDongSet, req.getScoreModelType());
-            Collection<DataMobile> loDongNewDataMobileSet = CollectionUtils.subtract(liDongMobileSet, liDongOldMobileSet);
+            Set<String> liDongOldSet = liDongOldMobileSet.stream().map(DataMobile::getPhoneNum).collect(Collectors.toSet());
+
+            Collection<String> loDongNewSet = CollectionUtils.subtract(liDongSet, liDongOldSet);
             ScoreModel scoreModel = scoreModelRepository.selectScoreModelByScoreTypeValue(scoreModelType);
             List<DataMobile> liDongNewMobileList = new ArrayList<>();
 
 
-            for (DataMobile mobile : loDongNewDataMobileSet) {
+            for (String mobile : loDongNewSet) {
                 // query
-                RemoteRespVo respVo = remoteClient.queryFromRemote(mobile.getPhoneNum(), scoreModel.getScoreModelCode());
+                RemoteRespVo respVo = remoteClient.queryFromRemote(mobile, scoreModel.getScoreModelCode());
                 if (respVo != null && ("Y").equals(respVo.getHead().getResult())) {
                     DataMobile dataMobile = new DataMobile();
-                    dataMobile.setPhoneNum(mobile.getPhoneNum());
+                    dataMobile.setPhoneNum(mobile);
                     dataMobile.setScore(Double.valueOf((String) (respVo.getRespBody().get(scoreModel.getScoreKey()))));
                     dataMobile.setScoreModelType(scoreModelType);
                     liDongNewMobileList.add(dataMobile);

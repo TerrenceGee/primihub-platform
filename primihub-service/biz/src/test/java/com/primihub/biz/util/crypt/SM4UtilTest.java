@@ -8,32 +8,31 @@ import java.util.Map;
 
 public class SM4UtilTest {
 
-    public static final String secretId = "58644534";
-    public static final String secretKey = "cDVMxEGRC9sMPZP1xtKnGWShi2YqwWW9yoEBoqo5PS0=";
+    public static final String secretId = "78005182";
+    public static final String secretKey = "8q65/SEI79/ajNaTzAAUFogu4d4VvXFXionUSK6ADcg=";
     public static final String signTem = "requestRefId=<id>&secretId=<secretId>";
 
     // requestRefId=SJSREQ_201601010809108632A&secretId=KFZQpn74WFkmLPx3gnP
 
     public static void main(String[] args) {
-        System.out.println(SM3Util.encrypt("130582199702242410"));
-//        String s = test1("123456", secretId);
-//        System.out.println("sign 加密后: " + s);
-//
-//        Map<String, Object> map = new HashMap<String, Object>();
-//
-//        String sm3PhoneNum = SM3Util.encrypt("869167065109479");
-//        System.out.println("sm3phonenum : " + sm3PhoneNum);
-//        map.put("param", new HashMap<String, String>() {{
-//            put("mobile", sm3PhoneNum);
-//            put("empowerNo", String.valueOf(System.currentTimeMillis()));
-//        }});
-//        String s1 = test2(map);
-//        System.out.println("参数加密后: " + s1);
-//        try {
-//            test3("a684c92f509bafed25b28785b61793b35dcc0e25f567d3d58b1420619cb6427d");
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
+        String s = test1("123456", secretId);
+        System.out.println("sign 加密后: " + s);
+
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        String sm3PhoneNum = SM3Util.encrypt("869167065392075");
+        System.out.println("sm3phonenum : " + sm3PhoneNum);
+        map.put("param", new HashMap<String, String>() {{
+            put("mobile", sm3PhoneNum);
+            put("empowerNo", String.valueOf(System.currentTimeMillis()));
+        }});
+        String s1 = test2(map);
+        System.out.println("参数加密后: " + s1);
+        /*try {
+            test3("a684c92f509bafed25b28785b61793b35dcc0e25f567d3d58b1420619cb6427d");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }*/
     }
 
     public static String test1(String requestRefId, String secretId) {
