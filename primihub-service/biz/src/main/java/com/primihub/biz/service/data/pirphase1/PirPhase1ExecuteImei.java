@@ -70,12 +70,23 @@ public class PirPhase1ExecuteImei implements PirPhase1Execute {
             Set<DataImei> liDongImeiSet = dataImeiRepository.selectImeiWithScore(req.getTargetValueSet(), "yhhhwd_score");
             Set<String> liDongSet = liDongImeiSet.stream().map(DataImei::getImei).collect(Collectors.toSet());
             Set<DataImei> liDongOldImeiSet = dataImeiRepository.selectImeiWithScore(liDongSet, req.getScoreModelType());
-            Collection<DataImei> loDongNewDataImeiSet = CollectionUtils.subtract(liDongImeiSet, liDongOldImeiSet);
+            Set<String> liDongOldSet = liDongOldImeiSet.stream().map(DataImei::getImei).collect(Collectors.toSet());
+            Collection<String> liDongNewDataImeiStringSet = CollectionUtils.subtract(liDongSet, liDongOldSet);
+
+            List<DataImei> collect = liDongNewDataImeiStringSet.stream()
+                    .map(imei -> liDongImeiSet.stream()
+                            .filter(dataImei -> dataImei.getImei().equals(imei))
+                            .findFirst()
+                            .orElse(null)
+                    ).collect(Collectors.toList());
 
             ScoreModel scoreModel = scoreModelRepository.selectScoreModelByScoreTypeValue(scoreModelType);
             List<DataImei> liDongNewImeiList = new ArrayList<>();
             if (baseConfiguration.getWaterSwitch()) {
-                for (DataImei imei : loDongNewDataImeiSet) {
+                for (DataImei imei : collect) {
+                    if (imei == null) {
+                        continue;
+                    }
                     if (Objects.equals(imei.getPhoneNum(), UNDEFINED)) {
                         // water
                         DataImei dataImei = new DataImei();
@@ -97,7 +108,10 @@ public class PirPhase1ExecuteImei implements PirPhase1Execute {
                     }
                 }
             } else {
-                for (DataImei imei : loDongNewDataImeiSet) {
+                for (DataImei imei : collect) {
+                    if (imei == null) {
+                        continue;
+                    }
                     if (Objects.equals(imei.getPhoneNum(), UNDEFINED)) {
                     } else {
                         // query

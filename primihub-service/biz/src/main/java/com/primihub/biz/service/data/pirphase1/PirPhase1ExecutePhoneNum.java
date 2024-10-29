@@ -68,12 +68,12 @@ public class PirPhase1ExecutePhoneNum implements PirPhase1Execute {
             Set<DataMobile> liDongOldMobileSet = dataMobileRepository.selectMobileWithScore(liDongSet, req.getScoreModelType());
             Set<String> liDongOldSet = liDongOldMobileSet.stream().map(DataMobile::getPhoneNum).collect(Collectors.toSet());
 
-            Collection<String> loDongNewSet = CollectionUtils.subtract(liDongSet, liDongOldSet);
+            Collection<String> liDongNewSet = CollectionUtils.subtract(liDongSet, liDongOldSet);
             ScoreModel scoreModel = scoreModelRepository.selectScoreModelByScoreTypeValue(scoreModelType);
             List<DataMobile> liDongNewMobileList = new ArrayList<>();
 
 
-            for (String mobile : loDongNewSet) {
+            for (String mobile : liDongNewSet) {
                 // query
                 RemoteRespVo respVo = remoteClient.queryFromRemote(mobile, scoreModel.getScoreModelCode());
                 if (respVo != null && ("Y").equals(respVo.getHead().getResult())) {
